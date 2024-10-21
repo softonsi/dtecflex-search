@@ -1,0 +1,20 @@
+<item tipo="atual">
+    <index status="atual_index">0</index>
+    <moldel status="atual_model">gpt-3.5-turbo-0125</moldel>
+
+    <index id="0">0</index>
+    <model id="0">gpt-3.5-turbo-0125</model>
+    <tokens id="0">4096</tokens>
+
+    <index id="1">1</index>
+    <model id="1">gpt-3.5-turbo-1106</model>
+    <tokens id="1">4096</tokens>
+
+    <index id="2">2</index>
+    <model id="2">gpt-4-0125-preview</model>
+    <tokens id="2">4096</tokens>
+
+    <index id="3">3</index>
+    <model id="3">gpt-4-32k</model>
+    <tokens id="3">32768</tokens>
+</item>

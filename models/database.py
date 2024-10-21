@@ -1,5 +1,5 @@
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
-
+from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, func
+from sqlalchemy.orm import relationship
 from database import Base
 
 
@@ -22,5 +22,33 @@ class NoticiaRaspadaModel(Base):
     TEXTO_NOTICIA = Column(Text, nullable=True)
     LINK_ORIGINAL = Column(String(2000), nullable=True)
 
+    nomes_raspados = relationship("NoticiaRaspadaNomeModel", back_populates="noticia")
+
     def __repr__(self):
         return f"<NoticiaRaspadaModel(ID={self.ID}, TITULO='{self.TITULO}')>"
+
+
+class NoticiaRaspadaNomeModel(Base):
+    __tablename__ = 'TB_NOTICIA_RASPADA_NOME2'
+
+    ID = Column(Integer, primary_key=True, index=True)
+    NOME = Column(String(2000), nullable=True)
+    CPF = Column(String(15), nullable=True)
+    NOME_CPF = Column(String(15), nullable=True)
+    APELIDO = Column(String(100), nullable=True)
+    SEXO = Column(String(100), nullable=True)
+    PESSOA = Column(String(100), nullable=True)
+    IDADE = Column(Integer, nullable=True)
+    ATIVIDADE = Column(String(100), nullable=True)
+    ENVOLVIMENTO = Column(String(100), nullable=True)
+    TIPO_SUSPEITA = Column(String(100), nullable=True)
+    FLG_PESSOA_PUBLICA = Column(String(100), nullable=True)
+    ANIVERSARIO = Column(DateTime, nullable=True)
+    INDICADOR_PP = Column(String(1), nullable=True)
+
+    NOTICIA_ID = Column(Integer, ForeignKey('TB_NOTICIA_RASPADA.ID'), nullable=False)
+
+    noticia = relationship("NoticiaRaspadaModel", back_populates="nomes_raspados")
+
+    def __repr__(self):
+        return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class NoticiaRaspadaBaseSchema(BaseModel):
     LINK_ID: str = Field(..., max_length=64)
-    URL: str = Field(..., max_length=1000)
+    URL: Optional[str] = Field(..., max_length=1000)
     FONTE: str = Field(..., max_length=250)
     DATA_PUBLICACAO: Optional[datetime] = None
     CATEGORIA: str = Field(..., max_length=50)
