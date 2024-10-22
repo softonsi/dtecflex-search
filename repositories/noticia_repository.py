@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 
 from models.database import NoticiaRaspadaModel
@@ -23,11 +23,17 @@ class NoticiaRepository:
     def get_by_id(self, noticia_id: int) -> Optional[NoticiaRaspadaModel]:
         return self.session.query(NoticiaRaspadaModel).filter(NoticiaRaspadaModel.ID == noticia_id).first()
 
+    def get_by_id_with_names(self, noticia_id: int) -> Optional[NoticiaRaspadaModel]:
+        return self.session.query(NoticiaRaspadaModel)\
+            .options(joinedload(NoticiaRaspadaModel.nomes_raspados))\
+            .filter(NoticiaRaspadaModel.ID == noticia_id)\
+            .first()
+
     def xlist(self, limit: int = None) -> List[NoticiaRaspadaModel]:
         query = self.session.query(NoticiaRaspadaModel).order_by(NoticiaRaspadaModel.ID.desc())
         if limit:
             query = query.limit(limit)
-        
+
         return query.all()
 
     def xxlist(self, offset: int = 0, limit: int = 10) -> List[NoticiaRaspadaModel]:
@@ -152,6 +158,6 @@ class NoticiaRepository:
             self.session.commit()
             return True
         return False
-   
+
     def count(self) -> int:
             return self.session.query(NoticiaRaspadaModel).count()

@@ -13,6 +13,8 @@ class NoticiaRaspadaModel(Base):
     DATA_PUBLICACAO = Column(DateTime, nullable=True)
     CATEGORIA = Column(String(50), nullable=False)
     QUERY = Column(String(250), nullable=True)
+    # UF = Column(String(250), nullable=True)
+    # REGIAO = Column(String(250), nullable=True)
     ID_ORIGINAL = Column(String(2000), nullable=False)
     DT_RASPAGEM = Column(DateTime, nullable=False, server_default=func.now())
     DT_DECODE = Column(DateTime, nullable=True)
