@@ -20,7 +20,6 @@ class NoticiaRaspadaBaseSchema(BaseModel):
     TEXTO_NOTICIA: Optional[str] = None
     LINK_ORIGINAL: Optional[str] = Field(None, max_length=2000)
 
-    # Atualização para Pydantic V2
     model_config = ConfigDict(from_attributes=True)
 
 class NoticiaRaspadaCreateSchema(NoticiaRaspadaBaseSchema):

@@ -343,6 +343,5 @@ def render_status(txt_label, txt):
     </div>
 """
 
-
 if __name__ == "__main__":
     main()

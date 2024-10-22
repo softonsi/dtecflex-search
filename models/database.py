@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, func
+from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, func, BigInteger, Date
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -31,24 +31,28 @@ class NoticiaRaspadaModel(Base):
 
 
 class NoticiaRaspadaNomeModel(Base):
-    __tablename__ = 'TB_NOTICIA_RASPADA_NOME2'
+    __tablename__ = 'TB_NOTICIA_RASPADA_NOME'
 
-    ID = Column(Integer, primary_key=True, index=True)
-    NOME = Column(String(2000), nullable=True)
-    CPF = Column(String(15), nullable=True)
-    NOME_CPF = Column(String(15), nullable=True)
-    APELIDO = Column(String(100), nullable=True)
-    SEXO = Column(String(100), nullable=True)
-    PESSOA = Column(String(100), nullable=True)
+    ID = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    NOTICIA_ID = Column(
+        Integer,
+        ForeignKey('TB_NOTICIA_RASPADA.ID', ondelete="NO ACTION", onupdate="NO ACTION"),
+        nullable=False,
+        index=True
+    )
+    NOME = Column(String(100, collation='utf8mb4_unicode_ci'), nullable=False)
+    CPF = Column(String(14, collation='utf8mb4_unicode_ci'), nullable=True, server_default='0')
+    NOME_CPF = Column(String(100, collation='utf8mb4_unicode_ci'), nullable=True)
+    APELIDO = Column(String(50, collation='utf8mb4_unicode_ci'), nullable=True)
+    SEXO = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+    PESSOA = Column(String(2, collation='utf8mb4_unicode_ci'), nullable=True)
     IDADE = Column(Integer, nullable=True)
-    ATIVIDADE = Column(String(100), nullable=True)
-    ENVOLVIMENTO = Column(String(100), nullable=True)
-    TIPO_SUSPEITA = Column(String(100), nullable=True)
-    FLG_PESSOA_PUBLICA = Column(String(100), nullable=True)
-    ANIVERSARIO = Column(DateTime, nullable=True)
-    INDICADOR_PP = Column(String(1), nullable=True)
-
-    NOTICIA_ID = Column(Integer, ForeignKey('TB_NOTICIA_RASPADA.ID'), nullable=False)
+    ATIVIDADE = Column(String(140, collation='latin1_general_ci'), nullable=True)
+    ENVOLVIMENTO = Column(String(500, collation='utf8mb4_unicode_ci'), nullable=True)
+    TIPO_SUSPEITA = Column(String(20, collation='utf8mb4_unicode_ci'), nullable=True)
+    FLG_PESSOA_PUBLICA = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+    ANIVERSARIO = Column(Date, nullable=True)
+    INDICADOR_PPE = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
 
     noticia = relationship("NoticiaRaspadaModel", back_populates="nomes_raspados")
 
