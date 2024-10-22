@@ -20,3 +20,9 @@ class NoticiaNomeService:
 
     def find_noticia_nome_by_noticia_id(self, noticia_id):
         return self.noticia_nome_repository.find_by_noticia_id(noticia_id)
+
+    def update(self, nome_id: int, data: NoticiaRaspadaNomeCreateSchema) -> Optional[NoticiaRaspadaNomeCreateSchema]:
+        return self.noticia_nome_repository.update(nome_id, data)
+
+    def delete(self, nome_id: int) -> bool:
+        return self.noticia_nome_repository.delete(nome_id)

@@ -24,6 +24,10 @@ class NoticiaService:
             return NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
         return None
 
+    def get_by_id_with_names(self, noticia_id: int) -> Optional[NoticiaRaspadaSchema]:
+        noticia = self.noticia_repository.get_by_id_with_names(noticia_id)
+        return noticia
+
     def listar_noticias(self, page: int = 1, per_page: int = 10) -> List[NoticiaRaspadaSchema]:
         offset = (page - 1) * per_page
         noticias = self.noticia_repository.list(offset=offset, limit=per_page)
@@ -49,7 +53,7 @@ class NoticiaService:
             NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
             for noticia in noticias
         ]
-    
+
     def listar_noticias(self, page: int = 1, per_page: int = 10, filters: Optional[Dict[str, Any]] = None) -> (List[NoticiaRaspadaSchema], int):
         offset = (page - 1) * per_page
         noticias, total_count = self.noticia_repository.list(offset=offset, limit=per_page, filters=filters)

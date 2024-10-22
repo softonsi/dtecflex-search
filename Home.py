@@ -44,6 +44,7 @@ def main():
             status_10_url_ok = st.checkbox("10-URL-OK")
             status_15_url_chk = st.checkbox("15-URL-CHK")
             status_99_deleted = st.checkbox("99-DELETED")
+            status_07_edit = st.checkbox("07-EDIT-MODE")
 
         with st.sidebar.expander("Notícias por Página", expanded=True):
             per_page = st.number_input('Notícias por página', min_value=1, max_value=100, value=10)
@@ -83,6 +84,8 @@ def main():
             selected_status.append("15-URL-CHK")
         if status_99_deleted:
             selected_status.append("99-DELETED")
+        if status_07_edit:
+            selected_status.append("07-EDIT-MODE")
 
         if selected_status:
             filters['STATUS'] = selected_status
@@ -160,7 +163,7 @@ def main():
                                 st.toast(f"Notícia ID {noticia['ID']} excluída com sucesso.")
                                 st.rerun()
 
-                        if st.button("Analisar", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=noticia['STATUS'] != '10-URL-OK'):
+                        if st.button("Analisar", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE') ):
                             st.session_state['id_notice_to_analyze'] = noticia['ID']
                             st.session_state[f'notice_to_analyze_{noticia['ID']}'] = noticia
                             st.session_state['url'] = noticia['URL']
