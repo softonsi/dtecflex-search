@@ -14,18 +14,40 @@ from services.noticia_service import NoticiaService
 
 Base.metadata.create_all(bind=engine)
 
-def main():
+def init_page_layout():
     st.set_page_config(layout='wide')
-    st.title("Lista de Notícias")
+    st.markdown("""
+        <style>
+            /* Remove blank space at top and bottom */
+            .block-container {
+                padding-top: 0rem;
+                padding-bottom: 0rem;
+            }
+            /* Remove blank space at the center canvas */
+            .st-emotion-cache-z5fcl4 {
+                position: relative;
+                top: -62px;
+                }
+            /* Make the toolbar transparent and the content below it clickable */
+            .st-emotion-cache-18ni7ap {
+                pointer-events: none;
+                background: rgb(255 255 255 / 0%)
+                }
+            .st-emotion-cache-zq5wmm {
+                pointer-events: auto;
+                background: rgb(255 255 255);
+                border-radius: 5px;
+                }
+        </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
+        """, unsafe_allow_html=True)
 
-    st.markdown(
-    """
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
-    """,
-    unsafe_allow_html=True,)
+def main():
+    init_page_layout()
+
+    st.markdown("#### Lista de Notícias")
 
     session = SessionLocal()
-
     noticia_repository = NoticiaRepository(session)
     noticia_service = NoticiaService(noticia_repository)
 
@@ -108,7 +130,7 @@ def main():
         )
         total_pages = (total_noticias + per_page - 1) // per_page or 1
 
-        cols = st.columns([10,1,1,1])
+        cols = st.columns([12,1,1,1])
         with cols[2]:
             if st.button("Ant.", disabled=st.session_state['page_number'] <= 1):
                 st.session_state['page_number'] -= 1
@@ -135,20 +157,11 @@ def main():
                 else:
                     background_color = "#ffffff"
 
-                with st.container():
-                    top_cols = st.columns(4)
-                    with top_cols[0]:
-                        st.markdown(f"**Categoria**: {noticia['CATEGORIA']}")
-                    with top_cols[1]:
-                        st.markdown(f"**Publicação**: {noticia['DATA_PUBLICACAO']}")
-                    with top_cols[2]:
-                        st.markdown(f"**Extração**: {noticia['DT_RASPAGEM']}")
-
-                    col1, col2 = st.columns([1, 3])
+                    col1, col2, col3 = st.columns([1, 8, 1])
 
                     with col1:
                         st.markdown(render_box('ID', noticia["ID"]), unsafe_allow_html=True)
-                        st.markdown(render_box('Status', noticia['STATUS']), unsafe_allow_html=True)
+                        st.markdown(render_status('Status', noticia['STATUS']), unsafe_allow_html=True)
 
                         if noticia['STATUS'] == '99-DELETED':
                             if st.button("Recuperar", key=f"recuperar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True):
@@ -181,7 +194,7 @@ def main():
 
                         if noticia['URL'] is None or noticia['STATUS'] == '15-URL-CHK' or st.session_state[key_edit_mode]:
                             with st.form(key=f"link_form_{noticia['ID']}"):
-                                link_col, button_col = st.columns([4, 1])
+                                link_col, button_col = st.columns([9, 1])
                                 with link_col:
                                     link = st.text_input('**Link Notícia**', value=noticia.get('URL', ''), label_visibility="collapsed")
                                 with button_col:
@@ -198,13 +211,27 @@ def main():
                                             st.session_state[key_edit_mode] = False
                                             st.rerun()
                         else:
-                            link_col, button_col = st.columns([4, 1])
+                            link_col, button_col = st.columns([9, 1])
                             with link_col:
                                 st.markdown(f'**Link Notícia:** [{noticia["URL"]}]({noticia["URL"]})')
                             with button_col:
                                 if st.button('Editar', key=f"edit_link_{noticia['ID']}"):
                                     st.session_state[key_edit_mode] = True
                                     st.rerun()
+                    with col3:
+#                        with st.container():
+#                            top_cols = st.columns(3)
+#                            with top_cols[0]:
+                                #st.markdown(f"**Categoria**: {noticia['CATEGORIA']}")
+                                st.markdown(render_box('Categoria', noticia['CATEGORIA']), unsafe_allow_html=True)
+ #                           with top_cols[1]:
+                                #st.markdown(f"**Publicação**: {noticia['DATA_PUBLICACAO']}")
+                                st.markdown(render_box('Publicação', noticia['DATA_PUBLICACAO']), unsafe_allow_html=True)
+#                            with top_cols[2]:
+                                #st.markdown(f"**Extração**: {noticia['DT_RASPAGEM']}")
+                                st.markdown(render_box('Extração', noticia['DT_RASPAGEM']), unsafe_allow_html=True)
+
+
                     st.markdown("---")
 
         else:
@@ -312,6 +339,8 @@ def render_status(txt_label, txt):
     elif '10-' in txt: # Verde
         bg_color = '#b2e6b2'
     elif '15-' in txt: # Amarelo
+        bg_color = '#fff3cd'
+    elif '07-' in txt: # Amarelo
         bg_color = '#fff3cd'
     else: # default / neutro
         bg_color = '#fff8e1'

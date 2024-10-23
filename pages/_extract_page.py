@@ -19,7 +19,6 @@ import json
 import io
 
 session = SessionLocal()
-
 client = OpenAI()
 
 noticia_name_repository = NoticiaNomeRepository(session)
@@ -27,12 +26,40 @@ noticia_name_service = NoticiaNomeService(noticia_name_repository)
 noticia_repository = NoticiaRepository(session)
 noticia_service = NoticiaService(noticia_repository)
 
-st.set_page_config(
-    page_title="Extração de Nomes",
-    page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+def init_page_layout():
+    st.set_page_config(
+        page_title="Extração de Nomes",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
+    st.markdown("""
+        <style>
+            # /* Remove blank space at top and bottom */
+            # .block-container {
+            #     padding-top: 0rem;
+            #     padding-bottom: 0rem;
+            # }
+            /* Remove blank space at the center canvas */
+            .st-emotion-cache-z5fcl4 {
+                position: relative;
+                top: -62px;
+                }
+            /* Make the toolbar transparent and the content below it clickable */
+            .st-emotion-cache-18ni7ap {
+                pointer-events: none;
+                background: rgb(255 255 255 / 0%)
+                }
+            .st-emotion-cache-zq5wmm {
+                pointer-events: auto;
+                background: rgb(255 255 255);
+                border-radius: 5px;
+                }
+        </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
+        """, unsafe_allow_html=True)
+
+init_page_layout()
 
 if 'url' not in st.session_state:
     st.session_state['url'] = ''
@@ -45,34 +72,6 @@ URL = st.text_input('URL', value=URL)
 server_fonte = ''
 
 cols_top = st.columns(3)
-
-def render_box(txt_label, txt):
-    return f"""
-    <div style="
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 10px;
-    ">
-        <label style="
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 2px;
-        ">
-            {txt_label}
-        </label>
-        <div style="
-            font-weight: bold;
-            background-color: #fbfbfb;
-            padding: 8px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            color: #1f77b4;
-        ">
-            {txt}
-        </div>
-    </div>
-    """
 
 noticia_id = st.session_state['id_notice_to_analyze']
 
@@ -246,7 +245,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 if saved_names_list:
-    st.header("Nomes Salvos")
+    st.markdown("#### Nomes Salvos")
     for idx, item in enumerate(saved_names_list):
         with st.expander(f"{item.get('NOME', '')}", expanded=False):
             with st.form(key=f'saved_form_{idx}'):
@@ -294,7 +293,7 @@ if saved_names_list:
                         st.error(f"Erro ao deletar {item.get('NOME')}")
 
 if extracted_names_list:
-    st.header("Nomes Extraídos")
+    st.markdown("#### Nomes Extraídos")
     for idx, item in enumerate(extracted_names_list):
         is_deleted = item.get('deleted', False)
 
