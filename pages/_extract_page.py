@@ -15,7 +15,7 @@ from datetime import datetime
 import re
 import emoji
 import json
-
+import itertools
 import io
 
 session = SessionLocal()
@@ -55,9 +55,12 @@ def init_page_layout():
                 background: rgb(255 255 255);
                 border-radius: 5px;
                 }
+            #MainMenu {visibility: hidden;}
+
         </style>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
         """, unsafe_allow_html=True)
+
 
 init_page_layout()
 
@@ -94,7 +97,7 @@ if noticia:
     TEXT = noticia.TEXTO_NOTICIA
     if not TEXT and URL:
         try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'}
             response = requests.get(URL, headers=headers)
             if response.status_code == 200:
                 server_fonte = URL.split('/')[2]
@@ -138,8 +141,48 @@ with cols_bottom[0]:
 with cols_bottom[1]:
     uf = st.text_input('UF', value=noticia.UF if noticia and hasattr(noticia, 'UF') and noticia.UF else '')
 
-
+# Destacar nomes usando tags html
 def destaque_nomes(texto, lista_nomes):
+    lt_colors=[
+        "LightSkyBlue",  # Azul claro agradável
+        "LightCoral",    # Coral suave
+        "PaleGreen",     # Verde pálido
+        "Khaki",         # Bege amarelado
+        "Lavender",      # Lavanda suave
+        "PeachPuff",     # Pêssego claro
+        "MistyRose",     # Rosa suave
+        "PowderBlue",    # Azul pó
+        "Thistle",       # Cardo claro
+        "PaleTurquoise", # Turquesa pálido
+        "LightSalmon",   # Salmão claro
+        "Aquamarine"     # Água-marinha
+    ]
+    dk_colors=[
+        "MidnightBlue",   # Azul profundo
+        "DarkRed",        # Vermelho escuro
+        "ForestGreen",    # Verde floresta
+        "SaddleBrown",    # Marrom sela
+        "Indigo",         # Índigo escuro
+        "FireBrick",      # Tijolo queimado
+        "DarkSlateGray",  # Cinza ardósia escuro
+        "DarkOliveGreen", # Verde oliva escuro
+        "DarkMagenta",    # Magenta escuro
+        "DarkCyan",       # Ciano escuro
+        "Chocolate",      # Chocolate profundo
+        "DarkGoldenrod"   # Dourado escuro
+    ]
+
+    color_sequence=itertools.cycle( lt_colors )
+    # Substituir cada nome na lista pelo mesmo nome destacado
+    for nome in lista_nomes:
+        # texto = texto.replace(nome, f"**{nome}**")
+        texto = texto.replace(nome, f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>')
+
+    texto = texto.replace(chr(10), '<br>').replace('\r', '<br>').replace('$', '\$')
+
+    return texto
+
+def destaque_nomesx(texto, lista_nomes):
     for nome in lista_nomes:
         nome_escapado = re.escape(nome)
         texto = re.sub(r'\b{}\b'.format(nome_escapado),
@@ -214,7 +257,7 @@ if TEXT:
 
 names_to_highlight = [item['NOME'] for item in saved_names_list + extracted_names_list if 'NOME' in item]
 
-with st.expander('Texto notícia e nomes destacados', expanded=False):
+with st.expander('Texto notícia e nomes destacados', expanded=True):
     if TEXT and names_to_highlight:
         highlighted_text = destaque_nomes(TEXT, names_to_highlight)
         st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text), unsafe_allow_html=True)
@@ -237,9 +280,9 @@ with st.expander('Texto notícia e nomes destacados', expanded=False):
         with st.container():
             st.write("Edite o texto da notícia")
             with st.container():
-                reason = st.text_area("Texto da Notícia", value=noticia.TEXTO_NOTICIA, height=300)
+                texto_noticia = st.text_area("Texto da Notícia", value=noticia.TEXTO_NOTICIA, height=300)
                 if st.button("Atualizar"):
-                    update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=reason)
+                    update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
                     try:
                         noticia_service.atualizar_noticia(noticia.ID, update_data)
                         st.success("Notícia atualizada com sucesso!")
@@ -248,7 +291,6 @@ with st.expander('Texto notícia e nomes destacados', expanded=False):
                         st.error(f"Erro ao atualizar a notícia: {e}")
 
     if "closed_modal" not in st.session_state:
-        st.write("Vote for your favorite")
         if st.button("Editar texto"):
             render_area()
 
