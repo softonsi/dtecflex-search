@@ -67,8 +67,9 @@ if 'id_notice_to_analyze' not in st.session_state:
     st.session_state['id_notice_to_analyze'] = None
 
 TEXT = ''
+st.markdown("##### Dados Notícia")
 URL = st.session_state['url']
-URL = st.text_input('URL', value=URL)
+URL = st.text_input('URL:', value=URL)
 server_fonte = ''
 
 cols_top = st.columns(3)
@@ -245,7 +246,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 if saved_names_list:
-    st.markdown("#### Nomes Salvos")
+    st.markdown("##### Nomes Salvos")
     for idx, item in enumerate(saved_names_list):
         with st.expander(f"{item.get('NOME', '')}", expanded=False):
             with st.form(key=f'saved_form_{idx}'):
@@ -293,7 +294,7 @@ if saved_names_list:
                         st.error(f"Erro ao deletar {item.get('NOME')}")
 
 if extracted_names_list:
-    st.markdown("#### Nomes Extraídos")
+    st.markdown("##### Nomes Extraídos")
     for idx, item in enumerate(extracted_names_list):
         is_deleted = item.get('deleted', False)
 
