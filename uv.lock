@@ -149,6 +149,18 @@ wheels = [
 ]
 
 [[package]]
+name = "deprecation"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5a/d3/8ae2869247df154b64c1884d7346d412fed0c49df84db635aab2d1c40e62/deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff", size = 173788 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/c3/253a89ee03fc9b9682f1541728eb66db7db22148cd94f89ab22528cd1e1b/deprecation-2.1.0-py2.py3-none-any.whl", hash = "sha256:a10811591210e1fb0e768a8c25517cabeabcba6f0bf96564f8ff45189f90b14a", size = 11178 },
+]
+
+[[package]]
 name = "distro"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -171,6 +183,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
     { name = "streamlit" },
+    { name = "streamlit-modal" },
     { name = "tiktoken" },
 ]
 
@@ -185,6 +198,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "sqlalchemy", specifier = ">=2.0.35" },
     { name = "streamlit", specifier = ">=1.39.0" },
+    { name = "streamlit-modal", specifier = ">=0.1.2" },
     { name = "tiktoken", specifier = ">=0.8.0" },
 ]
 
@@ -888,6 +902,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d5/21/3740871ad79ee35f442f11bafec5010a3ec1916c7c9eb43ef866da641f31/streamlit-1.39.0.tar.gz", hash = "sha256:fef9de7983c4ee65c08e85607d7ffccb56b00482b1041fa62f90e4815d39df3a", size = 8360694 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/e1/f9c479f9dbe0bb702ea5ca6608f10e91a708b438f7fb4572a2642718c6e3/streamlit-1.39.0-py2.py3-none-any.whl", hash = "sha256:a359fc54ed568b35b055ff1d453c320735539ad12e264365a36458aef55a5fba", size = 8741335 },
+]
+
+[[package]]
+name = "streamlit-modal"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "deprecation" },
+    { name = "streamlit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/34/feb9666c148ddf72c92b059509e13ed89b95d6f336317e324d009591f6e6/streamlit_modal-0.1.2.tar.gz", hash = "sha256:3c169aed6e659fd834e3526ffac285efd77867c2e5847131c2fa9d441468a522", size = 4351 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/af/44/3a6cdc70580ba2f48f1197589adaea29b199786f809aa0919fbabf489e1c/streamlit_modal-0.1.2-py3-none-any.whl", hash = "sha256:60dac7590fd7a168d046cc03335460ac323b060676818bf8000949a878c74386", size = 4614 },
 ]
 
 [[package]]

@@ -83,51 +83,6 @@ class NoticiaRepository:
         query = query.order_by(NoticiaRaspadaModel.ID.desc()).offset(offset).limit(limit)
         return query.all(), total_count
 
-
-    # def list(self, offset: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> Tuple[List[NoticiaRaspadaModel], int]:
-    #     query = self.session.query(NoticiaRaspadaModel)
-
-    #     if filters:
-    #         filter_conditions = []
-    #         if 'FONTE' in filters and filters['FONTE']:
-    #             filter_conditions.append(NoticiaRaspadaModel.FONTE.ilike(f"%{filters['FONTE']}%"))
-    #         if 'STATUS' in filters and filters['STATUS']:
-    #             print(filter)
-    #             filter_conditions.append(NoticiaRaspadaModel.STATUS == filters['STATUS'])
-    #         if 'CATEGORIA' in filters and filters['CATEGORIA']:
-    #             print(filter)
-    #             filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
-    #         if 'DATA_INICIO' in filters and 'DATA_FIM' in filters:
-    #             filter_conditions.append(
-    #                 NoticiaRaspadaModel.DATA_PUBLICACAO.between(filters['DATA_INICIO'], filters['DATA_FIM'])
-    #             )
-    #         if 'PERIODO' in filters:
-    #             today = datetime.today()
-
-    #             if filters['PERIODO'] == 'dia':
-    #                 start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-
-    #             elif filters['PERIODO'] == 'semana':
-    #                 start_date = today - timedelta(days=today.weekday())
-    #                 start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-
-    #             elif filters['PERIODO'] == 'mes':
-    #                 start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Primeiro dia do mês
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-    #         # Adicione mais filtros conforme necessário
-    #         if filter_conditions:
-    #             query = query.filter(and_(*filter_conditions))
-
-    #     total_count = query.count()
-
-    #     query = query.order_by(NoticiaRaspadaModel.ID.desc()).offset(offset).limit(limit)
-    #     return query.all(), total_count
-
     def update(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaModel]:
         noticia = self.get_by_id(noticia_id)
         try:
@@ -139,7 +94,6 @@ class NoticiaRepository:
                 self.session.refresh(noticia)
         except Exception as err:
             print('erro repository:', err)
-        # print('return2', noticia)
         return noticia
 
     def xupdate(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaModel]:

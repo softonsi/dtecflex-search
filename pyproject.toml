@@ -13,6 +13,7 @@ dependencies = [
     "pymysql>=1.1.1",
     "python-dotenv>=1.0.1",
     "sqlalchemy>=2.0.35",
+    "streamlit-modal>=0.1.2",
     "streamlit>=1.39.0",
     "tiktoken>=0.8.0",
 ]

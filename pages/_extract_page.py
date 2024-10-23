@@ -66,15 +66,22 @@ if 'url' not in st.session_state:
 if 'id_notice_to_analyze' not in st.session_state:
     st.session_state['id_notice_to_analyze'] = None
 
+if 'noticia_id' not in st.query_params:
+    print('AAAAAAAAAAAAAAAAAAAAAAAa')
+    st.query_params.from_dict({'noticia_id': st.session_state.get('id_notice_to_analyze')})
+
+noticia_id = st.query_params['noticia_id']
+
+noticia = noticia_service.get_by_id_with_names(noticia_id)
+
+
 TEXT = ''
-st.markdown("##### Dados Notícia")
-URL = st.session_state['url']
-URL = st.text_input('URL:', value=URL)
+URL = noticia.URL
+URL = st.text_input('URL', value=URL)
 server_fonte = ''
 
-cols_top = st.columns(3)
 
-noticia_id = st.session_state['id_notice_to_analyze']
+cols_top = st.columns(3)
 
 if f'{noticia_id}_is_extracted' not in st.session_state:
     st.session_state[f'{noticia_id}_is_extracted'] = []
@@ -82,7 +89,6 @@ if f'{noticia_id}_is_extracted' not in st.session_state:
 saved_names_list = []
 extracted_names_list = []
 
-noticia = noticia_service.get_by_id_with_names(noticia_id)
 
 if noticia:
     TEXT = noticia.TEXTO_NOTICIA
@@ -171,7 +177,9 @@ if TEXT:
                 Nunca omitir o cabeçalho.
                 Não mostrar marcadores de markdown.
                 Mostrar como resultado APENAS um array de json, cada objeto deve conter essas propriedades:
-                ORDEM|NOME|IDADE|ATIVIDADE|CLASSIFICACAO|ENVOLVIMENTO|OPERACAO
+                    'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO(o valor dessa propriedade caso seja homem será M, mulher F e não especificado N/A', 'PESSOA', 'IDADE',
+                    'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO',
+                    'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
                 caso você não extraia certa informação de uma respectiva pessoa retorna como null mesmo, por exemplo:
                     {
                         ENVOLVIMENTO: null
@@ -207,15 +215,42 @@ if TEXT:
 names_to_highlight = [item['NOME'] for item in saved_names_list + extracted_names_list if 'NOME' in item]
 
 with st.expander('Texto notícia e nomes destacados', expanded=False):
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(TEXT), unsafe_allow_html=True)
-    with col2:
-        if TEXT and names_to_highlight:
-            highlighted_text = destaque_nomes(TEXT, names_to_highlight)
-            st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text), unsafe_allow_html=True)
-        else:
-            st.write("Nenhum nome para destacar.")
+    if TEXT and names_to_highlight:
+        highlighted_text = destaque_nomes(TEXT, names_to_highlight)
+        st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text), unsafe_allow_html=True)
+    else:
+        st.write("Nenhum nome para destacar ou texto não disponível.")
+
+    @st.dialog(f"Edite o texto da notícia de id {noticia.ID}", width="large")
+    def render_area():
+        st.markdown(
+            """
+            <style>
+            .big-text-area .stTextArea textarea {
+                width: 100% !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.container():
+            st.write("Edite o texto da notícia")
+            with st.container():
+                reason = st.text_area("Texto da Notícia", value=noticia.TEXTO_NOTICIA, height=300)
+                if st.button("Atualizar"):
+                    update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=reason)
+                    try:
+                        noticia_service.atualizar_noticia(noticia.ID, update_data)
+                        st.success("Notícia atualizada com sucesso!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erro ao atualizar a notícia: {e}")
+
+    if "closed_modal" not in st.session_state:
+        st.write("Vote for your favorite")
+        if st.button("Editar texto"):
+            render_area()
 
 colunas = [
     'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO', 'PESSOA', 'IDADE',
@@ -246,7 +281,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 if saved_names_list:
-    st.markdown("##### Nomes Salvos")
+    st.markdown("#### Nomes Salvos")
     for idx, item in enumerate(saved_names_list):
         with st.expander(f"{item.get('NOME', '')}", expanded=False):
             with st.form(key=f'saved_form_{idx}'):
@@ -277,6 +312,7 @@ if saved_names_list:
                         APELIDO=input_values.get('APELIDO'),
                         ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
                         NOME_CPF=input_values.get('NOME CPF'),
+                        SEXO=input_values.get('SEXO'),
                         OPERACAO=input_values.get('OPERACAO'),
                         ATIVIDADE=input_values.get('ATIVIDADE'),
                         NOTICIA_ID=noticia_id
@@ -294,7 +330,7 @@ if saved_names_list:
                         st.error(f"Erro ao deletar {item.get('NOME')}")
 
 if extracted_names_list:
-    st.markdown("##### Nomes Extraídos")
+    st.markdown("#### Nomes Extraídos")
     for idx, item in enumerate(extracted_names_list):
         is_deleted = item.get('deleted', False)
 
@@ -344,6 +380,7 @@ if extracted_names_list:
                         CPF=input_values.get('CPF'),
                         NOME=input_values.get('NOME'),
                         APELIDO=input_values.get('APELIDO'),
+                        SEXO=input_values.get('SEXO'),
                         # ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
                         NOME_CPF=input_values.get('NOME CPF'),
                         OPERACAO=input_values.get('OPERACAO'),
