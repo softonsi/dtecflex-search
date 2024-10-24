@@ -17,6 +17,8 @@ import emoji
 import json
 import itertools
 import io
+from playwright.sync_api import sync_playwright
+import time
 
 session = SessionLocal()
 client = OpenAI()
@@ -62,6 +64,29 @@ def init_page_layout():
         """, unsafe_allow_html=True)
 
 
+def get_page_content(URL: str) -> str:
+    headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'}
+    page_content = ''
+    try:
+        response = requests.get(URL, headers=headers)
+        if response.status_code == 2001:
+            server_fonte = URL.split('/')[2]
+            page_content = response.content
+        else:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                page.goto(URL)
+                page.wait_for_load_state(state='networkidle')
+                page_content = page.content()
+                print(f"URL processada: {page.url}")
+                browser.close()
+
+    except Exception as e:
+        st.error(f"Erro ao acessar a URL: {e}")
+
+    return page_content
+
 init_page_layout()
 
 if 'url' not in st.session_state:
@@ -83,7 +108,6 @@ URL = noticia.URL
 URL = st.text_input('URL', value=URL)
 server_fonte = ''
 
-
 cols_top = st.columns(3)
 
 if f'{noticia_id}_is_extracted' not in st.session_state:
@@ -92,40 +116,15 @@ if f'{noticia_id}_is_extracted' not in st.session_state:
 saved_names_list = []
 extracted_names_list = []
 
-
 if noticia:
     TEXT = noticia.TEXTO_NOTICIA
     if not TEXT and URL:
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'}
-            response = requests.get(URL, headers=headers)
-            if response.status_code == 200:
-                server_fonte = URL.split('/')[2]
-                soup = BeautifulSoup(response.content, 'html.parser')
-                texto = '\n'.join([p.get_text() for p in soup.find_all('p')])
-                TEXT = texto
-                update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=TEXT)
-                noticia_service.atualizar_noticia(noticia.ID, update_data)
-            else:
-                st.error(f"Erro ao acessar a página. Código de status: {response.status_code}")
-        except Exception as e:
-            st.error(f"Erro ao acessar a URL: {e}")
-else:
-    if URL:
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(URL, headers=headers)
-            if response.status_code == 200:
-                server_fonte = URL.split('/')[2]
-                soup = BeautifulSoup(response.content, 'html.parser')
-                texto = '\n'.join([p.get_text() for p in soup.find_all('p')])
-                TEXT = texto
-            else:
-                st.error(f"Erro ao acessar a página. Código de status: {response.status_code}")
-        except Exception as e:
-            st.error(f"Erro ao acessar a URL: {e}")
-    else:
-        st.error("ID da notícia não encontrado e URL não fornecida.")
+        page_content = get_page_content(URL)
+        soup = BeautifulSoup(page_content, 'html.parser')
+        texto = '\n'.join([p.get_text() for p in soup.find_all('p')])
+        TEXT = texto
+        update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=TEXT)
+        noticia_service.atualizar_noticia(noticia.ID, update_data)
 
 with cols_top[0]:
     fonte = st.text_input('Fonte', value=noticia.FONTE if noticia and noticia.FONTE else '')
@@ -178,17 +177,11 @@ def destaque_nomes(texto, lista_nomes):
         # texto = texto.replace(nome, f"**{nome}**")
         texto = texto.replace(nome, f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>')
 
-    texto = texto.replace(chr(10), '<br>').replace('\r', '<br>').replace('$', '\$')
+    texto = texto.replace(chr(10), '<br>').replace(chr(13), '<br>')
 
     return texto
 
-def destaque_nomesx(texto, lista_nomes):
-    for nome in lista_nomes:
-        nome_escapado = re.escape(nome)
-        texto = re.sub(r'\b{}\b'.format(nome_escapado),
-                       f'<span style="background-color: yellow;">{nome}</span>',
-                       texto, flags=re.IGNORECASE)
-    return texto.replace('$', '\\$')
+
 
 if noticia and noticia.nomes_raspados:
     for item in noticia.nomes_raspados:
@@ -213,20 +206,15 @@ if TEXT:
     if not st.session_state[f'{noticia_id}_is_extracted']:
         try:
             with st.spinner('Analisando o texto...'):
-                prompt = """Você irá atuar como interpretador avançado de textos e notícias, checagem de fatos. O objetivo principal é localizar nomes de pessoas envolvidas em crimes ou outras ilicitudes. Cada nome deverá ser listado com outras informações que podem ser obtidas na notícia e conforme as regras abaixo.
+                prompt = """Você irá atuar como interpretador avançado de textos, notícias e checagem de fatos. O objetivo principal é localizar nomes de pessoas envolvidas em crimes ou outras ilicitudes. Cada nome deverá ser listado com outras informações que podem ser obtidas na notícia e conforme as regras abaixo.
                 O texto será fornecido delimitado com a tag "artigo"
-                Localize cada NOME de pessoa ou EMPRESA citada no texto, resumindo seu ENVOLVIMENTO em ilícitos ou crime e conforme contexto, crie uma CLASSIFICACAO como acusado, suspeito, investigado, denunciado, condenado, preso, réu, vítima.
+                Localize cada NOME, ENTIDADE ou EMPRESA citada no texto, resumindo seu ENVOLVIMENTO em ilícitos ou crime e conforme contexto, crie uma CLASSIFICACAO como acusado, suspeito, investigado, denunciado, condenado, preso, réu, vítima.
                 Não incluir nomes de vítimas.
-                Nunca omitir o cabeçalho.
                 Não mostrar marcadores de markdown.
-                Mostrar como resultado APENAS um array de json, cada objeto deve conter essas propriedades:
-                    'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO(o valor dessa propriedade caso seja homem será M, mulher F e não especificado N/A', 'PESSOA', 'IDADE',
-                    'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO',
-                    'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
-                caso você não extraia certa informação de uma respectiva pessoa retorna como null mesmo, por exemplo:
-                    {
-                        ENVOLVIMENTO: null
-                    }
+                Mostrar como resultado APENAS um array de json. Cada objeto deve conter todas as seguintes propriedades:
+                    'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO' (o valor dessa propriedade caso seja homem será 'M', mulher 'F' e não especificado 'N/A'
+                    , 'PESSOA', 'IDADE', 'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
+                caso você não encontre certa propriedade de uma pessoa, retorne como null
                 """
                 artigo = f"<artigo>\n{TEXT}\n</artigo>"
                 response = client.chat.completions.create(

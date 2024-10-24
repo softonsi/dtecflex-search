@@ -3,6 +3,7 @@ import os
 from dotenv import find_dotenv, load_dotenv
 
 dotenv_path = find_dotenv()
+
 if dotenv_path:
     load_dotenv(dotenv_path, override=True)
     # logger.info(f'.env file found and loaded: {dotenv_path}')
