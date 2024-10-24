@@ -140,48 +140,36 @@ with cols_bottom[0]:
 with cols_bottom[1]:
     uf = st.text_input('UF', value=noticia.UF if noticia and hasattr(noticia, 'UF') and noticia.UF else '')
 
-# Destacar nomes usando tags html
 def destaque_nomes(texto, lista_nomes):
-    lt_colors=[
-        "LightSkyBlue",  # Azul claro agradável
-        "LightCoral",    # Coral suave
-        "PaleGreen",     # Verde pálido
-        "Khaki",         # Bege amarelado
-        "Lavender",      # Lavanda suave
-        "PeachPuff",     # Pêssego claro
-        "MistyRose",     # Rosa suave
-        "PowderBlue",    # Azul pó
-        "Thistle",       # Cardo claro
-        "PaleTurquoise", # Turquesa pálido
-        "LightSalmon",   # Salmão claro
-        "Aquamarine"     # Água-marinha
+    if not isinstance(texto, str):
+        texto = '' if texto is None else str(texto)
+    
+    lt_colors = [
+        "LightSkyBlue", "LightCoral", "PaleGreen", "Khaki", 
+        "Lavender", "PeachPuff", "MistyRose", "PowderBlue", 
+        "Thistle", "PaleTurquoise", "LightSalmon", "Aquamarine"
     ]
-    dk_colors=[
-        "MidnightBlue",   # Azul profundo
-        "DarkRed",        # Vermelho escuro
-        "ForestGreen",    # Verde floresta
-        "SaddleBrown",    # Marrom sela
-        "Indigo",         # Índigo escuro
-        "FireBrick",      # Tijolo queimado
-        "DarkSlateGray",  # Cinza ardósia escuro
-        "DarkOliveGreen", # Verde oliva escuro
-        "DarkMagenta",    # Magenta escuro
-        "DarkCyan",       # Ciano escuro
-        "Chocolate",      # Chocolate profundo
-        "DarkGoldenrod"   # Dourado escuro
+    
+    dk_colors = [
+        "MidnightBlue", "DarkRed", "ForestGreen", "SaddleBrown", 
+        "Indigo", "FireBrick", "DarkSlateGray", "DarkOliveGreen", 
+        "DarkMagenta", "DarkCyan", "Chocolate", "DarkGoldenrod"
     ]
-
-    color_sequence=itertools.cycle( lt_colors )
-    # Substituir cada nome na lista pelo mesmo nome destacado
+    
+    color_sequence = itertools.cycle(lt_colors)
+    
     for nome in lista_nomes:
-        # texto = texto.replace(nome, f"**{nome}**")
-        texto = texto.replace(nome, f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>')
-
-    texto = texto.replace(chr(10), '<br>').replace(chr(13), '<br>')
-
+        if not isinstance(nome, str) or not nome.strip():
+            st.warning(f"Nome inválido encontrado: {nome}")
+            continue
+        texto = texto.replace(
+            nome, 
+            f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>'
+        )
+    
+    texto = texto.replace('\n', '<br>').replace('\r', '<br>')
+    
     return texto
-
-
 
 if noticia and noticia.nomes_raspados:
     for item in noticia.nomes_raspados:
@@ -243,7 +231,11 @@ if TEXT:
     saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
     extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
 
-names_to_highlight = [item['NOME'] for item in saved_names_list + extracted_names_list if 'NOME' in item]
+names_to_highlight = [
+    item['NOME'] 
+    for item in saved_names_list + extracted_names_list 
+    if 'NOME' in item and isinstance(item['NOME'], str) and item['NOME'].strip()
+]
 
 with st.expander('Texto notícia e nomes destacados', expanded=True):
     if TEXT and names_to_highlight:
