@@ -143,32 +143,32 @@ with cols_bottom[1]:
 def destaque_nomes(texto, lista_nomes):
     if not isinstance(texto, str):
         texto = '' if texto is None else str(texto)
-    
+
     lt_colors = [
-        "LightSkyBlue", "LightCoral", "PaleGreen", "Khaki", 
-        "Lavender", "PeachPuff", "MistyRose", "PowderBlue", 
+        "LightSkyBlue", "LightCoral", "PaleGreen", "Khaki",
+        "Lavender", "PeachPuff", "MistyRose", "PowderBlue",
         "Thistle", "PaleTurquoise", "LightSalmon", "Aquamarine"
     ]
-    
+
     dk_colors = [
-        "MidnightBlue", "DarkRed", "ForestGreen", "SaddleBrown", 
-        "Indigo", "FireBrick", "DarkSlateGray", "DarkOliveGreen", 
+        "MidnightBlue", "DarkRed", "ForestGreen", "SaddleBrown",
+        "Indigo", "FireBrick", "DarkSlateGray", "DarkOliveGreen",
         "DarkMagenta", "DarkCyan", "Chocolate", "DarkGoldenrod"
     ]
-    
+
     color_sequence = itertools.cycle(lt_colors)
-    
+
     for nome in lista_nomes:
         if not isinstance(nome, str) or not nome.strip():
             st.warning(f"Nome inválido encontrado: {nome}")
             continue
         texto = texto.replace(
-            nome, 
+            nome,
             f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>'
         )
-    
+
     texto = texto.replace('\n', '<br>').replace('\r', '<br>')
-    
+
     return texto
 
 if noticia and noticia.nomes_raspados:
@@ -194,19 +194,27 @@ if TEXT:
     if not st.session_state[f'{noticia_id}_is_extracted']:
         try:
             with st.spinner('Analisando o texto...'):
-                prompt = """Você irá atuar como interpretador avançado de textos, notícias e checagem de fatos. O objetivo principal é localizar nomes de pessoas envolvidas em crimes ou outras ilicitudes. Cada nome deverá ser listado com outras informações que podem ser obtidas na notícia e conforme as regras abaixo.
-                O texto será fornecido delimitado com a tag "artigo"
-                Localize cada NOME, ENTIDADE ou EMPRESA citada no texto, resumindo seu ENVOLVIMENTO em ilícitos ou crime e conforme contexto, crie uma CLASSIFICACAO como acusado, suspeito, investigado, denunciado, condenado, preso, réu, vítima.
-                Não incluir nomes de vítimas.
-                Não mostrar marcadores de markdown.
-                Mostrar como resultado APENAS um array de json. Cada objeto deve conter todas as seguintes propriedades:
-                    'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO' (o valor dessa propriedade caso seja homem será 'M', mulher 'F' e não especificado 'N/A'
-                    , 'PESSOA', 'IDADE', 'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
-                caso você não encontre certa propriedade de uma pessoa, retorne como null
-                """
+                prompt = """Você irá atuar como interpretador avançado de textos, notícias e checagem de fatos.
+                            O texto para análise será delimitado com a tag "artigo"
+                            Localize cada NOME conhecido ou EMPRESA citada no texto, resumindo seu ENVOLVIMENTO em ilícitos ou crime e conforme contexto.
+                            Identificar as pessoas no seguinte domínio: acusado, investigado, denunciado, condenado, preso, réu, vítima, etc.
+                            Não incluir nomes de vítimas na lista final.
+                            Não mostrar marcadores de markdown.
+                            Mostrar como resultado APENAS um array de json.
+
+                            Cada NOME deve conter as seguintes propriedades:
+                                'NOME', 'CPF', 'APELIDO', 'NOME CPF'
+                              , 'SEXO' (o valor dessa propriedade caso seja homem será 'M', mulher 'F' e não especificado 'N/A'
+                              , 'PESSOA' (deve ser classificado PF para pessoa física, PJ para pessoa jurídica ou  para os demais 'N/A')
+                              , 'IDADE', 'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO'
+                              , 'OPERACAO', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
+
+                            Não incluir NOME nulo.
+
+                            """
                 artigo = f"<artigo>\n{TEXT}\n</artigo>"
                 response = client.chat.completions.create(
-                    model='gpt-4o-mini',
+                    model='gpt-4o',
                     messages=[
                         {"role": "system", "content": prompt},
                         {"role": "user", "content": artigo}
@@ -232,8 +240,8 @@ if TEXT:
     extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
 
 names_to_highlight = [
-    item['NOME'] 
-    for item in saved_names_list + extracted_names_list 
+    item['NOME']
+    for item in saved_names_list + extracted_names_list
     if 'NOME' in item and isinstance(item['NOME'], str) and item['NOME'].strip()
 ]
 
@@ -242,7 +250,7 @@ with st.expander('Texto notícia e nomes destacados', expanded=True):
         highlighted_text = destaque_nomes(TEXT, names_to_highlight)
         st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text), unsafe_allow_html=True)
     else:
-        st.write("Nenhum nome para destacar ou texto não disponível.")
+        st.write(TEXT)
 
     @st.dialog(f"Edite o texto da notícia de id {noticia.ID}", width="large")
     def render_area():
