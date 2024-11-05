@@ -1,5 +1,5 @@
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
-
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, ForeignKey, func, BigInteger, Date
+from sqlalchemy.orm import relationship
 from database import Base
 
 
@@ -13,6 +13,8 @@ class NoticiaRaspadaModel(Base):
     DATA_PUBLICACAO = Column(DateTime, nullable=True)
     CATEGORIA = Column(String(50), nullable=False)
     QUERY = Column(String(250), nullable=True)
+    # UF = Column(String(250), nullable=True)
+    # REGIAO = Column(String(250), nullable=True)
     ID_ORIGINAL = Column(String(2000), nullable=False)
     DT_RASPAGEM = Column(DateTime, nullable=False, server_default=func.now())
     DT_DECODE = Column(DateTime, nullable=True)
@@ -22,5 +24,49 @@ class NoticiaRaspadaModel(Base):
     TEXTO_NOTICIA = Column(Text, nullable=True)
     LINK_ORIGINAL = Column(String(2000), nullable=True)
 
+    nomes_raspados = relationship("NoticiaRaspadaNomeModel", back_populates="noticia")
+
     def __repr__(self):
         return f"<NoticiaRaspadaModel(ID={self.ID}, TITULO='{self.TITULO}')>"
+
+
+class NoticiaRaspadaNomeModel(Base):
+    __tablename__ = 'TB_NOTICIA_RASPADA_NOME'
+
+    ID = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    NOTICIA_ID = Column(
+        Integer,
+        ForeignKey('TB_NOTICIA_RASPADA.ID', ondelete="NO ACTION", onupdate="NO ACTION"),
+        nullable=False,
+        index=True
+    )
+    NOME = Column(String(100, collation='utf8mb4_unicode_ci'), nullable=False)
+    CPF = Column(String(14, collation='utf8mb4_unicode_ci'), nullable=True, server_default='0')
+    NOME_CPF = Column(String(100, collation='utf8mb4_unicode_ci'), nullable=True)
+    APELIDO = Column(String(50, collation='utf8mb4_unicode_ci'), nullable=True)
+    SEXO = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+    PESSOA = Column(String(2, collation='utf8mb4_unicode_ci'), nullable=True)
+    IDADE = Column(Integer, nullable=True)
+    ATIVIDADE = Column(String(140, collation='latin1_general_ci'), nullable=True)
+    ENVOLVIMENTO = Column(String(500, collation='utf8mb4_unicode_ci'), nullable=True)
+    TIPO_SUSPEITA = Column(String(20, collation='utf8mb4_unicode_ci'), nullable=True)
+    FLG_PESSOA_PUBLICA = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+    ANIVERSARIO = Column(Date, nullable=True)
+    INDICADOR_PPE = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+
+    noticia = relationship("NoticiaRaspadaModel", back_populates="nomes_raspados")
+
+    def __repr__(self):
+        return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"
+    
+class UsuarioModel(Base):
+    __tablename__ = 'TB_USER'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(50), nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    senha = Column(String(128), nullable=False)
+    admin = Column(Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return f"<Usuario(id={self.id}, nome='{self.nome}', email='{self.email}', admin={self.admin})>"

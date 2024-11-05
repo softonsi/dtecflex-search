@@ -1,0 +1,247 @@
+Lavagem de Dinheiro:
+  key1:
+    - Administracao publica
+    - Agiota
+    - Agiotagem
+    - Assalto a banco
+    - Bens em nome de laranja
+    - Caixa dois
+    - Caixa eletronico
+    - Cedulas falsas
+    - Clonagem de cartao
+    - Coaf
+    - Cofres publicos
+    - Colarinho branco
+    - Comissao de valores mobiliarios
+    - Conluio
+    - Contas bancarias fantasmas
+    - Contrabando de Armas
+    - Corrupcao ativa
+    - Corrupcao eleitoral
+    - Corrupcao passiva
+    - Crime contra a ordem economica
+    - Crime contra investidores
+    - Crime de responsabilidade
+    - Delacao
+    - Desvio de recursos publicos
+    - Desvio de verba
+    - Doleiro
+    - Empresa fantasma
+    - Empresa offshore
+    - Enriquecimento ilicito
+    - Estelionato
+    - Evasao cambial
+    - Exploracao de maquinas caca-niqueis
+    - Exploracao sexual
+    - Explosao de caixas eletronicos
+    - Explosao de carro-forte
+    - Extorsao
+    - Falsidade ideologica
+    - Falsificacao de documentos
+    - Formacao de quadrilha
+    - Fraude Financeira
+    - Fraude virtual
+    - Funcionario fantasma
+    - Gestao fraudulenta
+    - Golpe
+    - Golpista
+    - Hacker
+    - Improbidade administrativa
+    - Indicios de fraude
+    - Informacao privilegiada
+    - Inidoneidade
+    - Jogo do bicho
+    - Jogos de azar
+    - Lavagem de capitais
+    - Lavagem de dinheiro
+    - Licitacao
+    - Lobista
+    - Mafia
+    - Nepotismo
+    - Obras de arte
+    - Ocultacao de bens
+    - Ocultacao de divisas
+    - Ocultacao de valores
+    - Operacao fraudulenta
+    - Organizacao criminosa
+    - Paraiso fiscal
+    - Peculato
+    - Pedras preciosas
+    - Piramide
+    - Piramide financeira
+    - Propina
+    - Prostituicao
+    - Rachadinha
+    - Roubo a banco
+    - Sequestro
+    - Sistema financeiro
+    - Sistema financeiro nacional
+    - Sonegacao fiscal
+    - Suborno
+    - Suspensao de recursos
+    - Terrorismo
+    - Testa de ferro
+    - Trafico de armas
+    - Trafico de drogas
+    - Trafico de influencia
+    - Usado como laranja
+    - Fraude Processual
+    - Cartel
+    - Cartel empresas
+    - Receptacao
+  key2:
+    - preso
+    - condenado
+    - suspeito
+    - indiciado
+    - procurado
+    - cumplice
+Crime:
+  key1:
+    - Assalto
+    - Assassinato
+    - Estupro
+    - Feminicidio
+    - Furto
+    - Homicidio
+    - Pedofilia
+    - Roubo
+    - Tentativa de homicidio
+    - Prostituicao
+    - Jogos de Azar
+    - Casino ilegal
+  key2:
+    - preso
+    - condenado
+    - suspeito
+    - indiciado
+    - suspeito
+Ambiental:
+  key1:
+    - Acao civil publica
+    - Acidente de trabalho
+    - Agressao ambiental
+    - Agressao ao meio ambiente
+    - Ambiental acao civil publica
+    - Ambiental area contaminada
+    - Ambiental auto de infracao
+    - Ambiental auto de paralisacao
+    - Ambiental compensacao ambiental
+    - Ambiental inquerito
+    - Ambiental desmatamento
+    - Ambiental fiscalizacao
+    - Ambiental multa
+    - Analogas a escravidao
+    - Area contaminada
+    - Area de preservacao
+    - Area de protecao permanente
+    - Area de reserva
+    - Area protegida
+    - Areas embargadas
+    - Auto de infracao ambiental
+    - Auto de paralisacao
+    - Avaliacao socioambiental
+    - Bacia hidrografica
+    - Baixo carbono
+    - Biosseguranca
+    - Cadastro ambiental rural
+    - Cativeiro de animais silvestres
+    - Comercio ilegal de animais
+    - Compensacao ambiental
+    - Construcao clandestina
+    - Contaminacao da agua
+    - Contaminacao de mananciais
+    - Contaminacao de solo
+    - Contaminacao do terreno
+    - Contaminacao radioativa
+    - Crime ambiental
+    - Crise hidrica
+    - Danos ao consumidor
+    - Danos ao meio ambiente
+    - Danos ao patrimonio publico
+    - Danos socioambientais
+    - Degradante
+    - Derrubada de arvores
+    - Descarte irregular de residuos
+    - Desmatamento floresta*
+    - Destruicao da camada de ozonio
+    - Economia verde
+    - Embargo
+    - Embargo de obra
+    - Embargou a obra
+    - Emissoes dos gases de efeito
+    - Exploracao infantil
+    - Extracao irregular
+    - Gases poluentes
+    - Gerenciamento de residuos solidos
+    - Governanca corporativa
+    - impacto ambiental
+    - Incendio
+    - Infraco ambiental
+    - Inquerito civil
+    - Inquerito policial
+    - Insalubres
+    - Lencois freaticos
+    - Licenca ambiental
+    - Licenciamento ambiental
+    - Lixo nuclear
+    - Mao de obra escrava
+    - Mao de obra infantil
+    - Meio ambiente
+    - Meio ambiente ministerio publico
+    - Mudancas climaticas
+    - Multa ambiental
+    - Novo codigo florestal
+    - Organismos geneticamente modificados
+    - Outorga
+    - Passivo ambiental
+    - Poluicao ambiental
+    - Poluicao da agua
+    - Poluicao do ar
+    - Poluicao do solo
+    - Poluicao sonora
+    - Poluicao rios
+    - Poluir
+    - Queimadas
+    - Reserva florestal
+    - Reserva indigena
+    - Residuos solidos
+    - Responsabilidade socioambiental
+    - Retirada de agua rios
+    - Rios contaminados
+    - Rios poluidos
+    - Saude do empregado
+    - Saude do trabalhador
+    - Saude e seguranca ocupacional
+    - Termo de ajuste de conduta
+    - Terras indigenas
+    - Trabalho analogo escravo
+    - Trabalho * escravo
+    - Trabalho degradante
+    - Trabalho extenuante
+    - Trabalho infantil
+    - Trafico * animais
+    - Trafico * pessoas
+  key2:
+
+Empresarial:
+  key1:
+    - Concordata
+    - Dificuldades financeiras
+    - Downgrade
+    - Encerramento de atividade
+    - Falencia
+    - Falimentar
+    - Fechamento de empresa
+    - Fechamento de unidade
+    - Impacto na receita
+    - Impacto no faturamento
+    - Inidoneidade
+    - Massa falida
+    - Medida liminar trabalhista
+    - Medida liminar tributaria
+    - Queda de rating
+    - Recuperacao judicial
+    - Reestruturacao financeira
+    - Reestruturacao societaria
+  key2:
