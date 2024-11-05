@@ -12,6 +12,11 @@ class NoticiaRepository:
     def __init__(self, session: Session):
         self.session = session
 
+    def get_all_fontes(self) -> List[str]:
+        query = self.session.query(NoticiaRaspadaModel.FONTE).distinct()
+        fontes = [row.FONTE for row in query.all()]
+        return fontes
+
     def create(self, noticia_data: NoticiaRaspadaCreateSchema) -> NoticiaRaspadaModel:
         #noticia = NoticiaRaspadaModel(**noticia_data.dict(exclude_unset=True))
         noticia = NoticiaRaspadaModel(**noticia_data.model_dump())
@@ -24,10 +29,10 @@ class NoticiaRepository:
         return self.session.query(NoticiaRaspadaModel).filter(NoticiaRaspadaModel.ID == noticia_id).first()
 
     def get_by_id_with_names(self, noticia_id: int) -> Optional[NoticiaRaspadaModel]:
-        return self.session.query(NoticiaRaspadaModel)\
-            .options(joinedload(NoticiaRaspadaModel.nomes_raspados))\
-            .filter(NoticiaRaspadaModel.ID == noticia_id)\
-            .first()
+            return self.session.query(NoticiaRaspadaModel)\
+                .options(joinedload(NoticiaRaspadaModel.nomes_raspados))\
+                .filter(NoticiaRaspadaModel.ID == noticia_id)\
+                .first()
 
     def xlist(self, limit: int = None) -> List[NoticiaRaspadaModel]:
         query = self.session.query(NoticiaRaspadaModel).order_by(NoticiaRaspadaModel.ID.desc())
@@ -46,7 +51,10 @@ class NoticiaRepository:
         if filters:
             filter_conditions = []
             if 'FONTE' in filters and filters['FONTE']:
-                filter_conditions.append(NoticiaRaspadaModel.FONTE.ilike(f"%{filters['FONTE']}%"))
+                if isinstance(filters['FONTE'], list):
+                    filter_conditions.append(NoticiaRaspadaModel.FONTE.in_(filters['FONTE']))
+                else:
+                    filter_conditions.append(NoticiaRaspadaModel.FONTE.ilike(f"%{filters['FONTE']}%"))
             if 'STATUS' in filters and filters['STATUS']:
                 filter_conditions.append(NoticiaRaspadaModel.STATUS.in_(filters['STATUS']))
             if 'DATA_INICIO' in filters and 'DATA_FIM' in filters:
@@ -54,7 +62,10 @@ class NoticiaRepository:
                     NoticiaRaspadaModel.DATA_PUBLICACAO.between(filters['DATA_INICIO'], filters['DATA_FIM'])
                 )
             if 'CATEGORIA' in filters and filters['CATEGORIA']:
-                filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
+                if isinstance(filters['CATEGORIA'], list):
+                    filter_conditions.append(NoticiaRaspadaModel.CATEGORIA.in_(filters['CATEGORIA']))
+                else:
+                    filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
             if 'PERIODO' in filters:
                 today = datetime.today()
 
@@ -63,16 +74,14 @@ class NoticiaRepository:
                     end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
                     filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
 
-                # Filtro por notícias da semana
                 elif filters['PERIODO'] == 'semana':
                     start_date = today - timedelta(days=today.weekday())
                     start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
                     end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
                     filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
 
-                # Filtro por notícias do mês
                 elif filters['PERIODO'] == 'mes':
-                    start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)  # Primeiro dia do mês
+                    start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
                     filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
             if filter_conditions:

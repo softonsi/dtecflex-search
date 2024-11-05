@@ -31,9 +31,10 @@ class NoticiaRaspadaNomeCreateSchema(BaseModel):
     ATIVIDADE: Optional[str] = Field(None, max_length=100)
     ENVOLVIMENTO: Optional[str] = Field(None, max_length=100)
     TIPO_SUSPEITA: Optional[str] = Field(None, max_length=100)
-    FLG_PESSOA_PUBLICA: Optional[str] = Field(None, max_length=100)
+    # FLG_PESSOA_PUBLICA: Optional[str] = Field(None, max_length=100)
+    FLG_PESSOA_PUBLICA: bool = False
     ANIVERSARIO: Optional[datetime] = None
-    INDICADOR_PPE: Optional[str] = Field(None, max_length=1)
+    INDICADOR_PPE: bool = False
     NOTICIA_ID: int
 # Esquema de criação que inclui os nomes
 class NoticiaRaspadaCreateSchema(NoticiaRaspadaBaseSchema):

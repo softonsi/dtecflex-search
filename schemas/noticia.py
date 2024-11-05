@@ -1,8 +1,27 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
+class NomeRaspadoSchema(BaseModel):
+    ID: int
+    NOME: Optional[str] = Field(None, max_length=250)
+    CPF: Optional[str] = Field(None, max_length=14)
+    APELIDO: Optional[str] = Field(None, max_length=100)
+    NOME_CPF: Optional[str] = Field(None, max_length=270)
+    SEXO: Optional[str] = Field(None, max_length=1, description="M para masculino, F para feminino, N/A para não especificado")
+    PESSOA: Optional[str] = Field(None, max_length=2)
+    IDADE: Optional[int] = None
+    ANIVERSARIO: Optional[date] = None
+    ATIVIDADE: Optional[str] = Field(None, max_length=140)
+    ENVOLVIMENTO: Optional[str] = Field(None, max_length=500)
+    TIPO_SUSPEITA: Optional[str] = Field(None, max_length=20)
+    FLG_PESSOA_PUBLICA: Optional[bool] = False
+    INDICADOR_PPE: Optional[bool] = False
+    OPERACAO: Optional[str] = Field(None, max_length=250)
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class NoticiaRaspadaBaseSchema(BaseModel):
     LINK_ID: str = Field(..., max_length=64)
@@ -45,5 +64,7 @@ class NoticiaRaspadaUpdateSchema(BaseModel):
 
 class NoticiaRaspadaSchema(NoticiaRaspadaBaseSchema):
     ID: int
+
+    nomes_raspados: Optional[list[NomeRaspadoSchema]] = None
 
     model_config = ConfigDict(from_attributes=True)

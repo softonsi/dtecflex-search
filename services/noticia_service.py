@@ -1,6 +1,4 @@
-# services/noticia_service.py
-
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from repositories.noticia_repository import NoticiaRepository
 from schemas.noticia import (
@@ -8,11 +6,17 @@ from schemas.noticia import (
     NoticiaRaspadaSchema,
     NoticiaRaspadaUpdateSchema,
 )
+from database import SessionLocal
 
+session = SessionLocal()
 
 class NoticiaService:
-    def __init__(self, noticia_repository: NoticiaRepository):
+    def __init__(self, noticia_repository: NoticiaRepository = NoticiaRepository(session)):
         self.noticia_repository = noticia_repository
+
+    def get_all_fontes(self) -> List[str]:
+        return self.noticia_repository.get_all_fontes()
+
 
     def criar_noticia(self, noticia_data: NoticiaRaspadaCreateSchema) -> NoticiaRaspadaSchema:
         noticia = self.noticia_repository.create(noticia_data)
@@ -24,9 +28,14 @@ class NoticiaService:
             return NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
         return None
 
+
     def get_by_id_with_names(self, noticia_id: int) -> Optional[NoticiaRaspadaSchema]:
-        noticia = self.noticia_repository.get_by_id_with_names(noticia_id)
-        return noticia
+        noticia_model = self.noticia_repository.get_by_id_with_names(noticia_id)
+        if not noticia_model:
+            return None
+
+        noticia_schema = NoticiaRaspadaSchema.model_validate(noticia_model)
+        return noticia_schema.model_dump()
 
     def listar_noticias(self, page: int = 1, per_page: int = 10) -> List[NoticiaRaspadaSchema]:
         offset = (page - 1) * per_page

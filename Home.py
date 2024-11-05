@@ -10,6 +10,7 @@ from schemas.noticia import (
     NoticiaRaspadaSchema,
     NoticiaRaspadaUpdateSchema,
 )
+from view_components.components.home.filters import filters
 from services.noticia_service import NoticiaService
 
 Base.metadata.create_all(bind=engine)
@@ -57,78 +58,7 @@ def main():
         st.session_state['edit_id'] = None
 
     def listar_noticias():
-        st.sidebar.header("Filtros")
-
-        with st.sidebar.expander("Filtrar por Categoria", expanded=True):
-            categoria_filter = st.selectbox('Categoria', options=['', 'Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial'])
-
-        with st.sidebar.expander("Filtrar por Status", expanded=True):
-            status_10_url_ok = st.checkbox("10-URL-OK")
-            status_15_url_chk = st.checkbox("15-URL-CHK")
-            status_99_deleted = st.checkbox("99-DELETED")
-            status_07_edit = st.checkbox("07-EDIT-MODE")
-
-        with st.sidebar.expander("Notícias por Página", expanded=True):
-            per_page = st.number_input('Notícias por página', min_value=1, max_value=100, value=10)
-
-        with st.sidebar.expander("Filtrar por Período", expanded=True):
-            today = date.today()
-            options = ["-", "Hoje", "Última semana", "Último mês"]
-            selected_option = st.selectbox("Selecione o período:", options)
-
-        filters = {}
-
-        if selected_option == "Hoje":
-            filters = {
-                'PERIODO': 'dia',
-                'DATA_INICIO': today,
-                'DATA_FIM': today
-            }
-        elif selected_option == "Última semana":
-            filters = {
-                'PERIODO': 'semana',
-                'DATA_INICIO': today - timedelta(days=7),
-                'DATA_FIM': today
-            }
-        elif selected_option == "Último mês":
-            filters = {
-                'PERIODO': 'mes',
-                'DATA_INICIO': today - timedelta(days=30),
-                'DATA_FIM': today
-            }
-        elif selected_option == "-":
-            filters = {}
-
-        selected_status = []
-        if status_10_url_ok:
-            selected_status.append("10-URL-OK")
-        if status_15_url_chk:
-            selected_status.append("15-URL-CHK")
-        if status_99_deleted:
-            selected_status.append("99-DELETED")
-        if status_07_edit:
-            selected_status.append("07-EDIT-MODE")
-
-        if selected_status:
-            filters['STATUS'] = selected_status
-
-        if categoria_filter:
-            filters['CATEGORIA'] = categoria_filter
-        if 'page_number' not in st.session_state:
-            st.session_state['page_number'] = 1
-
-        if 'last_filters' not in st.session_state:
-            st.session_state['last_filters'] = filters
-        elif filters != st.session_state['last_filters']:
-            st.session_state['page_number'] = 1
-            st.session_state['last_filters'] = filters
-
-        noticias, total_noticias = noticia_service.listar_noticias(
-            page=st.session_state['page_number'],
-            per_page=per_page,
-            filters=filters
-        )
-        total_pages = (total_noticias + per_page - 1) // per_page or 1
+        noticias, total_pages = filters(st, noticia_service)
 
         cols = st.columns([12,1,1,1])
         with cols[2]:

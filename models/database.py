@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey, func, BigInteger, Date
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, ForeignKey, func, BigInteger, Date
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -58,3 +58,15 @@ class NoticiaRaspadaNomeModel(Base):
 
     def __repr__(self):
         return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"
+    
+class UsuarioModel(Base):
+    __tablename__ = 'TB_USER'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(50), nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    senha = Column(String(128), nullable=False)
+    admin = Column(Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return f"<Usuario(id={self.id}, nome='{self.nome}', email='{self.email}', admin={self.admin})>"
