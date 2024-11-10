@@ -1,13 +1,10 @@
 from view_components.components.extract_page.notice_info.index import notice_info
 from view_components.services.extract_page.page_content_fetcher import PageContentFetcher
 from view_components.components.extract_page.text_with_highlighted_names.index import text_with_highlighted_names
-from database import SessionLocal
-from repositories.noticia_nome_repository import NoticiaNomeRepository
-from repositories.noticia_repository import NoticiaRepository
-from schemas.noticia import NoticiaRaspadaUpdateSchema
-from schemas.noticia_nome import NoticiaRaspadaNomeCreateSchema
-from services.noticia_nome_service import NoticiaNomeService
-from services.noticia_service import NoticiaService
+from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice_name.noticia_nome import NoticiaRaspadaNomeCreateSchema
+from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
+from backend.resources.notice.noticia_service import NoticiaService
 import streamlit as st
 import pandas as pd
 
@@ -16,9 +13,7 @@ import pandas as pd
 # noticia_repository = NoticiaRepository(session)
 # noticia_service = NoticiaService(noticia_repository)
 
-noticia_name_repository = NoticiaNomeRepository()
 noticia_name_service = NoticiaNomeService()
-noticia_repository = NoticiaRepository()
 noticia_service = NoticiaService()
 
 st.set_page_config(

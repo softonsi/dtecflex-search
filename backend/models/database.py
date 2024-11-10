@@ -63,10 +63,10 @@ class UsuarioModel(Base):
     __tablename__ = 'TB_USER'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String(50), nullable=False)
-    email = Column(String(120), unique=True, nullable=False)
+    # nome = Column(String(50), nullable=False)
+    username = Column(String(120), unique=True, nullable=False)
     senha = Column(String(128), nullable=False)
     admin = Column(Boolean, default=False, nullable=False)
 
-    def __repr__(self):
-        return f"<Usuario(id={self.id}, nome='{self.nome}', email='{self.email}', admin={self.admin})>"
+    # def __repr__(self):
+    #     return f"<Usuario(id={self.id}, username='{self.username}', admin={self.admin}, senha='{self.senha}')>"

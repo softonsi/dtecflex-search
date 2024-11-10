@@ -4,8 +4,8 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 
-from models.database import NoticiaRaspadaModel
-from schemas.noticia import NoticiaRaspadaCreateSchema, NoticiaRaspadaUpdateSchema
+from backend.models.database import NoticiaRaspadaModel
+from backend.resources.notice.noticia import NoticiaRaspadaCreateSchema, NoticiaRaspadaUpdateSchema
 
 
 class NoticiaRepository:

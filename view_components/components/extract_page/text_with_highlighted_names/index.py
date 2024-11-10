@@ -1,7 +1,7 @@
 import itertools
 import streamlit as st
 
-from schemas.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from view_components.services.extract_page.text_analyzer import TextAnalyzer
 
 def destaque_nomes(texto, lista_nomes):
@@ -51,6 +51,8 @@ def text_with_highlighted_names(text, notice, noticia_service):
                 st.error(f"Erro ao processar a chamada à API: {e}")
 
         extracted_names_list = st.session_state[f'{notice['ID']}_is_extracted']
+
+        print('extracted_names_list', extracted_names_list)
 
         saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
         extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]

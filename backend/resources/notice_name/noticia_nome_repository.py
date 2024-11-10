@@ -1,7 +1,7 @@
 from typing_extensions import Optional
-from schemas.noticia_nome import NoticiaRaspadaNomeCreateSchema
+from backend.resources.notice_name.noticia_nome import NoticiaRaspadaNomeCreateSchema
 from sqlalchemy.orm import Session, joinedload
-from models.database import NoticiaRaspadaNomeModel
+from backend.models.database import NoticiaRaspadaNomeModel
 from datetime import datetime
 
 class NoticiaNomeRepository:

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from repositories.noticia_repository import NoticiaRepository
-from schemas.noticia import (
+from backend.resources.notice.noticia_repository import NoticiaRepository
+from backend.resources.notice.noticia import (
     NoticiaRaspadaCreateSchema,
     NoticiaRaspadaSchema,
     NoticiaRaspadaUpdateSchema,

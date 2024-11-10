@@ -1,8 +1,8 @@
 from typing import Optional
 
-from repositories.noticia_nome_repository import NoticiaNomeRepository
+from backend.resources.notice_name.noticia_nome_repository import NoticiaNomeRepository
 from database import SessionLocal
-from schemas.noticia_nome import NoticiaRaspadaNomeCreateSchema
+from backend.resources.notice_name.noticia_nome import NoticiaRaspadaNomeCreateSchema
 session = SessionLocal()
 
 class NoticiaNomeService:

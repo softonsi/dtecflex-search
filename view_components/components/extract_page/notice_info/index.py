@@ -1,10 +1,10 @@
 import streamlit as st
 
-from repositories.noticia_nome_repository import NoticiaNomeRepository
-from repositories.noticia_repository import NoticiaRepository
-from schemas.noticia import NoticiaRaspadaUpdateSchema
-from services.noticia_nome_service import NoticiaNomeService
-from services.noticia_service import NoticiaService
+from backend.resources.notice_name.noticia_nome_repository import NoticiaNomeRepository
+from backend.resources.notice.noticia_repository import NoticiaRepository
+from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
+from backend.resources.notice.noticia_service import NoticiaService
 from database import SessionLocal
 
 session = SessionLocal()

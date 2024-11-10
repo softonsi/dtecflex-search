@@ -1,17 +1,15 @@
-from datetime import date, datetime, timedelta
-
+from datetime import date, datetime
 import streamlit as st
-
 from database import Base, SessionLocal, engine
-from models.database import NoticiaRaspadaModel
-from repositories.noticia_repository import NoticiaRepository
-from schemas.noticia import (
-    NoticiaRaspadaCreateSchema,
-    NoticiaRaspadaSchema,
+from backend.resources.notice.noticia_repository import NoticiaRepository
+from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
 )
 from view_components.components.home.filters import filters
-from services.noticia_service import NoticiaService
+from backend.resources.notice.noticia_service import NoticiaService
+
+from view_components.components.shared.navsidebar import navsidebar
+from view_components.middleware.check_auth import require_authentication
 
 Base.metadata.create_all(bind=engine)
 
@@ -43,8 +41,10 @@ def init_page_layout():
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
         """, unsafe_allow_html=True)
 
+@require_authentication
 def main():
     init_page_layout()
+    navsidebar()
 
     st.markdown("#### Lista de Notícias")
 
@@ -149,17 +149,9 @@ def main():
                                     st.session_state[key_edit_mode] = True
                                     st.rerun()
                     with col3:
-#                        with st.container():
-#                            top_cols = st.columns(3)
-#                            with top_cols[0]:
-                                #st.markdown(f"**Categoria**: {noticia['CATEGORIA']}")
-                                st.markdown(render_box('Categoria', noticia['CATEGORIA']), unsafe_allow_html=True)
- #                           with top_cols[1]:
-                                #st.markdown(f"**Publicação**: {noticia['DATA_PUBLICACAO']}")
-                                st.markdown(render_box('Publicação', noticia['DATA_PUBLICACAO']), unsafe_allow_html=True)
-#                            with top_cols[2]:
-                                #st.markdown(f"**Extração**: {noticia['DT_RASPAGEM']}")
-                                st.markdown(render_box('Extração', noticia['DT_RASPAGEM']), unsafe_allow_html=True)
+                            st.markdown(render_box('Categoria', noticia['CATEGORIA']), unsafe_allow_html=True)
+                            st.markdown(render_box('Publicação', noticia['DATA_PUBLICACAO']), unsafe_allow_html=True)
+                            st.markdown(render_box('Extração', noticia['DT_RASPAGEM']), unsafe_allow_html=True)
 
 
                     st.markdown("---")
