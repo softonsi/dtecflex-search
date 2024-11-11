@@ -1,7 +1,7 @@
 import itertools
 import streamlit as st
 
-from schemas.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from view_components.services.extract_page.text_analyzer import TextAnalyzer
 
 def destaque_nomes(texto, lista_nomes):
@@ -98,5 +98,8 @@ def text_with_highlighted_names(text, notice, noticia_service):
                 if st.button("Editar texto"):
                     render_area()
 
+        print('names_to_highlight', names_to_highlight)
+        print('saved_names_list', saved_names_list)
+        print('extracted_names_list', extracted_names_list)
 
         return names_to_highlight, saved_names_list, extracted_names_list
