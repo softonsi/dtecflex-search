@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import streamlit as st
+from backend.resources.auth.auth_service import AuthService
 from database import Base, SessionLocal, engine
 from backend.resources.notice.noticia_repository import NoticiaRepository
 from backend.resources.notice.noticia import (
@@ -42,7 +43,7 @@ def init_page_layout():
         """, unsafe_allow_html=True)
 
 @require_authentication
-def main():
+def main(user=None):
     init_page_layout()
     navsidebar()
 

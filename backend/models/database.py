@@ -13,17 +13,16 @@ class NoticiaRaspadaModel(Base):
     DATA_PUBLICACAO = Column(DateTime, nullable=True)
     CATEGORIA = Column(String(50), nullable=False)
     QUERY = Column(String(250), nullable=True)
-    # UF = Column(String(250), nullable=True)
-    # REGIAO = Column(String(250), nullable=True)
     ID_ORIGINAL = Column(String(2000), nullable=False)
     DT_RASPAGEM = Column(DateTime, nullable=False, server_default=func.now())
     DT_DECODE = Column(DateTime, nullable=True)
     TITULO = Column(String(250), nullable=True)
-    ID_USUARIO = Column(Integer, nullable=True)
+    ID_USUARIO = Column(Integer, ForeignKey('TB_USER.ID'), nullable=True)
     STATUS = Column(String(25), nullable=True)
     TEXTO_NOTICIA = Column(Text, nullable=True)
     LINK_ORIGINAL = Column(String(2000), nullable=True)
 
+    usuario = relationship("UsuarioModel", back_populates="noticias_raspadas")
     nomes_raspados = relationship("NoticiaRaspadaNomeModel", back_populates="noticia")
 
     def __repr__(self):
@@ -58,15 +57,18 @@ class NoticiaRaspadaNomeModel(Base):
 
     def __repr__(self):
         return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"
-    
+
+
 class UsuarioModel(Base):
     __tablename__ = 'TB_USER'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    # nome = Column(String(50), nullable=False)
-    username = Column(String(120), unique=True, nullable=False)
-    senha = Column(String(128), nullable=False)
-    admin = Column(Boolean, default=False, nullable=False)
+    ID = Column(Integer, primary_key=True, autoincrement=True)
+    # NOME = Column(String(50), nullable=False)
+    USERNAME = Column(String(120), unique=True, nullable=False)
+    SENHA = Column(String(128), nullable=False)
+    ADMIN = Column(Boolean, default=False, nullable=False)
+
+    noticias_raspadas = relationship("NoticiaRaspadaModel", back_populates="usuario")
 
     # def __repr__(self):
-    #     return f"<Usuario(id={self.id}, username='{self.username}', admin={self.admin}, senha='{self.senha}')>"
+    #     return f"<UsuarioModel(ID={self.ID}, USERNAME='{self.USERNAME}', ADMIN={self.ADMIN})>"

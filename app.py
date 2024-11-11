@@ -1,6 +1,10 @@
 import streamlit as st
-from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
+from database import Base, engine
+
+from backend.models.database import NoticiaRaspadaModel, NoticiaRaspadaNomeModel, UsuarioModel
+
+Base.metadata.create_all(bind=engine)
 
 @require_authentication
 def main():

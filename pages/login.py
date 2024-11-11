@@ -1,5 +1,6 @@
 import streamlit as st
 from backend.resources.auth.auth_service import AuthService
+from backend.resources.user.user_service import UserService
 
 auth_service = AuthService()
 

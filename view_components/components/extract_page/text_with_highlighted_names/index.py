@@ -52,8 +52,6 @@ def text_with_highlighted_names(text, notice, noticia_service):
 
         extracted_names_list = st.session_state[f'{notice['ID']}_is_extracted']
 
-        print('extracted_names_list', extracted_names_list)
-
         saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
         extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
 
@@ -100,5 +98,8 @@ def text_with_highlighted_names(text, notice, noticia_service):
                 if st.button("Editar texto"):
                     render_area()
 
+        print('names_to_highlight', names_to_highlight)
+        print('saved_names_list', saved_names_list)
+        print('extracted_names_list', extracted_names_list)
 
         return names_to_highlight, saved_names_list, extracted_names_list

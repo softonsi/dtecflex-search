@@ -2,7 +2,7 @@ from argon2 import PasswordHasher
 from database import SessionLocal
 from backend.models.database import UsuarioModel
 from backend.resources.user.user_repository import UserRepository
-from backend.resources.user.user import UserCreateBaseSchema
+from backend.resources.user.user_schema import UserCreateBaseSchema
 
 session = SessionLocal()
 
@@ -17,16 +17,16 @@ class UserService:
     def create(self, username: str, pwd:str, admin: bool=False) -> UsuarioModel:
         try:
             user_data = UserCreateBaseSchema(
-                username=username,
-                senha=pwd,
-                admin=admin or False
+                USUARIO=username,
+                SENHA=pwd,
+                ADMIN=admin or False
             )
 
             new_user = UsuarioModel(
-                username=user_data.username,
-                email=user_data.email,
-                hashed_password=self._hash_password(user_data.senha),
-                admin=user_data.admin or False
+                USERNAME=user_data.USUARIO,
+                # email=user_data.email,
+                SENHA=self._hash_password(user_data.SENHA),
+                ADMIN=user_data.ADMIN or False
             )
 
             return self.user_repository.create(new_user)

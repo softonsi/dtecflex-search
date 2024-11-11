@@ -18,15 +18,15 @@ class AuthService:
     def login(self, username, password):
         user = self._find_by_username(username)
 
-        verify_pwd = self._decode_password(password, user.senha)
+        verify_pwd = self._decode_password(password, user.SENHA)
 
         if not verify_pwd:
             return 'Invalid username or password'
         
         payload = {
-            'user_id': user.id,
-            'username': user.username,
-            'role': user.admin,
+            'user_id': user.ID,
+            'username': user.USERNAME,
+            'role': user.ADMIN,
             'exp': datetime.utcnow() + timedelta(hours=1)
         }
 
@@ -35,6 +35,17 @@ class AuthService:
     def verify_token(self, token):
         return self._decode_jwt(token)
 
+    def decode_jwt(self, token):
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            return payload
+        except jwt.ExpiredSignatureError:
+            print("O token expirou.")
+            return None
+        except jwt.InvalidTokenError:
+            print("Token inválido.")
+            return None
+    
     def _find_by_username(self, username):
         try:
             return self.user_service.get_by_username(username)
