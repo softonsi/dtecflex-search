@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, ForeignKey, func, BigInteger, Date
-from sqlalchemy.orm import relationship
-from database import Base
+from sqlalchemy.orm import relationship, declarative_base
 
+Base = declarative_base()
 
 class NoticiaRaspadaModel(Base):
     __tablename__ = 'TB_NOTICIA_RASPADA'
@@ -11,6 +11,7 @@ class NoticiaRaspadaModel(Base):
     URL = Column(String(1000), nullable=False)
     FONTE = Column(String(250), nullable=False)
     DATA_PUBLICACAO = Column(DateTime, nullable=True)
+    # DATA_ANALISE = Column(DateTime, nullable=True)
     CATEGORIA = Column(String(50), nullable=False)
     QUERY = Column(String(250), nullable=True)
     ID_ORIGINAL = Column(String(2000), nullable=False)
@@ -27,7 +28,6 @@ class NoticiaRaspadaModel(Base):
 
     def __repr__(self):
         return f"<NoticiaRaspadaModel(ID={self.ID}, TITULO='{self.TITULO}')>"
-
 
 class NoticiaRaspadaNomeModel(Base):
     __tablename__ = 'TB_NOTICIA_RASPADA_NOME'
@@ -58,14 +58,13 @@ class NoticiaRaspadaNomeModel(Base):
     def __repr__(self):
         return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"
 
-
 class UsuarioModel(Base):
     __tablename__ = 'TB_USER'
 
     ID = Column(Integer, primary_key=True, autoincrement=True)
     # NOME = Column(String(50), nullable=False)
-    USERNAME = Column(String(120), unique=True, nullable=False)
-    SENHA = Column(String(128), nullable=False)
+    USUARIO = Column(String(120), unique=True, nullable=False)
+    SENHA = Column(String(129), nullable=False)
     ADMIN = Column(Boolean, default=False, nullable=False)
 
     noticias_raspadas = relationship("NoticiaRaspadaModel", back_populates="usuario")

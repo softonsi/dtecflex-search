@@ -1,7 +1,6 @@
 from datetime import date, datetime
 import streamlit as st
-from backend.resources.auth.auth_service import AuthService
-from database import Base, SessionLocal, engine
+from database import  SessionLocal
 from backend.resources.notice.noticia_repository import NoticiaRepository
 from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
@@ -11,8 +10,6 @@ from backend.resources.notice.noticia_service import NoticiaService
 
 from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
-
-Base.metadata.create_all(bind=engine)
 
 def init_page_layout():
     st.set_page_config(layout='wide')
@@ -43,15 +40,14 @@ def init_page_layout():
         """, unsafe_allow_html=True)
 
 @require_authentication
-def main(user=None):
+def main(current_user=None):
     init_page_layout()
     navsidebar()
 
     st.markdown("#### Lista de Notícias")
 
     session = SessionLocal()
-    noticia_repository = NoticiaRepository(session)
-    noticia_service = NoticiaService(noticia_repository)
+    noticia_service = NoticiaService(session)
 
     if 'edit_mode' not in st.session_state:
         st.session_state['edit_mode'] = False
@@ -108,12 +104,15 @@ def main(user=None):
                                 st.rerun()
 
                         if st.button("Analisar", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE') ):
-                            st.session_state['id_notice_to_analyze'] = noticia['ID']
-                            st.session_state[f'notice_to_analyze_{noticia['ID']}'] = noticia
-                            st.session_state['url'] = noticia['URL']
-                            update_data = NoticiaRaspadaUpdateSchema(STATUS='07-EDIT-MODE')
-                            noticia_service.atualizar_noticia(noticia['ID'], update_data)
-                            st.switch_page("pages/_extract_page.py")
+                            with st.spinner("Analisando..."):
+                                st.session_state['id_notice_to_analyze'] = noticia['ID']
+                                st.session_state[f'notice_to_analyze_{noticia['ID']}'] = noticia
+                                st.session_state['url'] = noticia['URL']
+                                notice = noticia_service.get_by_id_with_names(noticia['ID'])
+                                # if notice['STATUS'] == '07-EDIT-MODE' and noticia['ID_USUARIO'] == current_user['user_id']:
+                                st.switch_page("pages/_extract_page.py")
+                                # else:
+                                #     st.toast("Apenas o autor da notícia pode analisar.")
                     with col2:
                         st.markdown(render_box('Fonte', noticia['FONTE']), unsafe_allow_html=True)
                         st.markdown(render_box('Título', noticia['TITULO']), unsafe_allow_html=True)
@@ -156,7 +155,6 @@ def main(user=None):
 
 
                     st.markdown("---")
-
         else:
             st.info("Nenhuma notícia encontrada.")
 

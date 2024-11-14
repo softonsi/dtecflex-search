@@ -9,10 +9,8 @@ from database import SessionLocal
 
 session = SessionLocal()
 
-noticia_name_repository = NoticiaNomeRepository(session)
-noticia_name_service = NoticiaNomeService(noticia_name_repository)
-noticia_repository = NoticiaRepository(session)
-noticia_service = NoticiaService(noticia_repository)
+noticia_name_service = NoticiaNomeService(session)
+noticia_service = NoticiaService(session)
 
 def notice_info(notice):
     cols_top = st.columns(3)
@@ -61,9 +59,16 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
         if st.button('Finalizar', use_container_width=True):
-            update_data = NoticiaRaspadaUpdateSchema(STATUS='10-URL-OK')
+            update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')
+            st.switch_page("pages/home.py")
+    with cols[2]:
+        if st.button('Deletar', use_container_width=True):
+            update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
+            noticia_service.atualizar_noticia(notice_id, update_data)
+            msg_confirma('Notícia deletada')
+            st.switch_page("pages/home.py")
     with cols[6]:
         if st.button('Sair', use_container_width=True):
             st.switch_page("Home.py")

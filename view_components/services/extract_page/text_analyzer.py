@@ -22,6 +22,7 @@ class TextAnalyzer:
 
     def analyze_text(self, text: str) -> list:
         try:
+            print('bateu analyze')
             artigo = f"<artigo>\n{text}\n</artigo>"
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -31,7 +32,13 @@ class TextAnalyzer:
                 ]
             )
 
+            print('antes response')
+
             resposta = response.choices[0].message.content
+
+            print('aaaaaaaaaaaaaaaaaaaaaaa', resposta)
+
+            print('resposta::::', resposta)
 
             resposta_dict = json.loads(resposta)
             if isinstance(resposta_dict, list):
@@ -43,6 +50,5 @@ class TextAnalyzer:
             return resposta_dict
 
         except Exception as e:
-            print('error', e)
             st.error(f"Erro ao processar a chamada à API: {e}")
             return []

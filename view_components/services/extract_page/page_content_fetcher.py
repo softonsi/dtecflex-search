@@ -18,6 +18,7 @@ class PageContentFetcher:
     
     def fetch_and_extract_text(self, url: str) -> str:
         html_content = self.fetch(url)
+        print('fez o fetch')
         return self.extract_text_from_html(html_content)
 
     def _fetch_with_requests(self, url: str) -> str:
@@ -28,19 +29,20 @@ class PageContentFetcher:
                 return response.content
         except requests.RequestException as e:
             print(f"Erro ao acessar a URL com requests: {e}")
+            return self._fetch_with_playwright(url)
         return None
 
-    # def _fetch_with_playwright(self, url: str) -> str:
-    #     try:
-    #         with sync_playwright() as p:
-    #             browser = p.chromium.launch(headless=True)
-    #             page = browser.new_page()
-    #             page.goto(url)
-    #             page.wait_for_load_state(state='networkidle')
-    #             page_content = page.content()
-    #             print(f"URL processada com playwright: {page.url}")
-    #             browser.close()
-    #             return page_content
-    #     except Exception as e:
-    #         print(f"Erro ao acessar a URL com Playwright: {e}")
-    #     return None  # Retorna None se falhar
+    def _fetch_with_playwright(self, url: str) -> str:
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                page.goto(url)
+                page.wait_for_load_state(state='networkidle')
+                page_content = page.content()
+                print(f"URL processada com playwright: {page.url}")
+                browser.close()
+                return page_content
+        except Exception as e:
+            print(f"Erro ao acessar a URL com Playwright: {e}")
+        return None  # Retorna None se falhar

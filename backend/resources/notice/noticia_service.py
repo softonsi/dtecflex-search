@@ -6,13 +6,9 @@ from backend.resources.notice.noticia import (
     NoticiaRaspadaSchema,
     NoticiaRaspadaUpdateSchema,
 )
-from database import SessionLocal
-
-session = SessionLocal()
-
 class NoticiaService:
-    def __init__(self, noticia_repository: NoticiaRepository = NoticiaRepository(session)):
-        self.noticia_repository = noticia_repository
+    def __init__(self, session, noticia_repository_cls=NoticiaRepository):
+        self.noticia_repository = noticia_repository_cls(session)
 
     def get_all_fontes(self) -> List[str]:
         return self.noticia_repository.get_all_fontes()
@@ -47,7 +43,6 @@ class NoticiaService:
 
     def atualizar_noticia(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaSchema]:
         noticia = self.noticia_repository.update(noticia_id, noticia_data)
-        print(noticia_data)
         if noticia:
             return NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
         return None

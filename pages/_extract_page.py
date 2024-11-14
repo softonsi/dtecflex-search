@@ -9,9 +9,10 @@ from backend.resources.notice_name.noticia_nome_service import NoticiaNomeServic
 from backend.resources.notice.noticia_service import NoticiaService
 import streamlit as st
 import pandas as pd
+from database import SessionLocal
 
 @require_authentication
-def main(user=None):
+def main(current_user=None):
     st.set_page_config(
         page_title="Extração de Nomes",
         page_icon="🤖",
@@ -19,8 +20,10 @@ def main(user=None):
         initial_sidebar_state="collapsed",
     )
     navsidebar()
-    noticia_name_service = NoticiaNomeService()
-    noticia_service = NoticiaService()
+    session = SessionLocal()
+
+    noticia_name_service = NoticiaNomeService(session)
+    noticia_service = NoticiaService(session)
 
 
     if 'noticia_id' in st.query_params:
@@ -46,6 +49,10 @@ def main(user=None):
     if f'{noticia_id}_is_extracted' not in st.session_state:
         st.session_state[f'{noticia_id}_is_extracted'] = []
 
+    if not noticia['ID_USUARIO']:
+        update_data = NoticiaRaspadaUpdateSchema(ID_USUARIO=current_user['user_id'], STATUS='07-EDIT-MODE')
+        noticia_service.atualizar_noticia(noticia['ID'], update_data)
+
     if noticia:
         TEXT = noticia['TEXTO_NOTICIA']
         if not TEXT and URL:
@@ -54,9 +61,9 @@ def main(user=None):
             update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
             noticia_service.atualizar_noticia(noticia['ID'], update_data)
 
-    font, title, category, region, uf = notice_info(noticia)
+    notice_info(noticia)
 
-    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(TEXT, noticia, noticia_service)
+    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia['ID'])
 
     colunas = [
         'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'INDICADOR_PPE', 'IDADE',
@@ -246,20 +253,12 @@ def main(user=None):
                     
                     st.markdown("""
                         <style>
-                            .st-emotion-cache-qcmr57 {
-                                gap: 0.3rem !important;  /* Remove completamente o gap */
-                            }
-                            .st-emotion-cache-gqlm7t{
-                                gap: 0rem !important
+                            .st-emotion-cache-i6nec9 {
+                                gap: 0rem !important;  /* Remove completamente o gap */
                             }
                             div[data-testid="column"] {
                                 gap: 0rem !important;  /* Remove completamente o gap entre colunas */
                             }
-                            
-                            .st-emotion-cache {
-                                gap: 0rem !important;  /* Remove completamente o gap */
-                            }
-
                             .stTextInput, .stSelectbox, .stDateInput, .stNumberInput {
                                 margin-bottom: 5px !important;  /* Reduz o espaçamento entre os inputs */
                             }
@@ -298,6 +297,7 @@ def main(user=None):
                             if not is_deleted:
                                 delete_submitted = st.form_submit_button("Excluir")
 
+
                     if not is_deleted and submitted:
                         data = NoticiaRaspadaNomeCreateSchema(
                             CPF=input_values.get('CPF'),
@@ -309,7 +309,7 @@ def main(user=None):
                             IDADE=input_values.get('IDADE'),
                             ANIVERSARIO=input_values.get('ANIVERSARIO'),
                             ATIVIDADE=input_values.get('ATIVIDADE'),
-                            ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
+                            # ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
                             OPERACAO=input_values.get('OPERACAO'),
                             FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
                             ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),

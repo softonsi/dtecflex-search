@@ -13,6 +13,9 @@ class UserService:
 
     def get_by_username(self, username):
         return self.user_repository.get_by_username(username)
+    
+    def find_all(self):
+        return self.user_repository.find_all()
 
     def create(self, username: str, pwd:str, admin: bool=False) -> UsuarioModel:
         try:
@@ -23,7 +26,7 @@ class UserService:
             )
 
             new_user = UsuarioModel(
-                USERNAME=user_data.USUARIO,
+                USUARIO=user_data.USUARIO,
                 # email=user_data.email,
                 SENHA=self._hash_password(user_data.SENHA),
                 ADMIN=user_data.ADMIN or False

@@ -1,12 +1,12 @@
 import streamlit as st
 from view_components.middleware.check_auth import require_authentication
-from database import Base, engine
+# from database import Base, engine
 
-from backend.models.database import NoticiaRaspadaModel, NoticiaRaspadaNomeModel, UsuarioModel
+# from backend.models.database import NoticiaRaspadaModel, NoticiaRaspadaNomeModel, UsuarioModel
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
-@require_authentication
+# @require_authentication
 def main():
     pass
 

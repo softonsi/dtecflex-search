@@ -84,6 +84,10 @@ class NoticiaRepository:
                     start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
                     filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
+            
+            if 'USUARIO_ID' in filters and filters['USUARIO_ID']:
+                filter_conditions.append(NoticiaRaspadaModel.ID_USUARIO == filters['USUARIO_ID'])
+            
             if filter_conditions:
                 query = query.filter(and_(*filter_conditions))
 

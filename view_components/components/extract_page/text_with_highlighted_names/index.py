@@ -2,7 +2,9 @@ import itertools
 import streamlit as st
 
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice.noticia_service import NoticiaService
 from view_components.services.extract_page.text_analyzer import TextAnalyzer
+from database import SessionLocal
 
 def destaque_nomes(texto, lista_nomes):
     if not isinstance(texto, str):
@@ -35,71 +37,84 @@ def destaque_nomes(texto, lista_nomes):
     
     return texto
 
+def text_with_highlighted_names(notice_id):
+    session = SessionLocal()
+    noticia_service = NoticiaService(session)
+    notice = noticia_service.get_by_id_with_names(notice_id)
+    text = notice['TEXTO_NOTICIA']
+    saved_names_list = notice['nomes_raspados'] if notice['nomes_raspados'] else []
+    extracted_names_list = []
+    names_to_highlight = []
 
-def text_with_highlighted_names(text, notice, noticia_service):
-    saved_names_list = notice['nomes_raspados']
-    if text:
-        if not st.session_state.get(f'{notice['ID']}_is_extracted'):
-            try:
-                with st.spinner('Analisando o texto...'):
-                    analyzer = TextAnalyzer()
-                    names_results = analyzer.analyze_text(text)
+    names_results = st.session_state.get(f'{notice["ID"]}_is_extracted', [])
 
-                    st.session_state[f'{notice['ID']}_is_extracted'] = names_results
-            except Exception as e:
-                print('error', e)
-                st.error(f"Erro ao processar a chamada à API: {e}")
+    with st.expander('Texto notícia e nomes destacados', expanded=True):
+        if names_results:
+            extracted_names_list = names_results
+            saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
+            extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
 
-        extracted_names_list = st.session_state[f'{notice['ID']}_is_extracted']
+            names_to_highlight = [
+                item['NOME'] 
+                for item in saved_names_list + extracted_names_list 
+                if 'NOME' in item and isinstance(item['NOME'], str) and item['NOME'].strip()
+            ]
 
-        saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
-        extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
-
-        names_to_highlight = [
-            item['NOME'] 
-            for item in saved_names_list + extracted_names_list 
-            if 'NOME' in item and isinstance(item['NOME'], str) and item['NOME'].strip()
-        ]
-        
-        with st.expander('Texto notícia e nomes destacados', expanded=True):
-            if text and names_to_highlight:
-                highlighted_text = destaque_nomes(text, names_to_highlight)
-                st.markdown('<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text), unsafe_allow_html=True)
+        if text and names_to_highlight:
+            highlighted_text = destaque_nomes(text, names_to_highlight)
+            st.markdown(
+                '<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text),
+                unsafe_allow_html=True
+            )
+        else:
+            if len(text) < 1:
+                st.write('Não há texto para exibir.')
             else:
-                st.write(notice['TEXTO_NOTICIA'])
+                st.write(text)
 
-            @st.dialog(f"Edite o texto da notícia de id {notice['ID']}", width="large")
-            def render_area():
-                st.markdown(
-                    """
-                    <style>
-                    .big-text-area .stTextArea textarea {
-                        width: 100% !important;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True,
-                )
+        col_analisar, col_editar, spacer_col = st.columns([1.5, 1.5, 14])
+        with col_analisar:
+            if st.button("Analisar texto"):
+                try:
+                    with st.spinner('Analisando o texto...'):
+                        analyzer = TextAnalyzer()
+                        names_results = analyzer.analyze_text(text)
+                        st.session_state[f'{notice["ID"]}_is_extracted'] = names_results
+                        st.toast("Análise concluída!")
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao processar a chamada à API: {e}")
+        with col_editar:
+            if st.button("Editar texto"):
+                edit_text_dialog(notice, noticia_service)
 
-                with st.container():
-                    st.write("Edite o texto da notícia")
-                    with st.container():
-                        texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=300)
-                        if st.button("Atualizar"):
-                            update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
-                            try:
-                                noticia_service.atualizar_noticia(notice['ID'], update_data)
-                                st.success("Notícia atualizada com sucesso!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Erro ao atualizar a notícia: {e}")
+    return (
+        names_to_highlight if names_to_highlight else [], 
+        saved_names_list if saved_names_list else [], 
+        extracted_names_list if extracted_names_list else []
+    )
 
-            if "closed_modal" not in st.session_state:
-                if st.button("Editar texto"):
-                    render_area()
+@st.dialog("Editar Texto", width="large")
+def edit_text_dialog(notice, noticia_service):
+    st.markdown(
+        """
+        <style>
+        .big-text-area .stTextArea textarea {
+            width: 100% !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        print('names_to_highlight', names_to_highlight)
-        print('saved_names_list', saved_names_list)
-        print('extracted_names_list', extracted_names_list)
-
-        return names_to_highlight, saved_names_list, extracted_names_list
+    st.write("Edite o texto da notícia")
+    texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=300)
+    if st.button("Atualizar"):
+        update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
+        try:
+            noticia_service.atualizar_noticia(notice['ID'], update_data)
+            st.success("Notícia atualizada com sucesso!")
+            st.session_state['texto_atualizado'] = True
+            st.rerun()
+        except Exception as e:
+            st.error(f"Erro ao atualizar a notícia: {e}")

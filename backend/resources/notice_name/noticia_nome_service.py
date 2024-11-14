@@ -3,11 +3,10 @@ from typing import Optional
 from backend.resources.notice_name.noticia_nome_repository import NoticiaNomeRepository
 from database import SessionLocal
 from backend.resources.notice_name.noticia_nome import NoticiaRaspadaNomeCreateSchema
-session = SessionLocal()
 
 class NoticiaNomeService:
-    def __init__(self, noticia_name_repository: NoticiaNomeRepository = NoticiaNomeRepository(session)):
-        self.noticia_nome_repository = noticia_name_repository
+    def __init__(self, session, noticia_name_repository_cls=NoticiaNomeRepository):
+        self.noticia_nome_repository = noticia_name_repository_cls(session)
 
     def create(self, noticia_nome_data: NoticiaRaspadaNomeCreateSchema) -> NoticiaRaspadaNomeCreateSchema:
         noticia = self.noticia_nome_repository.create(noticia_nome_data)

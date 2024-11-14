@@ -18,5 +18,5 @@ def require_authentication(func):
                 st.switch_page('pages/login.py')
                 # st.rerun()
             else:
-                return func(*args, user=decoded_user, **kwargs)
+                return func(*args, current_user=decoded_user, **kwargs)
     return wrapper

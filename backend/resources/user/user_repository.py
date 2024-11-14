@@ -26,8 +26,14 @@ class UserRepository:
             self.session.rollback()
             raise Exception(f"Erro inesperado: {str(e)}")
         
+    def find_all(self):
+        try:
+            return self.session.query(UsuarioModel).all()
+        except Exception as e:
+            raise Exception(f"Erro ao buscar todos os usuários: {str(e)}")
+    
     def get_by_username(self, username):
         try:
-            return self.session.query(UsuarioModel).filter(UsuarioModel.USERNAME == username).first()
+            return self.session.query(UsuarioModel).filter(UsuarioModel.USUARIO == username).first()
         except Exception as e:
             raise Exception(f"Erro ao buscar usuário: {str(e)}")
