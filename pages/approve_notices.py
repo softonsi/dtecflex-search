@@ -151,6 +151,7 @@ def main(current_user=None):
         with col_page:
             st.write(f"**Página {page} de {total_pages}**")
 
+
         with col_next:
             if st.button("Próximo") and page < total_pages:
                 st.session_state['page'] += 1
