@@ -1,21 +1,35 @@
 from datetime import date, timedelta
 from dateutil import parser
+from backend.resources.search_term.search_term_service import SearchTermService
 from streamlit_tags import st_tags
-from backend.resources.notice.noticia import  NoticiaRaspadaUpdateSchema
+from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice.noticia_service import NoticiaService
 from view_components.services.extract_page.page_content_fetcher import PageContentFetcher
 from view_components.services.search_page.RssSerarch import gerer_link, parse_rss_feed
 from playwright.sync_api import sync_playwright
 from database import SessionLocal
 import hashlib
-import json
-import os
 import feedparser
 import pandas as pd
 import requests
 import streamlit as st
 import re
-import os
+from database import SessionLocal
+
+def salvar_filtro(categoria, tags_chave_and, tags_chave_or):
+    session = SessionLocal()
+    
+    try:
+        print('tags_chave_and', tags_chave_and)
+        print('tags_chave_or', tags_chave_or)
+        termo_busca_service = SearchTermService(session)
+        termo_busca_service.save(categoria, tags_chave_and, tags_chave_or)
+        
+        st.success("Filtro salvo com sucesso no banco de dados!")
+    except Exception as e:
+        st.error(f"Erro ao salvar filtro: {e}")
+    finally:
+        session.close()
 
 st.set_page_config(
     page_title="Pesquisa",
@@ -76,33 +90,6 @@ def gerar_tabela(query_pattern):
 
     return df
 
-def salvar_filtro(categoria, tags_chave_and, tags_chave_or):
-    file_path = 'conf/palavrasPesquisa.json'
-
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as f:
-            json_data = json.load(f)
-    else:
-        json_data = {
-            "Lavagem de Dinheiro": [],
-            "Crime": [],
-            "Ambiental": [],
-            "Empresarial": []
-        }
-
-    new_entry = {
-        "palavrasAnd": tags_chave_and,
-        "palavrasOr": tags_chave_or,
-        "link": ""
-    }
-
-    json_data[categoria].append(new_entry)
-
-    with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)
-
-    st.success(f"Filtro salvo com sucesso! Arquivo salvo em: {os.path.abspath(file_path)}")
-
 if 'removed_urls' not in st.session_state:
     st.session_state.removed_urls = []
 
@@ -132,17 +119,15 @@ def edit_text_dialog(text):
 
     st.write("Edite o texto da notícia")
     texto_noticia = st.text_area("Texto da Notícia", value=text, height=300)
-    # if st.button("Atualizar"):
-    #     update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
-    #     try:
-    #         noticia_service.atualizar_noticia(notice['ID'], update_data)
-    #         st.success("Notícia atualizada com sucesso!")
-    #         st.session_state['texto_atualizado'] = True
-    #         st.rerun()
-    #     except Exception as e:
-    #         st.error(f"Erro ao atualizar a notícia: {e}")
 
 def main():
+    session = SessionLocal()
+    termo_busca_service = SearchTermService(session)
+
+    categoria = ''
+    keywords = termo_busca_service.get_processed_terms(categoria)
+
+    session.close()
 
     categoria = ''
 
@@ -157,10 +142,20 @@ def main():
                 index=0,
                 placeholder="Selecione",
             )
-        with col2:
+
+        if keywords:
+            with col2:
+                selected_keywords = st.selectbox(
+                    "Selecione os termos-chave:",
+                    keywords,
+                    index=0,
+                    help="Selecione um ou mais termos para sua pesquisa"
+                )
+        
+        with col3:
             dias = st.number_input("Dias de recuo:", min_value=1, max_value=30)
 
-        with col3:
+        with col4:
             LANG = st.text_input("Idioma:", value='pt-BR')
 
         with col4:
@@ -181,6 +176,14 @@ def main():
             st.markdown('🕵🏻‍♀️')
             bt_salvar = st.button("Salvar")
 
+            if bt_salvar:
+                if categoria == '':
+                    st.warning('Informe a Categoria')
+                elif not tags_chave_and and not tags_chave_or:
+                    st.warning('Preencha os campos Palavras AND e Palavras OR')
+                else:
+                    salvar_filtro(categoria, tags_chave_and, tags_chave_or)
+
     if dias:
         ref_data = date.today() - timedelta(days=dias)
         st.text(ref_data)
@@ -193,19 +196,10 @@ def main():
         if (tags_chave_and or tags_chave_or) and bt_buscar:
             link = gerer_link(dias, LANG, COUNTRY, tags_chave_and, tags_chave_or)
             resultados = gerar_tabela(link)
-            st.session_state.resultados = resultados  # Armazenar resultados no estado
+            st.session_state.resultados = resultados
             print('results:::',resultados)
         elif tags_chave_and == [] and tags_chave_or == [] and bt_buscar:
             st.warning('Preencha os campos Palavras AND e Palavras OR')
-
-    def update_selected_items(row, is_selected):
-        item = {'title': row['title'], 'url': row['url'], 'id_original': row['id_original']}
-        if is_selected and item not in st.session_state.selected_items:
-            st.session_state.selected_items.append(item)
-        elif not is_selected and item in st.session_state.selected_items:
-            st.session_state.selected_items.remove(item)
-
-    selected_count = len(st.session_state.selected_items)
 
     if not st.session_state.resultados.empty:
         for i, row in st.session_state.resultados.iterrows():
@@ -245,20 +239,11 @@ def main():
                 noticia_service.criar_noticia(create_data)
 
             if st.session_state[key_extracted_text]:
-                btn_show_text = col2.button('Texto notícia', key=f'show_text_{i}', use_container_width=True, type='secondary')
+                btn_show_text = col2.button('Texto notícia', key=f'btn_show_{i}', use_container_width=True)
                 if btn_show_text:
                     edit_text_dialog(st.session_state[key_extracted_text])
 
-            st.divider()
-    if bt_save_notice:
-        return ''
+    st.session_state.selected_items.clear()
 
-    if categoria == '' and bt_salvar:
-        st.warning('Informe a Categoria')
-    elif tags_chave_and == [] and tags_chave_or == [] and bt_salvar:
-        st.warning('Preencha os campos Palavras AND e Palavras OR')
-    elif (tags_chave_and or tags_chave_or or categoria == '') and bt_salvar:
-        salvar_filtro(categoria, tags_chave_and, tags_chave_or)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
