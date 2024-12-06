@@ -124,6 +124,8 @@ def main():
     session = SessionLocal()
     termo_busca_service = SearchTermService(session)
 
+    st.session_state['keyword'] = ''
+
     categoria = ''
     keywords = termo_busca_service.get_processed_terms(categoria)
 
@@ -147,10 +149,20 @@ def main():
             with col2:
                 selected_keywords = st.selectbox(
                     "Selecione os termos-chave:",
-                    keywords,
+                    keywords['labels'],
                     index=0,
                     help="Selecione um ou mais termos para sua pesquisa"
                 )
+
+            if selected_keywords:
+                selected_data = next((item for item in keywords['terms_data'] if item['label'] == selected_keywords), None)
+                
+                if selected_data:
+                    st.write("Dados do Termo Selecionado:")
+                    st.session_state['keyword'] = selected_data
+                    st.json(selected_data)
+                else:
+                    st.warning("Termo não encontrado.")
         
         with col3:
             dias = st.number_input("Dias de recuo:", min_value=1, max_value=30)
@@ -163,10 +175,16 @@ def main():
 
         col1, col2, col3, col4 = st.columns([3, 3, 1, 1])
         with col1:
-            tags_chave_and = st_tags(label="Palavras de busca AND")
+            keyword = st.session_state['keyword']['keyword']
+            tags_chave_and = st_tags(label="Palavras de busca AND", value=[keyword] if st.session_state['keyword'] else [] )
 
         with col2:
-            tags_chave_or = st_tags(label="Palavras de busca OR")
+            or_terms = st.session_state['keyword']['or_terms']
+            or_terms_list = [term.strip() for term in or_terms.split(',')]
+
+            print('or_terms_list:::', or_terms_list)
+
+            tags_chave_or = st_tags(label="Palavras de busca OR", value=or_terms_list)
 
         with col3:
             st.markdown(':mag_right:')
@@ -197,7 +215,6 @@ def main():
             link = gerer_link(dias, LANG, COUNTRY, tags_chave_and, tags_chave_or)
             resultados = gerar_tabela(link)
             st.session_state.resultados = resultados
-            print('results:::',resultados)
         elif tags_chave_and == [] and tags_chave_or == [] and bt_buscar:
             st.warning('Preencha os campos Palavras AND e Palavras OR')
 

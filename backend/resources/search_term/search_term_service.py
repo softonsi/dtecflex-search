@@ -12,6 +12,26 @@ class SearchTermService:
     def get_processed_terms(self, category: str):
         terms = self.termo_busca_repo.get_terms_by_category(category)
         
-        keywords = [term.KEYWORD for term in terms]
+        labels = []
         
-        return keywords
+        terms_data = []
+        
+        for term in terms:
+            or_terms_list = term.OR_TERMS.split(',') if term.OR_TERMS else []
+            label = f"{term.KEYWORD}({', '.join(or_terms_list)})"
+            
+            labels.append(label)
+            
+            term_data = {
+                'id_categoria': term.ID_CATEGORIA,
+                'keyword': term.KEYWORD,
+                'or_terms': term.OR_TERMS,
+                'label': label
+            }
+            
+            terms_data.append(term_data)
+        
+        return {
+        'labels': labels,
+        'terms_data': terms_data
+    }

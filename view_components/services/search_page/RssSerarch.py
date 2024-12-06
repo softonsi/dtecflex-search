@@ -40,11 +40,9 @@ def get_final_redirect_url_curl(initial_url, max_retries=3):
     attempts = 0
     while attempts < max_retries:
         try:
-            # Usar o comando curl para seguir redirecionamentos e obter a URL final
             curl_command = ['curl', '-m 30', '-s', '--location', '-o', '/dev/null', '-w', '%{url_effective}', initial_url]
             final_url = subprocess.check_output(curl_command, universal_newlines=True).strip()
 
-            # Decodificar a URL final que está codificada
             final_url = unquote(final_url)
             final_text = extrair_texto_pagina(final_url)
 
@@ -68,7 +66,6 @@ def parse_rss_feed(feed, max_workers=20):
 
     print(f'antes {len(feed.entries)}')
 
-    # para cada link do google, busca destino final do link
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {executor.submit(get_final_redirect_url_curl, entry.link, 2): entry for entry in feed.entries}
         seq = 0
@@ -105,7 +102,6 @@ def gerer_link(dias, LANG, COUNTRY, tags_chave_and, tags_chave_or):
     str_chave_and = ' AND '.join(delimitar_palavras(tags_chave_and))
     str_chave_or = ' OR '.join(delimitar_palavras(tags_chave_or))
 
-    # Constroi str da query conforme tags "AND" e "OR" preenchidas
     if str_chave_and and str_chave_or:
         query = f'({str_chave_and}) AND ({str_chave_or})'
     elif str_chave_and:
