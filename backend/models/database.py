@@ -71,3 +71,21 @@ class UsuarioModel(Base):
 
     # def __repr__(self):
     #     return f"<UsuarioModel(ID={self.ID}, USERNAME='{self.USERNAME}', ADMIN={self.ADMIN})>"
+
+class CategoriaBusca(Base):
+    __tablename__ = 'TB_CATEGORIA_BUSCA'
+
+    ID = Column(Integer, primary_key=True, autoincrement=True)
+    NM_CATEGORIA = Column(String(50), nullable=True)
+
+    termos_busca = relationship("TermoBusca", back_populates="categoria_busca")
+
+class TermoBusca(Base):
+    __tablename__ = 'TB_TERMO_BUSCA'
+
+    ID = Column(Integer, primary_key=True, autoincrement=True)
+    ID_CATEGORIA = Column(Integer, ForeignKey('TB_CATEGORIA_BUSCA.ID'), nullable=True)
+    KEYWORD = Column(String(50), nullable=False)
+    OR_TERMS = Column(String(200), nullable=True)
+
+    categoria_busca = relationship("CategoriaBusca", back_populates="termos_busca")
