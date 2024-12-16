@@ -15,7 +15,7 @@ def main(current_user=None):
     noticia_service = NoticiaService(session)
 
     users = user_service.find_all()
-    user_options = ["-"] + [user.USUARIO for user in users]
+    user_options = ["-"] + [user.USERNAME for user in users]
 
     if 'selected_period' not in st.session_state:
         st.session_state['selected_period'] = "-"

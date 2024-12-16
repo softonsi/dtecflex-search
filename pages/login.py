@@ -3,6 +3,7 @@ from backend.resources.auth.auth_service import AuthService
 from backend.resources.user.user_service import UserService
 
 auth_service = AuthService()
+user_service = UserService()
 
 def main():
     st.title('Tela de Login')

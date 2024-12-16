@@ -25,7 +25,7 @@ class AuthService:
         
         payload = {
             'user_id': user.ID,
-            'username': user.USUARIO,
+            'username': user.USERNAME,
             'admin': user.ADMIN,
             'exp': datetime.utcnow() + timedelta(hours=1)
         }

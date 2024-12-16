@@ -20,14 +20,13 @@ class UserService:
     def create(self, username: str, pwd:str, admin: bool=False) -> UsuarioModel:
         try:
             user_data = UserCreateBaseSchema(
-                USUARIO=username,
+                USERNAME=username,
                 SENHA=pwd,
                 ADMIN=admin or False
             )
 
             new_user = UsuarioModel(
-                USUARIO=user_data.USUARIO,
-                # email=user_data.email,
+                USERNAME=user_data.USERNAME,
                 SENHA=self._hash_password(user_data.SENHA),
                 ADMIN=user_data.ADMIN or False
             )

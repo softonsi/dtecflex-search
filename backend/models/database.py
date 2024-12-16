@@ -63,7 +63,7 @@ class UsuarioModel(Base):
 
     ID = Column(Integer, primary_key=True, autoincrement=True)
     # NOME = Column(String(50), nullable=False)
-    USUARIO = Column(String(120), unique=True, nullable=False)
+    USERNAME = Column(String(120), unique=True, nullable=False)
     SENHA = Column(String(129), nullable=False)
     ADMIN = Column(Boolean, default=False, nullable=False)
 
