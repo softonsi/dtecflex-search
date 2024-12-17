@@ -34,6 +34,6 @@ class UserRepository:
     
     def get_by_username(self, username):
         try:
-            return self.session.query(UsuarioModel).filter(UsuarioModel.USUARIO == username).first()
+            return self.session.query(UsuarioModel).filter(UsuarioModel.USERNAME == username).first()
         except Exception as e:
             raise Exception(f"Erro ao buscar usuário: {str(e)}")
