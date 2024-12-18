@@ -41,10 +41,10 @@ class AuthService:
             return payload
         except jwt.ExpiredSignatureError:
             print("O token expirou.")
-            return None
+            return "O token expirou."
         except jwt.InvalidTokenError:
             print("Token inválido.")
-            return None
+            return "Token inválido."
     
     def _find_by_username(self, username):
         try:
