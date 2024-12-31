@@ -8,7 +8,7 @@ from database import SessionLocal
 
 @require_authentication
 def main(current_user=None):
-    st.set_page_config(page_title="Aprovar notícias", layout="wide")
+    st.set_page_config(page_title="Aprovar Notícias", layout="wide")
     navsidebar()
     session = SessionLocal()
     user_service = UserService()
@@ -27,30 +27,17 @@ def main(current_user=None):
     col_title, col_filters = st.columns([3, 2])
 
     with col_title:
-        col_user, col_period = st.columns(2)
-        # with col_period:
-        #     period_options = ["-", "Hoje", "Última semana", "Último mês"]
-        #     selected_period = st.selectbox(
-        #         "Período:",
-        #         period_options,
-        #         index=period_options.index(st.session_state['selected_period']) if st.session_state['selected_period'] in period_options else 0,
-        #         key='selected_period'
-        #     )
-
-        # with col_user:
-    selected_user = st.sidebar.selectbox(
-        "Usuário:",
-        user_options,
-        index=user_options.index(st.session_state['selected_user']) if st.session_state['selected_user'] in user_options else 0,
-        key='selected_user'
-    )
+        selected_user = st.sidebar.selectbox(
+            "Usuário:",
+            user_options,
+            index=user_options.index(st.session_state['selected_user']) if st.session_state['selected_user'] in user_options else 0,
+            key='selected_user'
+        )
 
     if st.session_state['selected_period'] != "-" or st.session_state['selected_user'] != "-":
         st.session_state['page'] = 1
 
-    filters = {}
-
-    filters['STATUS'] = ['200-TO-APPROVE']
+    filters = {'STATUS': ['200-TO-APPROVE']}
 
     if st.session_state['selected_period'] and st.session_state['selected_period'] != "-":
         filters['PERIODO'] = st.session_state['selected_period'].lower()
@@ -86,11 +73,11 @@ def main(current_user=None):
                     st.write(f"Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
                     st.write(f"Fonte: {noticia.FONTE}")
                     st.text_area(
-                        label="",
+                        label="Texto da Notícia:",
                         value=noticia.TEXTO_NOTICIA,
-                        height=card_height - 40,  # Ajuste para a altura do título
+                        height=card_height - 40,
                         key=f"text_{noticia.ID}",
-                        disabled=False
+                        disabled=True
                     )
 
                 with col2:
@@ -105,8 +92,7 @@ def main(current_user=None):
 
                 # Exibir o diálogo com as informações do nome selecionado
                 if st.session_state.dialog_nome and st.session_state.dialog_nome in noticia.nomes_raspados:
-                    @st.dialog(f"Detalhes de {st.session_state.dialog_nome.NOME}")
-                    def show_dialog():
+                    with st.expander(f"Detalhes de {st.session_state.dialog_nome.NOME}", expanded=True):
                         nome_obj = st.session_state.dialog_nome
                         # Renderizar as informações com labels e inputs
                         st.text_input("ID:", value=nome_obj.ID, key=f"id_{nome_obj.ID}", disabled=True)
@@ -128,13 +114,13 @@ def main(current_user=None):
                         if st.button("Fechar", key=f"fechar_{nome_obj.ID}"):
                             st.session_state.dialog_nome = None
                             st.rerun()
-                    show_dialog()
 
                 if st.button('Aprovar', key=f"aprovar_{noticia.ID}"):
                     update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
                     noticia_service.atualizar_noticia(noticia['ID'], update_data)
                     st.toast('Notícia aprovada')
                     st.rerun()
+
                 st.divider()
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
@@ -150,7 +136,6 @@ def main(current_user=None):
 
         with col_page:
             st.write(f"**Página {page} de {total_pages}**")
-
 
         with col_next:
             if st.button("Próximo") and page < total_pages:
