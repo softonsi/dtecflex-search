@@ -1,7 +1,4 @@
 import streamlit as st
-
-from backend.resources.notice_name.noticia_nome_repository import NoticiaNomeRepository
-from backend.resources.notice.noticia_repository import NoticiaRepository
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
 from backend.resources.notice.noticia_service import NoticiaService
@@ -16,24 +13,24 @@ def notice_info(notice):
     cols_top = st.columns(3)
 
     with cols_top[0]:
-        font = st.text_input('Fonte', value=notice['FONTE'] if notice and notice['FONTE'] else '')
+        font = st.text_input('Fonte', value=notice.FONTE if notice and notice.FONTE else '')
     with cols_top[1]:
-        title = st.text_input('Título', value=notice['TITULO'] if notice and notice['TITULO'] else '')
+        title = st.text_input('Título', value=notice.TITULO if notice and notice.TITULO else '')
     with cols_top[2]:
-        category = st.text_input('Categoria', value=notice['CATEGORIA'] if notice and notice['CATEGORIA'] else '')
+        category = st.text_input('Categoria', value=notice.CATEGORIA if notice and notice.CATEGORIA else '')
 
     cols_bottom = st.columns(3)
 
     with cols_bottom[0]:
-        region = st.text_input('Região', value=notice['REGIAO'] if notice and hasattr(notice, 'REGIAO') and notice['REGIAO'] else '')
+        region = st.text_input('Região', value=notice.REGIAO if notice and hasattr(notice, 'REGIAO') and notice.REGIAO else '')
     with cols_bottom[1]:
         uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
                 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
                 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
-        uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
+        uf_value = notice.UF if notice and hasattr(notice, 'UF') and notice.UF in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
 
-    main_action_buttons(font, title, category, region, uf, notice['ID'])
+    main_action_buttons(font, title, category, region, uf, notice.ID)
 
     return font, title, category, region, uf
 

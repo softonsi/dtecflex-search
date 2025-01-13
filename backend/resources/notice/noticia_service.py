@@ -33,13 +33,25 @@ class NoticiaService:
         noticia_schema = NoticiaRaspadaSchema.model_validate(noticia_model)
         return noticia_schema.model_dump()
 
-    def listar_noticias(self, page: int = 1, per_page: int = 10) -> List[NoticiaRaspadaSchema]:
+    # def listar_noticias(self, page: int = 1, per_page: int = 10) -> List[NoticiaRaspadaSchema]:
+    #     offset = (page - 1) * per_page
+    #     noticias = self.noticia_repository.list(offset=offset, limit=per_page)
+    #     return [
+    #         NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
+    #         for noticia in noticias
+    #     ]
+
+    def listar_noticias(self, page: int = 1, per_page: int = 10, filters: Optional[Dict[str, Any]] = None) -> List[NoticiaRaspadaSchema]:
         offset = (page - 1) * per_page
-        noticias = self.noticia_repository.list(offset=offset, limit=per_page)
-        return [
+        noticias, total_count = self.noticia_repository.list(offset=offset, limit=per_page, filters=filters)
+
+        # Carregando os nomes raspados usando 'joinedload' diretamente no método de consulta.
+        noticias_com_nomes = [
             NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
             for noticia in noticias
         ]
+
+        return noticias_com_nomes
 
     def atualizar_noticia(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaSchema]:
         noticia = self.noticia_repository.update(noticia_id, noticia_data)

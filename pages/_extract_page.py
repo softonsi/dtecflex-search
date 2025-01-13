@@ -21,21 +21,31 @@ def main(current_user=None):
     )
     navsidebar()
     session = SessionLocal()
-
+    noticia = {}
+    noticias = []
+    noticia_id = ''
+    extracted_names_list = []
     noticia_name_service = NoticiaNomeService(session)
     noticia_service = NoticiaService(session)
 
+    if 'noticia_id' not in st.query_params:
+        st.query_params.from_dict({'noticia_id': st.session_state.get('id_notice_to_analyze')})
 
     if 'noticia_id' in st.query_params:
         noticia_id = st.query_params['noticia_id']
     else:
         noticia_id = st.session_state.get('id_notice_to_analyze')
 
-    noticia = noticia_service.get_by_id_with_names(noticia_id)
+    if st.session_state['noticias']:
+        noticias = st.session_state['noticias']
+    else:
+        noticias = noticia_service.listar_noticias()
 
-    extracted_names_list = []
+    for noticia in noticias:
+        if noticia.ID == noticia_id:
+            noticia = noticia
 
-    URL = st.text_input('URL', value=noticia['URL'])
+    URL = st.text_input('URL', value=noticia.URL)
 
     if 'url' not in st.session_state:
         st.session_state['url'] = ''
@@ -43,27 +53,24 @@ def main(current_user=None):
     if 'id_notice_to_analyze' not in st.session_state:
         st.session_state['id_notice_to_analyze'] = None
 
-    if 'noticia_id' not in st.query_params:
-        st.query_params.from_dict({'noticia_id': st.session_state.get('id_notice_to_analyze')})
-
     if f'{noticia_id}_is_extracted' not in st.session_state:
         st.session_state[f'{noticia_id}_is_extracted'] = []
 
-    if not noticia['ID_USUARIO']:
+    if not noticia.ID_USUARIO:
         update_data = NoticiaRaspadaUpdateSchema(ID_USUARIO=current_user['user_id'], STATUS='07-EDIT-MODE')
-        noticia_service.atualizar_noticia(noticia['ID'], update_data)
+        noticia_service.atualizar_noticia(noticia.ID, update_data)
 
     if noticia:
-        TEXT = noticia['TEXTO_NOTICIA']
+        TEXT = noticia.TEXTO_NOTICIA
         if not TEXT and URL:
             fetcher = PageContentFetcher()
             extracted_text = fetcher.fetch_and_extract_text(URL)
             update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
-            noticia_service.atualizar_noticia(noticia['ID'], update_data)
+            noticia_service.atualizar_noticia(noticia.ID, update_data)
 
     notice_info(noticia)
 
-    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia['ID'])
+    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia.ID)
 
     colunas = [
         'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'INDICADOR_PPE', 'IDADE',

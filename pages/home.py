@@ -56,6 +56,7 @@ def main(current_user=None):
 
     def listar_noticias():
         noticias, total_pages = filters(st, noticia_service)
+        st.session_state['noticias'] = noticias
 
         cols = st.columns([12,1,1,1])
         with cols[2]:
