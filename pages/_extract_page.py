@@ -13,7 +13,7 @@ from database import SessionLocal
 
 @require_authentication
 def main(current_user=None):
-    current_user={'user_id': 5, 'username': 'gabrielfdias2', 'admin': True, 'exp': 1736788749}
+    # current_user={'user_id': 5, 'username': 'gabrielfdias2', 'admin': True, 'exp': 1736788749}
     st.set_page_config(
         page_title="Extração de Nomes",
         page_icon="🤖",
@@ -22,31 +22,21 @@ def main(current_user=None):
     )
     navsidebar(current_user)
     session = SessionLocal()
-    noticia = {}
-    noticias = []
-    noticia_id = ''
-    extracted_names_list = []
+
     noticia_name_service = NoticiaNomeService(session)
     noticia_service = NoticiaService(session)
 
-    if 'noticia_id' not in st.query_params:
-        st.query_params.from_dict({'noticia_id': st.session_state.get('id_notice_to_analyze')})
 
     if 'noticia_id' in st.query_params:
         noticia_id = st.query_params['noticia_id']
     else:
         noticia_id = st.session_state.get('id_notice_to_analyze')
 
-    if st.session_state['noticias']:
-        noticias = st.session_state['noticias']
-    else:
-        noticias = noticia_service.listar_noticias()
+    noticia = noticia_service.get_by_id_with_names(noticia_id)
 
-    for noticia in noticias:
-        if noticia.ID == noticia_id:
-            noticia = noticia
+    extracted_names_list = []
 
-    URL = st.text_input('URL', value=noticia.URL)
+    URL = st.text_input('URL', value=noticia['URL'])
 
     if 'url' not in st.session_state:
         st.session_state['url'] = ''
@@ -54,14 +44,18 @@ def main(current_user=None):
     if 'id_notice_to_analyze' not in st.session_state:
         st.session_state['id_notice_to_analyze'] = None
 
+    if 'noticia_id' not in st.query_params:
+        st.query_params.from_dict({'noticia_id': st.session_state.get('id_notice_to_analyze')})
+
     if f'{noticia_id}_is_extracted' not in st.session_state:
         st.session_state[f'{noticia_id}_is_extracted'] = []
 
-    if not noticia.ID_USUARIO:
+    if not noticia['ID_USUARIO']:
         update_data = NoticiaRaspadaUpdateSchema(ID_USUARIO=current_user['user_id'], STATUS='07-EDIT-MODE')
-        noticia_service.atualizar_noticia(noticia.ID, update_data)
+        noticia_service.atualizar_noticia(noticia['ID'], update_data)
 
     if noticia:
+        print('NOTICIA:::', noticia['ID'])
         TEXT = noticia.get('TEXTO_NOTICIA')
         if not TEXT and URL:
             fetcher = PageContentFetcher()
@@ -71,14 +65,14 @@ def main(current_user=None):
                 noticia_service.atualizar_noticia(noticia['ID'], update_data)
                 message = "Notícia atualizada com sucesso!"
                 st.toast(message)
-                st.rerun()
             except Exception as e:
+                print('erro')
                 message = f"Erro ao tentar extrair o conteúdo: {str(e)}"
                 st.toast(message)
 
     notice_info(noticia)
 
-    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia)
+    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia['ID'])
     
     colunas = [
         'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'INDICADOR_PPE', 'IDADE',

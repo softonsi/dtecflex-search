@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
 class PageContentFetcher:
-    def __init__(self, user_agent=None, max_timeout=10):
+    def __init__(self, user_agent=None):
         self.user_agent = user_agent or 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
     
     def fetch(self, url: str) -> str:
@@ -18,13 +18,12 @@ class PageContentFetcher:
 
     def fetch_and_extract_text(self, url: str) -> str:
         html_content = self.fetch(url)
-        print('fez o fetch')
         return self.extract_text_from_html(html_content)
 
     def _fetch_with_requests(self, url: str) -> str:
         headers = {'User-Agent': self.user_agent}
         try:
-            response = requests.get(url, headers=headers, timeout=self.max_timeout)
+            response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 return response.content
         except requests.exceptions.Timeout:
