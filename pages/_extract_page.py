@@ -13,13 +13,14 @@ from database import SessionLocal
 
 @require_authentication
 def main(current_user=None):
+    current_user={'user_id': 5, 'username': 'gabrielfdias2', 'admin': True, 'exp': 1736788749}
     st.set_page_config(
         page_title="Extração de Nomes",
         page_icon="🤖",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
-    navsidebar()
+    navsidebar(current_user)
     session = SessionLocal()
     noticia = {}
     noticias = []
@@ -61,17 +62,24 @@ def main(current_user=None):
         noticia_service.atualizar_noticia(noticia.ID, update_data)
 
     if noticia:
-        TEXT = noticia.TEXTO_NOTICIA
+        TEXT = noticia.get('TEXTO_NOTICIA')
         if not TEXT and URL:
             fetcher = PageContentFetcher()
-            extracted_text = fetcher.fetch_and_extract_text(URL)
-            update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
-            noticia_service.atualizar_noticia(noticia.ID, update_data)
+            try:
+                extracted_text = fetcher.fetch_and_extract_text(URL)
+                update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
+                noticia_service.atualizar_noticia(noticia['ID'], update_data)
+                message = "Notícia atualizada com sucesso!"
+                st.toast(message)
+                st.rerun()
+            except Exception as e:
+                message = f"Erro ao tentar extrair o conteúdo: {str(e)}"
+                st.toast(message)
 
     notice_info(noticia)
 
-    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia.ID)
-
+    names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia)
+    
     colunas = [
         'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'INDICADOR_PPE', 'IDADE',
         'ANIVERSARIO', 'ENVOLVIMENTO', 'OPERACAO',

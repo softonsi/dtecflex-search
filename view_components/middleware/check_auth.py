@@ -1,11 +1,21 @@
 import streamlit as st
 from functools import wraps
 from backend.resources.auth.auth_service import AuthService
+from streamlit_cookies_controller import CookieController
+import time
 
 def require_authentication(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        token = st.session_state.get('user')
+        controller = CookieController()
+        
+        token = None
+        for _ in range(4):
+            token = controller.get('token')
+            if token:
+                break
+            time.sleep(1)
+
         if not token:
             st.warning("Por favor, faça login para acessar esta página.")
             st.switch_page('pages/login.py')
@@ -19,4 +29,5 @@ def require_authentication(func):
                 # st.rerun()
             else:
                 return func(*args, current_user=decoded_user, **kwargs)
+
     return wrapper

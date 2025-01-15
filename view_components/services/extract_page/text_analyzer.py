@@ -22,7 +22,6 @@ class TextAnalyzer:
 
     def analyze_text(self, text: str) -> list:
         try:
-            print('bateu analyze')
             artigo = f"<artigo>\n{text}\n</artigo>"
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -31,24 +30,24 @@ class TextAnalyzer:
                     {"role": "user", "content": artigo}
                 ]
             )
-
-            print('antes response')
+            no_none_name = []
 
             resposta = response.choices[0].message.content
 
-            print('aaaaaaaaaaaaaaaaaaaaaaa', resposta)
-
-            print('resposta::::', resposta)
-
             resposta_dict = json.loads(resposta)
+
             if isinstance(resposta_dict, list):
                 timestamp = int(time.time())
                 for i, item in enumerate(resposta_dict):
                     item['ID'] = f"extracted_{i}_{timestamp}"
                     item['deleted'] = False
 
-            return resposta_dict
+            for rd in resposta_dict:
+                if rd['NOME']:
+                    no_none_name.append(rd)
+
+            return no_none_name
 
         except Exception as e:
-            st.error(f"Erro ao processar a chamada à API: {e}")
+            st.error(f"Erro ao processar a chamada à API2222: {e}")
             return []

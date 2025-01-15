@@ -37,10 +37,9 @@ def destaque_nomes(texto, lista_nomes):
     
     return texto
 
-def text_with_highlighted_names(notice_id):
+def text_with_highlighted_names(notice):
     session = SessionLocal()
     noticia_service = NoticiaService(session)
-    notice = noticia_service.get_by_id_with_names(notice_id)
     text = notice['TEXTO_NOTICIA']
     saved_names_list = notice['nomes_raspados'] if notice['nomes_raspados'] else []
     extracted_names_list = []
@@ -79,8 +78,9 @@ def text_with_highlighted_names(notice_id):
                     with st.spinner('Analisando o texto...'):
                         analyzer = TextAnalyzer()
                         names_results = analyzer.analyze_text(text)
+                        if len(names_results) <= 0:
+                            st.toast('Texto analisado e nenhum nome encontrado.')
                         st.session_state[f'{notice["ID"]}_is_extracted'] = names_results
-                        st.toast("Análise concluída!")
                         st.rerun()
                 except Exception as e:
                     st.error(f"Erro ao processar a chamada à API: {e}")

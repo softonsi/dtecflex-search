@@ -1,17 +1,12 @@
 import streamlit as st
 from backend.resources.auth.auth_service import AuthService
 
-def navsidebar():
-    token = st.session_state.get('user', False)
-
+def navsidebar(current_user):
     st.sidebar.title("Navegação")
 
-    auth_service = AuthService()
-    decoded_user = auth_service.decode_jwt(token)
-
-    if token:
+    if current_user:
         st.sidebar.page_link("pages/home.py", label="Home")
-        if decoded_user['admin']:
+        if current_user['admin']:
             st.sidebar.page_link("pages/approve_notices.py", label="Aprovar notícias")
             st.sidebar.page_link("pages/user_register.py", label="Registrar usuário")
     else:

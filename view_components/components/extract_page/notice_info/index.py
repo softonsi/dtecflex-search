@@ -29,6 +29,8 @@ def notice_info(notice):
                 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
         uf_value = notice.UF if notice and hasattr(notice, 'UF') and notice.UF in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
+    with cols_bottom[2]:
+        region = st.text_input('Código', value='')
 
     main_action_buttons(font, title, category, region, uf, notice.ID)
 

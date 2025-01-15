@@ -9,7 +9,7 @@ from database import SessionLocal
 @require_authentication
 def main(current_user=None):
     st.set_page_config(page_title="Aprovar Notícias", layout="wide")
-    navsidebar()
+    navsidebar(current_user)
     session = SessionLocal()
     user_service = UserService()
     noticia_service = NoticiaService(session)
@@ -90,11 +90,9 @@ def main(current_user=None):
                     else:
                         st.write("Nenhum nome raspado.")
 
-                # Exibir o diálogo com as informações do nome selecionado
                 if st.session_state.dialog_nome and st.session_state.dialog_nome in noticia.nomes_raspados:
                     with st.expander(f"Detalhes de {st.session_state.dialog_nome.NOME}", expanded=True):
                         nome_obj = st.session_state.dialog_nome
-                        # Renderizar as informações com labels e inputs
                         st.text_input("ID:", value=nome_obj.ID, key=f"id_{nome_obj.ID}", disabled=True)
                         st.text_input("Nome:", value=nome_obj.NOME, key=f"nome_{nome_obj.ID}", disabled=True)
                         st.text_input("CPF:", value=nome_obj.CPF, key=f"cpf_{nome_obj.ID}", disabled=True)

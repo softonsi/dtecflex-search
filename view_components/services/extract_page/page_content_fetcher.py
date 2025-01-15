@@ -1,12 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 
 class PageContentFetcher:
     def __init__(self, user_agent=None, max_timeout=10):
         self.user_agent = user_agent or 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
-        self.max_timeout = max_timeout  # Tempo máximo em segundos
-
+    
     def fetch(self, url: str) -> str:
         page_content = self._fetch_with_requests(url)
         if page_content is None:
@@ -18,13 +17,9 @@ class PageContentFetcher:
         return '\n'.join([p.get_text() for p in soup.find_all('p')])
 
     def fetch_and_extract_text(self, url: str) -> str:
-        try:
-            html_content = self.fetch(url)
-            print('fez o fetch')
-            return self.extract_text_from_html(html_content)
-        except Exception as e:
-            print(f"Erro ao extrair o conteúdo da página: {e}")
-            return ""
+        html_content = self.fetch(url)
+        print('fez o fetch')
+        return self.extract_text_from_html(html_content)
 
     def _fetch_with_requests(self, url: str) -> str:
         headers = {'User-Agent': self.user_agent}
@@ -55,4 +50,4 @@ class PageContentFetcher:
             print(f"Erro: Timeout ao acessar a URL {url} com Playwright.")
         except Exception as e:
             print(f"Erro ao acessar a URL com Playwright: {e}")
-        return None
+        return None  # Retorna None se falhar

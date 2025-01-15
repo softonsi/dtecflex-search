@@ -26,7 +26,7 @@ def filters(st, noticia_service):
         st.session_state['selected_fontes'] = []
 
     if 'per_page' not in st.session_state:
-        st.session_state['per_page'] = 10
+        st.session_state['per_page'] = 30
 
     if 'selected_option' not in st.session_state:
         st.session_state['selected_option'] = "-"
@@ -136,7 +136,7 @@ def filters(st, noticia_service):
     if st.session_state.get('per_page'):
         per_page = st.session_state['per_page']
     else:
-        per_page = 10
+        per_page = 30
 
     if 'last_filters' not in st.session_state:
         st.session_state['last_filters'] = filters_applied

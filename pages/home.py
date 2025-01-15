@@ -1,7 +1,7 @@
 from datetime import date, datetime
 import streamlit as st
+from backend.resources.auth.auth_service import AuthService
 from database import  SessionLocal
-from backend.resources.notice.noticia_repository import NoticiaRepository
 from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
 )
@@ -42,7 +42,7 @@ def init_page_layout():
 @require_authentication
 def main(current_user=None):
     init_page_layout()
-    navsidebar()
+    navsidebar(current_user)
 
     st.markdown("#### Lista de Notícias")
 

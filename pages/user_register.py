@@ -5,12 +5,13 @@ from backend.resources.user.user_service import UserService
 from backend.resources.user.user_repository import UserRepository
 from backend.resources.user.user_schema import UserCreateBaseSchema
 from view_components.components.shared.navsidebar import navsidebar
+from view_components.middleware.check_auth import require_authentication
 
-def main():
+@require_authentication
+def main(current_user=None):
     st.set_page_config(page_title="Registro de Usuário", layout="centered")
     st.title("Registro de Usuário")
-    navsidebar()
-    # Inicializa o UserService
+    navsidebar(current_user)
     session = SessionLocal()
     user_repository = UserRepository(session)
     user_service = UserService(user_repository)
