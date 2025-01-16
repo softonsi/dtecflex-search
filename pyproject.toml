@@ -3,7 +3,7 @@ name = "dtecflex-rss-manager"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12"
 dependencies = [
     "alembic>=1.13.3",
     "argon2-cffi>=23.1.0",

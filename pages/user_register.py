@@ -13,10 +13,8 @@ def main(current_user=None):
     st.title("Registro de Usuário")
     navsidebar(current_user)
     session = SessionLocal()
-    user_repository = UserRepository(session)
-    user_service = UserService(user_repository)
+    user_service = UserService(session)
 
-    # Formulário de registro
     with st.form(key='registration_form'):
         username = st.text_input("Nome de Usuário")
         password = st.text_input("Senha", type="password")
@@ -32,7 +30,6 @@ def main(current_user=None):
             st.error("As senhas não correspondem.")
         else:
             try:
-                # Chama o método create do UserService
                 user_service.create(username=username, pwd=password, admin=admin)
                 st.success(f"Usuário '{username}' registrado com sucesso.")
             except ValueError as e:

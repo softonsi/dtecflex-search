@@ -38,7 +38,7 @@ def filters(st, noticia_service):
         st.session_state['last_filters'] = {}
 
     with st.sidebar.expander("Filtrar por Categoria", expanded=True):
-        categoria_options = ['Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial']
+        categoria_options = ['Lavagem de dinheiro', 'Fraude', 'Ambiental', 'Crime', 'Empresarial']
 
         for categoria in categoria_options:
             checkbox_key = f'categoria_{categoria}'

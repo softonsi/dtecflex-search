@@ -1,8 +1,8 @@
 import streamlit as st
 from backend.resources.auth.auth_service import AuthService
+from database import SessionLocal
 
-auth_service = AuthService()
-
+session = SessionLocal()
 def main():
     st.title('Tela de Login')
 
@@ -10,9 +10,11 @@ def main():
     senha = st.text_input('Senha', type='password')
 
     if st.button('Login'):
+        auth_service = AuthService(session)
         user_jwt = auth_service.login(email, senha)
         if user_jwt:
             st.session_state['token'] = user_jwt
+            st.session_state['log'] = False
             st.switch_page('pages/set_token.py')
         else:
             st.toast('Falha no login. Verifique suas credenciais.')

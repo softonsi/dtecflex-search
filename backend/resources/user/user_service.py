@@ -4,12 +4,10 @@ from backend.models.database import UsuarioModel
 from backend.resources.user.user_repository import UserRepository
 from backend.resources.user.user_schema import UserCreateBaseSchema
 
-session = SessionLocal()
-
 class UserService:
 
-    def __init__(self, user_repository: UserRepository = UserRepository(session)):
-        self.user_repository = user_repository
+    def __init__(self, session, user_repository_cls=UserRepository):
+        self.user_repository = user_repository_cls(session)
 
     def get_by_username(self, username):
         return self.user_repository.get_by_username(username)

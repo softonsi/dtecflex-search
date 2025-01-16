@@ -11,13 +11,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 class AuthService:
 
-    def __init__(self, user_service: UserService = UserService(), ph: PasswordHasher = PasswordHasher()):
-        self.user_service = user_service
+    def __init__(self, session, user_service_cls=UserService, ph: PasswordHasher = PasswordHasher()):
+        self.user_service = user_service_cls(session)
         self.ph = ph
         
     def login(self, username, password):
         user = self._find_by_username(username)
-
         verify_pwd = self._decode_password(password, user.SENHA)
 
         if not verify_pwd:

@@ -6,12 +6,12 @@ from view_components.middleware.check_auth import require_authentication
 from view_components.components.shared.navsidebar import navsidebar
 from database import SessionLocal
 
+session = SessionLocal()
 @require_authentication
 def main(current_user=None):
     st.set_page_config(page_title="Aprovar Notícias", layout="wide")
     navsidebar(current_user)
-    session = SessionLocal()
-    user_service = UserService()
+    user_service = UserService(session)
     noticia_service = NoticiaService(session)
 
     users = user_service.find_all()
