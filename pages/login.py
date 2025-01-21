@@ -1,8 +1,10 @@
 import streamlit as st
 from backend.resources.auth.auth_service import AuthService
 from database import SessionLocal
+from view_components.middleware.check_auth import require_authentication
 
 session = SessionLocal()
+
 def main():
     st.title('Tela de Login')
 

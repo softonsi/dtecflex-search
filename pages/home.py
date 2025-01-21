@@ -69,7 +69,7 @@ def main(current_user=None):
                 unsafe_allow_html=True
             )
         with cols[3]:
-            if st.button("Próx.", disabled=st.session_state['page_number'] >= total_pages):
+
                 st.session_state['page_number'] += 1
                 st.rerun()
 

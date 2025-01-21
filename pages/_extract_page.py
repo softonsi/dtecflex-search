@@ -13,7 +13,6 @@ from database import SessionLocal
 
 @require_authentication
 def main(current_user=None):
-    # current_user={'user_id': 5, 'username': 'gabrielfdias2', 'admin': True, 'exp': 1736788749}
     st.set_page_config(
         page_title="Extração de Nomes",
         page_icon="🤖",
@@ -36,8 +35,6 @@ def main(current_user=None):
 
     extracted_names_list = []
 
-    URL = st.text_input('URL', value=noticia['URL'])
-
     if 'url' not in st.session_state:
         st.session_state['url'] = ''
 
@@ -55,12 +52,11 @@ def main(current_user=None):
         noticia_service.atualizar_noticia(noticia['ID'], update_data)
 
     if noticia:
-        print('NOTICIA:::', noticia['ID'])
         TEXT = noticia.get('TEXTO_NOTICIA')
-        if not TEXT and URL:
+        if not TEXT and noticia["URL"]:
             fetcher = PageContentFetcher()
             try:
-                extracted_text = fetcher.fetch_and_extract_text(URL)
+                extracted_text = fetcher.fetch_and_extract_text(noticia["URL"])
                 update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
                 noticia_service.atualizar_noticia(noticia['ID'], update_data)
                 message = "Notícia atualizada com sucesso!"

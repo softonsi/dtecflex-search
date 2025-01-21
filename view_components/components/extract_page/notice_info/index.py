@@ -10,6 +10,8 @@ noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
 def notice_info(notice):
+    st.markdown(f'**URL:** {notice["URL"]}')
+
     cols_top = st.columns(3)
 
     with cols_top[0]:
@@ -40,7 +42,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1, 1, 6, 1, 1, 1])
+    cols = st.columns([1, 1.02, 1, 6, 1, 1, 1])
     with cols[0]:
         if st.button('Gravar', use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(
@@ -57,7 +59,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
             except Exception as e:
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
-        if st.button('Finalizar', use_container_width=True):
+        if st.button('Enviar para análise'):
             update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')

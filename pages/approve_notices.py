@@ -7,12 +7,15 @@ from view_components.components.shared.navsidebar import navsidebar
 from database import SessionLocal
 
 session = SessionLocal()
+
+user_service = UserService(session)
+noticia_service = NoticiaService(session)
+
 @require_authentication
 def main(current_user=None):
     st.set_page_config(page_title="Aprovar Notícias", layout="wide")
+    
     navsidebar(current_user)
-    user_service = UserService(session)
-    noticia_service = NoticiaService(session)
 
     users = user_service.find_all()
     user_options = ["-"] + [user.USERNAME for user in users]
@@ -66,60 +69,52 @@ def main(current_user=None):
         for noticia in noticias:
             with st.container():
                 card_height = 300
-                col1, col2 = st.columns([2, 1])
+                
+                st.markdown(f"###### {noticia.TITULO}")
+                st.write(f"Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
+                st.write(f"Fonte: {noticia.FONTE}")
+                st.text_area(
+                    label="Texto da Notícia:",
+                    value=noticia.TEXTO_NOTICIA,
+                    height=card_height - 40,
+                    key=f"text_{noticia.ID}",
+                    disabled=True
+                )
 
-                with col1:
-                    st.markdown(f"###### {noticia.TITULO}")
-                    st.write(f"Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
-                    st.write(f"Fonte: {noticia.FONTE}")
-                    st.text_area(
-                        label="Texto da Notícia:",
-                        value=noticia.TEXTO_NOTICIA,
-                        height=card_height - 40,
-                        key=f"text_{noticia.ID}",
-                        disabled=True
-                    )
+                if noticia.nomes_raspados:
+                    for nome_obj in noticia.nomes_raspados:
+                        with st.expander(f"Detalhes de {nome_obj.NOME}", expanded=False):
+                            st.text_input("ID:", value=nome_obj.ID, key=f"id_{nome_obj.ID}", disabled=True)
+                            st.text_input("Nome:", value=nome_obj.NOME, key=f"nome_{nome_obj.ID}", disabled=True)
+                            st.text_input("CPF:", value=nome_obj.CPF, key=f"cpf_{nome_obj.ID}", disabled=True)
+                            st.text_input("Apelido:", value=nome_obj.APELIDO, key=f"apelido_{nome_obj.ID}", disabled=True)
+                            st.text_input("Nome/CPF:", value=nome_obj.NOME_CPF, key=f"nome_cpf_{nome_obj.ID}", disabled=True)
+                            st.text_input("Sexo:", value=nome_obj.SEXO, key=f"sexo_{nome_obj.ID}", disabled=True)
+                            st.text_input("Pessoa:", value=nome_obj.PESSOA, key=f"pessoa_{nome_obj.ID}", disabled=True)
+                            st.number_input("Idade:", value=nome_obj.IDADE, key=f"idade_{nome_obj.ID}", disabled=True)
+                            st.date_input("Aniversário:", value=nome_obj.ANIVERSARIO, key=f"aniversario_{nome_obj.ID}", disabled=True)
+                            st.text_input("Atividade:", value=nome_obj.ATIVIDADE, key=f"atividade_{nome_obj.ID}", disabled=True)
+                            st.text_input("Envolvimento:", value=nome_obj.ENVOLVIMENTO, key=f"envolvimento_{nome_obj.ID}", disabled=True)
+                            st.text_input("Tipo de Suspeita:", value=nome_obj.TIPO_SUSPEITA, key=f"tipo_suspeita_{nome_obj.ID}", disabled=True)
+                            st.checkbox("Pessoa Pública:", value=nome_obj.FLG_PESSOA_PUBLICA, key=f"pessoa_publica_{nome_obj.ID}", disabled=True)
+                            st.checkbox("Indicador PPE:", value=nome_obj.INDICADOR_PPE, key=f"indicador_ppe_{nome_obj.ID}", disabled=True)
+                            st.text_input("Operação:", value=nome_obj.OPERACAO, key=f"operacao_{nome_obj.ID}", disabled=True)
+                else:
+                    st.write("Nenhum nome raspado.")
 
-                with col2:
-                    st.markdown("### Nomes Salvos")
-                    if noticia.nomes_raspados:
-                        for nome_obj in noticia.nomes_raspados:
-                            nome = nome_obj.NOME
-                            if st.button(nome, key=f"{nome}_{noticia.ID}"):
-                                st.session_state.dialog_nome = nome_obj
-                    else:
-                        st.write("Nenhum nome raspado.")
-
-                if st.session_state.dialog_nome and st.session_state.dialog_nome in noticia.nomes_raspados:
-                    with st.expander(f"Detalhes de {st.session_state.dialog_nome.NOME}", expanded=True):
-                        nome_obj = st.session_state.dialog_nome
-                        st.text_input("ID:", value=nome_obj.ID, key=f"id_{nome_obj.ID}", disabled=True)
-                        st.text_input("Nome:", value=nome_obj.NOME, key=f"nome_{nome_obj.ID}", disabled=True)
-                        st.text_input("CPF:", value=nome_obj.CPF, key=f"cpf_{nome_obj.ID}", disabled=True)
-                        st.text_input("Apelido:", value=nome_obj.APELIDO, key=f"apelido_{nome_obj.ID}", disabled=True)
-                        st.text_input("Nome/CPF:", value=nome_obj.NOME_CPF, key=f"nome_cpf_{nome_obj.ID}", disabled=True)
-                        st.text_input("Sexo:", value=nome_obj.SEXO, key=f"sexo_{nome_obj.ID}", disabled=True)
-                        st.text_input("Pessoa:", value=nome_obj.PESSOA, key=f"pessoa_{nome_obj.ID}", disabled=True)
-                        st.number_input("Idade:", value=nome_obj.IDADE, key=f"idade_{nome_obj.ID}", disabled=True)
-                        st.date_input("Aniversário:", value=nome_obj.ANIVERSARIO, key=f"aniversario_{nome_obj.ID}", disabled=True)
-                        st.text_input("Atividade:", value=nome_obj.ATIVIDADE, key=f"atividade_{nome_obj.ID}", disabled=True)
-                        st.text_input("Envolvimento:", value=nome_obj.ENVOLVIMENTO, key=f"envolvimento_{nome_obj.ID}", disabled=True)
-                        st.text_input("Tipo de Suspeita:", value=nome_obj.TIPO_SUSPEITA, key=f"tipo_suspeita_{nome_obj.ID}", disabled=True)
-                        st.checkbox("Pessoa Pública:", value=nome_obj.FLG_PESSOA_PUBLICA, key=f"pessoa_publica_{nome_obj.ID}", disabled=True)
-                        st.checkbox("Indicador PPE:", value=nome_obj.INDICADOR_PPE, key=f"indicador_ppe_{nome_obj.ID}", disabled=True)
-                        st.text_input("Operação:", value=nome_obj.OPERACAO, key=f"operacao_{nome_obj.ID}", disabled=True)
-
-                        if st.button("Fechar", key=f"fechar_{nome_obj.ID}"):
-                            st.session_state.dialog_nome = None
-                            st.rerun()
-
-                if st.button('Aprovar', key=f"aprovar_{noticia.ID}"):
-                    update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
-                    noticia_service.atualizar_noticia(noticia['ID'], update_data)
-                    st.toast('Notícia aprovada')
-                    st.rerun()
+                cols = st.columns([1, 2, 6, 1, 1])
+                with cols[0]:
+                    if st.button('Aprovar', key=f"aprovar_{noticia.ID}"):
+                        update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
+                        noticia_service.atualizar_noticia(noticia['ID'], update_data)
+                        st.toast('Notícia aprovada')
+                        st.rerun()
+                with cols[1]:
+                    if st.button('Devolver para análise', key=f"devolver_{noticia.ID}"):
+                        open_justificativa_dialog(noticia)
 
                 st.divider()
+
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
 
@@ -139,6 +134,23 @@ def main(current_user=None):
             if st.button("Próximo") and page < total_pages:
                 st.session_state['page'] += 1
                 st.rerun()
+
+
+@st.dialog("Justificativa para Devolução")
+def open_justificativa_dialog(noticia):
+    print('noticia::', noticia)
+    justificativa = st.text_area("Digite sua justificativa para a devolução da notícia:", height=200)
+    
+    if st.button("Enviar Justificativa"):
+        # if justificativa:
+        #     update_data = NoticiaRaspadaUpdateSchema(STATUS='07-EDIT-MODE')
+        #     noticia_service.atualizar_noticia(noticia['ID'], update_data)
+        #     # st.session_state["justificativa"] = justificativa
+        #     st.toast('Notícia devolvida para análise com justificativa')
+        st.rerun()
+    else:
+        st.warning("Por favor, forneça uma justificativa antes de enviar.")
+
 
 if __name__ == "__main__":
     main()
