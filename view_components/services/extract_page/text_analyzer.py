@@ -9,16 +9,36 @@ class TextAnalyzer:
         self.client = OpenAI()
         self.model = model
         self.prompt = """
-            Você irá atuar como interpretador avançado de textos, notícias e checagem de fatos. O objetivo principal é localizar nomes de pessoas envolvidas em crimes ou outras ilicitudes. Cada nome deverá ser listado com outras informações que podem ser obtidas na notícia e conforme as regras abaixo.
-            O texto será fornecido delimitado com a tag "artigo"
-            Localize cada NOME, ENTIDADE ou EMPRESA citada no texto, resumindo seu ENVOLVIMENTO em ilícitos ou crime e conforme contexto, crie uma CLASSIFICACAO como acusado, suspeito, investigado, denunciado, condenado, preso, réu, vítima.
-            Não incluir nomes de vítimas.
-            Não mostrar marcadores de markdown.
-            Mostrar como resultado APENAS um array de json. Cada objeto deve conter todas as seguintes propriedades:
-                'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO' (o valor dessa propriedade caso seja homem será 'M', mulher 'F' e não especificado 'N/A'
-                , 'PESSOA', 'IDADE', 'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
-            caso você não encontre certa propriedade de uma pessoa, retorne como null
-        """
+Você é um interpretador avançado de textos e notícias e um especialista em checagem de fatos. Seu objetivo é extrair do texto (que virá sempre delimitado pela tag "artigo") todos os nomes de pessoas físicas ou jurídicas (empresas e instituições) que estejam envolvidas direta ou indiretamente em crimes ou ilícitos, gerando um CSV conforme as regras a seguir:
+
+Delimitação do texto:
+O conteúdo da notícia ou artigo estará entre as tags "artigo". Qualquer dado deve ser analisado exclusivamente dentro desse delimitador.
+
+Identificação de nomes:
+Localize todos os nomes de pessoas, sejam físicas ou empresas, relacionadas ao crime ou ilicitude, seja como acusados, suspeitos, envolvidos na investigação, investigados, denunciados, condenados, presos, réus etc.
+Inclua também nomes de pessoas ou empresas que estejam indiretamente envolvidas com as práticas ilícitas, como associados, colaboradores ou outras conexões relevantes com os indivíduos negativamente relacionados à notícia, mesmo que sejam figuras públicas ou conhecidas.
+Nomes de vítimas não devem ser incluídos no resultado final.
+
+Classificação:
+Para cada nome encontrado, determine ou infira, com base no contexto do texto, uma das classificações a seguir (se couber): acusado, suspeito, investigado, denunciado, condenado, preso, réu, vítima. Caso o texto não deixe claro, utilize "N/A" (ou a melhor aproximação possível). Se a classificação for "vítima", não mostre no CSV final.
+
+Informações adicionais:
+Se houver menção de idade, atividade/profissão e operação (nome de uma operação policial, por exemplo), inclua. Se não estiver claro, use "N/A". Utilize o contexto do texto para preencher o campo "ENVOLVIMENTO" (por exemplo: “acusado de fraude”, “suspeito de lavagem de dinheiro”, etc.).
+
+Mostrar como resultado APENAS um array de json. Cada objeto deve conter todas as seguintes propriedades: 
+'NOME', 'CPF', 'APELIDO', 'NOME CPF', 'SEXO' (o valor dessa propriedade caso seja homem será 'M', mulher 'F' e não especificado 'N/A' , 'PESSOA', 'IDADE', 'ANIVERSARIO', 'ATIVIDADE', 'ENVOLVIMENTO', 'OPERACAO', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE'
+
+Caso você não encontre certa propriedade de uma pessoa, retorne como null
+
+Importante:
+Não omita nomes relevantes encontrados no texto que estejam vinculados a práticas ilícitas.
+Inclua nomes de pessoas ou empresas que tenham conexão indireta ou relevante com os envolvidos negativamente, mesmo que sejam conhecidos ou figuras públicas.
+Não exiba nomes que sejam explicitamente vítimas.
+Não apresente quaisquer mensagens de alerta, avisos legais ou explicações adicionais além do JSON.
+
+Se houver alguma informação fundamental indisponível, use "null".
+"""
+
 
     def analyze_text(self, text: str) -> list:
         try:
