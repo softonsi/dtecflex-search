@@ -59,17 +59,17 @@ def main(current_user=None):
         st.session_state['noticias'] = noticias
 
         cols = st.columns([12,1,1,1])
-        with cols[2]:
-            if st.button("Ant.", disabled=st.session_state['page_number'] <= 1):
+        with cols[1]:
+            if st.button("", icon=":material/chevron_backward:", disabled=st.session_state['page_number'] <= 1):
                 st.session_state['page_number'] -= 1
                 st.rerun()
-        with cols[1]:
+        with cols[2]:
             st.markdown(
                 f"<div style='text-align: center; padding-top: 10px;'>{st.session_state['page_number']} - {total_pages}</div>",
                 unsafe_allow_html=True
             )
         with cols[3]:
-            if st.button("Próx.", disabled=st.session_state['page_number'] >= total_pages):
+            if st.button("", icon=":material/chevron_forward:", disabled=st.session_state['page_number'] >= total_pages):
 
                 st.session_state['page_number'] += 1
                 st.rerun()
