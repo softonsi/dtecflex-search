@@ -1,6 +1,8 @@
 import streamlit as st
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice.noticia_service import NoticiaService
+from backend.resources.notice_message_devolute.notice_message_devolute_schema import NoticiaRaspadaMsgCreateSchema
+from backend.resources.notice_message_devolute.notice_message_devolute_service import NoticiaRaspadaMsgService
 from backend.resources.user.user_service import UserService
 from view_components.middleware.check_auth import require_authentication
 from view_components.components.shared.navsidebar import navsidebar
@@ -10,6 +12,7 @@ session = SessionLocal()
 
 user_service = UserService(session)
 noticia_service = NoticiaService(session)
+noticia_raspada_msg_service = NoticiaRaspadaMsgService(session)
 
 @require_authentication
 def main(current_user=None):
@@ -47,7 +50,7 @@ def main(current_user=None):
 
     if st.session_state['selected_user'] and st.session_state['selected_user'] != "-":
         selected_username = st.session_state['selected_user']
-        selected_user2 = next((user for user in users if user.USUARIO == selected_username), None)
+        selected_user2 = next((user for user in users if user.USERNAME == selected_username), None)
         filters['USUARIO_ID'] = selected_user2.ID
 
     per_page = 10
@@ -60,7 +63,7 @@ def main(current_user=None):
             filters=filters
         )
 
-    total_pages = (total_count + per_page - 1) // per_page
+    total_pages = (total_count + per_page - 1)
 
     if 'dialog_nome' not in st.session_state:
         st.session_state['dialog_nome'] = None
@@ -70,6 +73,7 @@ def main(current_user=None):
             with st.container():
                 card_height = 300
                 
+                st.markdown(f"###### {noticia.CATEGORIA}")
                 st.markdown(f"###### {noticia.TITULO}")
                 st.write(f"Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
                 st.write(f"Fonte: {noticia.FONTE}")
@@ -100,18 +104,18 @@ def main(current_user=None):
                             st.checkbox("Indicador PPE:", value=nome_obj.INDICADOR_PPE, key=f"indicador_ppe_{nome_obj.ID}", disabled=True)
                             st.text_input("Operação:", value=nome_obj.OPERACAO, key=f"operacao_{nome_obj.ID}", disabled=True)
                 else:
-                    st.write("Nenhum nome raspado.")
+                    st.write("Nenhum nome extraído.")
 
                 cols = st.columns([1, 2, 6, 1, 1])
                 with cols[0]:
                     if st.button('Aprovar', key=f"aprovar_{noticia.ID}"):
                         update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
-                        noticia_service.atualizar_noticia(noticia['ID'], update_data)
+                        noticia_service.atualizar_noticia(noticia.ID, update_data)
                         st.toast('Notícia aprovada')
                         st.rerun()
                 with cols[1]:
                     if st.button('Devolver para análise', key=f"devolver_{noticia.ID}"):
-                        open_justificativa_dialog(noticia)
+                        open_justificativa_dialog(noticia, current_user)
 
                 st.divider()
 
@@ -137,17 +141,25 @@ def main(current_user=None):
 
 
 @st.dialog("Justificativa para Devolução")
-def open_justificativa_dialog(noticia):
-    print('noticia::', noticia)
+def open_justificativa_dialog(noticia, current_user):
     justificativa = st.text_area("Digite sua justificativa para a devolução da notícia:", height=200)
     
     if st.button("Enviar Justificativa"):
-        # if justificativa:
-        #     update_data = NoticiaRaspadaUpdateSchema(STATUS='07-EDIT-MODE')
-        #     noticia_service.atualizar_noticia(noticia['ID'], update_data)
-        #     # st.session_state["justificativa"] = justificativa
-        #     st.toast('Notícia devolvida para análise com justificativa')
-        st.rerun()
+        if justificativa.strip():
+            msg_data = NoticiaRaspadaMsgCreateSchema(MSG_TEXT=justificativa)
+            user_id = current_user['user_id']
+            
+            noticia_raspada_msg_service.create_msg(
+                noticia_id=noticia.ID,
+                msg_data=msg_data,
+                user_id=user_id
+            )
+
+            update_data = NoticiaRaspadaUpdateSchema(STATUS='06-REPROVED')
+            noticia_service.atualizar_noticia(noticia.ID, update_data)
+            
+            st.toast('Justificativa enviada com sucesso.')
+            st.rerun()
     else:
         st.warning("Por favor, forneça uma justificativa antes de enviar.")
 

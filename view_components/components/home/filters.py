@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-import streamlit as st
 
 def filters(st, noticia_service):
     st.sidebar.header("Filtros")
@@ -37,8 +36,21 @@ def filters(st, noticia_service):
     if 'last_filters' not in st.session_state:
         st.session_state['last_filters'] = {}
 
+    with st.sidebar.expander("Filtrar por Período", expanded=True):
+        today = date.today()
+        options = ["-", "Últimos 3 dias", "Últimos 5 dias", "Últimos 10 dias", "Últimos 15 dias"]
+
+        selected_option = st.selectbox(
+            "Selecione o período:",
+            options,
+            index=options.index(st.session_state['selected_option']) if st.session_state['selected_option'] in options else 0,
+            key='selected_option_widget'
+        )
+
+        st.session_state['selected_option'] = selected_option
+
     with st.sidebar.expander("Filtrar por Categoria", expanded=True):
-        categoria_options = ['Lavagem de dinheiro', 'Fraude', 'Ambiental', 'Crime', 'Empresarial']
+        categoria_options = ['Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial', 'Fraude']
 
         for categoria in categoria_options:
             checkbox_key = f'categoria_{categoria}'
@@ -66,7 +78,7 @@ def filters(st, noticia_service):
         st.session_state['selected_fontes'] = selected_fontes
 
     with st.sidebar.expander("Filtrar por Status", expanded=True):
-        status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED", "07-EDIT-MODE"]
+        status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED"]
 
         for status in status_options:
             checkbox_key = f'status_{status}'
@@ -90,37 +102,30 @@ def filters(st, noticia_service):
     #         key='per_page'
     #     )
 
-    with st.sidebar.expander("Filtrar por Período", expanded=True):
-        today = date.today()
-        options = ["-", "Hoje", "Última semana", "Último mês"]
-
-        selected_option = st.selectbox(
-            "Selecione o período:",
-            options,
-            index=options.index(st.session_state['selected_option']) if st.session_state['selected_option'] in options else 0,
-            key='selected_option_widget'
-        )
-
-        st.session_state['selected_option'] = selected_option
-
     filters_applied = {}
 
-    if selected_option == "Hoje":
+    if selected_option == "Últimos 3 dias":
         filters_applied.update({
-            'PERIODO': 'dia',
-            'DATA_INICIO': today,
+            'PERIODO': 'dias',
+            'DATA_INICIO': today - timedelta(days=3),
             'DATA_FIM': today
         })
-    elif selected_option == "Última semana":
+    elif selected_option == "Últimos 5 dias":
         filters_applied.update({
-            'PERIODO': 'semana',
-            'DATA_INICIO': today - timedelta(days=7),
+            'PERIODO': 'dias',
+            'DATA_INICIO': today - timedelta(days=5),
             'DATA_FIM': today
         })
-    elif selected_option == "Último mês":
+    elif selected_option == "Últimos 10 dias":
         filters_applied.update({
-            'PERIODO': 'mes',
-            'DATA_INICIO': today - timedelta(days=30),
+            'PERIODO': 'dias',
+            'DATA_INICIO': today - timedelta(days=10),
+            'DATA_FIM': today
+        })
+    elif selected_option == "Últimos 15 dias":
+        filters_applied.update({
+            'PERIODO': 'dias',
+            'DATA_INICIO': today - timedelta(days=15),
             'DATA_FIM': today
         })
 

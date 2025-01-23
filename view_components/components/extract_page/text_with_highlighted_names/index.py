@@ -67,10 +67,11 @@ def text_with_highlighted_names(notice_id):
                 unsafe_allow_html=True
             )
         else:
-            if len(text) < 1:
-                st.write('Não há texto para exibir.')
-            else:
-                st.write(text)
+            if text:
+                if len(text) < 1:
+                    st.write('Não há texto para exibir.')
+                else:
+                    st.write(text)
 
         col_analisar, col_editar, spacer_col = st.columns([1.5, 1.5, 14])
         with col_analisar:

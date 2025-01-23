@@ -25,6 +25,8 @@ class NoticiaRaspadaModel(Base):
 
     usuario = relationship("UsuarioModel", back_populates="noticias_raspadas")
     nomes_raspados = relationship("NoticiaRaspadaNomeModel", back_populates="noticia")
+    mensagens = relationship("NoticiaRaspadaMsgModel", back_populates="noticia")
+
 
     def __repr__(self):
         return f"<NoticiaRaspadaModel(ID={self.ID}, TITULO='{self.TITULO}')>"
@@ -58,6 +60,27 @@ class NoticiaRaspadaNomeModel(Base):
     def __repr__(self):
         return f"<NoticiaRaspadaNomeModel(ID={self.ID}, NOME='{self.NOME}')>"
 
+class NoticiaRaspadaMsgModel(Base):
+    __tablename__ = 'TB_NOTICIA_RASPADA_MSG'
+
+    ID = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    NOTICIA_ID = Column(
+        Integer,
+        ForeignKey('TB_NOTICIA_RASPADA.ID', ondelete="NO ACTION", onupdate="NO ACTION"),
+        nullable=False,
+        index=True
+    )
+    MSG_TEXT = Column(String(500, collation='utf8mb4_unicode_ci'), nullable=True)
+    MSG_STATUS = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
+    MSG_TIME = Column(Date, nullable=True)
+    ID_USUARIO = Column(Integer, ForeignKey('TB_USER.ID'), nullable=True)
+
+    noticia = relationship("NoticiaRaspadaModel", back_populates="mensagens")
+    usuario = relationship("UsuarioModel", back_populates="mensagens")
+
+    def __repr__(self):
+        return f"<NoticiaRaspadaMsgModel(ID={self.ID}, MSG_TEXT='{self.MSG_TEXT}')>"
+    
 class UsuarioModel(Base):
     __tablename__ = 'TB_USER'
 
@@ -68,6 +91,7 @@ class UsuarioModel(Base):
     ADMIN = Column(Boolean, default=False, nullable=False)
 
     noticias_raspadas = relationship("NoticiaRaspadaModel", back_populates="usuario")
+    mensagens = relationship("NoticiaRaspadaMsgModel", back_populates="usuario")
 
     # def __repr__(self):
     #     return f"<UsuarioModel(ID={self.ID}, USERNAME='{self.USERNAME}', ADMIN={self.ADMIN})>"

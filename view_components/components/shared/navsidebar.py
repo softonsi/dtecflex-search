@@ -10,5 +10,6 @@ def navsidebar(current_user):
             st.sidebar.page_link("pages/approve_notices.py", label="Aprovar notícias")
             st.sidebar.page_link("pages/user_register.py", label="Registrar usuário")
     else:
+        st.sidebar.page_link("pages/my_analysis.py", label="Minhas análises")
         st.sidebar.page_link("pages/login.py", label="Login")
         st.sidebar.page_link("pages/search.py", label="Pesquisa")

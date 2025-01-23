@@ -1,9 +1,6 @@
 import streamlit as st
-from argon2 import PasswordHasher
 from database import SessionLocal
 from backend.resources.user.user_service import UserService
-from backend.resources.user.user_repository import UserRepository
-from backend.resources.user.user_schema import UserCreateBaseSchema
 from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
 
@@ -19,7 +16,7 @@ def main(current_user=None):
         username = st.text_input("Nome de Usuário")
         password = st.text_input("Senha", type="password")
         confirm_password = st.text_input("Confirme a Senha", type="password")
-        admin = st.toggle("Usuário Admin", key="admin_toggle", value=False)
+        admin = st.toggle("Usuário administrador", key="admin_toggle", value=False)
 
         submit_button = st.form_submit_button(label='Registrar')
 
