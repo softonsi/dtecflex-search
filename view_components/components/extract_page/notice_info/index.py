@@ -72,5 +72,5 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
             st.switch_page("pages/home.py")
     with cols[6]:
         if st.button('Sair', use_container_width=True):
-            st.switch_page("Home.py")
+            st.switch_page("pages/home.py")
             msg_confirma('Saindo da aplicação')
