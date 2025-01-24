@@ -33,8 +33,6 @@ class TextAnalyzer:
 
             resposta = response.choices[0].message.content
 
-            print('RESPOSTA::', resposta)
-
             if isinstance(resposta, str) and resposta.strip():
                 resposta_dict = json.loads(resposta)
 

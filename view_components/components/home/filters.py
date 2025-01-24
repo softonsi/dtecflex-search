@@ -78,7 +78,7 @@ def filters(st, noticia_service):
         st.session_state['selected_fontes'] = selected_fontes
 
     with st.sidebar.expander("Filtrar por Status", expanded=True):
-        status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED"]
+        status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED", "07-EDIT-MODE"]
 
         for status in status_options:
             checkbox_key = f'status_{status}'

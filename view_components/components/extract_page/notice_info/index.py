@@ -32,7 +32,7 @@ def notice_info(notice):
         uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
     with cols_bottom[2]:
-        region = st.text_input('Código', value='')
+        region = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
     main_action_buttons(font, title, category, region, uf, notice['ID'])
 
@@ -42,7 +42,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1.02, 1, 6, 1, 1, 1])
+    cols = st.columns([1, 1.2, 1, 6, 1, 1, 1])
     with cols[0]:
         if st.button('Gravar', use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(
@@ -59,7 +59,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
             except Exception as e:
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
-        if st.button('Enviar para análise'):
+        if st.button('Enviar para aprovação'):
             update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')

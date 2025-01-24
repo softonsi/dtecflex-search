@@ -75,36 +75,22 @@ class NoticiaRepository:
 
         if filters:
             filter_conditions = []
-
-            # Filtrar por FONTE
             if 'FONTE' in filters and filters['FONTE']:
                 if isinstance(filters['FONTE'], list):
                     filter_conditions.append(NoticiaRaspadaModel.FONTE.in_(filters['FONTE']))
                 else:
                     filter_conditions.append(NoticiaRaspadaModel.FONTE.ilike(f"%{filters['FONTE']}%"))
-
-            # Filtrar por STATUS
             if 'STATUS' in filters and filters['STATUS']:
                 filter_conditions.append(NoticiaRaspadaModel.STATUS.in_(filters['STATUS']))
-            
-            # Excluir o status '200-TO-APPROVE' explicitamente
-            # Adicionando este filtro para garantir que qualquer notícia com esse status seja excluída
-            filter_conditions.append(NoticiaRaspadaModel.STATUS != '200-TO-APPROVE')
-
-            # Filtrar por DATA_INICIO e DATA_FIM
             if 'DATA_INICIO' in filters and 'DATA_FIM' in filters:
                 filter_conditions.append(
                     NoticiaRaspadaModel.DATA_PUBLICACAO.between(filters['DATA_INICIO'], filters['DATA_FIM'])
                 )
-
-            # Filtrar por CATEGORIA
             if 'CATEGORIA' in filters and filters['CATEGORIA']:
                 if isinstance(filters['CATEGORIA'], list):
                     filter_conditions.append(NoticiaRaspadaModel.CATEGORIA.in_(filters['CATEGORIA']))
                 else:
                     filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
-
-            # Filtrar por PERIODO (dia, semana, mês)
             if 'PERIODO' in filters:
                 today = datetime.today()
 
@@ -124,23 +110,16 @@ class NoticiaRepository:
                     end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
                     filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
 
-            # Filtrar por USUARIO_ID
             if 'USUARIO_ID' in filters and filters['USUARIO_ID']:
                 filter_conditions.append(NoticiaRaspadaModel.ID_USUARIO == filters['USUARIO_ID'])
 
-            # Aplica os filtros na consulta
             if filter_conditions:
                 query = query.filter(and_(*filter_conditions))
 
-        # Conta o número total de registros após os filtros
         total_count = query.count()
 
-        # Aplica ordenação, paginação e limitação dos resultados
         query = query.order_by(NoticiaRaspadaModel.ID.desc()).offset(offset).limit(limit)
-
-        # Retorna as notícias filtradas e o total de registros
         return query.all(), total_count
-
     # def list(self, offset: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> Tuple[List[NoticiaRaspadaModel], int]:
     #     query = self.session.query(NoticiaRaspadaModel)
     #     if filters:

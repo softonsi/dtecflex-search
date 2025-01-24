@@ -45,6 +45,7 @@ class NoticiaRaspadaNomeModel(Base):
     CPF = Column(String(14, collation='utf8mb4_unicode_ci'), nullable=True, server_default='0')
     NOME_CPF = Column(String(100, collation='utf8mb4_unicode_ci'), nullable=True)
     APELIDO = Column(String(50, collation='utf8mb4_unicode_ci'), nullable=True)
+    # REG_NOTICIA = Column(String(20, collation='utf8mb4_unicode_ci'), nullable=True)
     SEXO = Column(String(1, collation='utf8mb4_unicode_ci'), nullable=True)
     PESSOA = Column(String(2, collation='utf8mb4_unicode_ci'), nullable=True)
     IDADE = Column(Integer, nullable=True)
