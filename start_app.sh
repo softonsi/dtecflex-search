@@ -15,6 +15,11 @@ echo "UV : $UV"
 
 mkdir -p "$DIR/log"
 
-$UV venv
+# Redireciona toda a saída do script para o log
+exec >> "$LOG" 2>&1
+
+# $UV venv
 source .venv/bin/activate
-$UV run streamlit run app.py --server.port 8502 >> "$LOG" 2>&1
+
+streamlit run app.py --server.port 8502
+
