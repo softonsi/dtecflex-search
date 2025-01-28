@@ -10,6 +10,17 @@ noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
 def notice_info(notice):
+    if notice['mensagens']:
+        for msg in notice['mensagens']:
+            st.warning(f"NOTÍCIA REPROVADA.\n\n\"{msg.MSG_TEXT}\"", icon="⚠️")
+
+    cols = st.columns([1.5, 8, 8])
+    page_to_return = st.session_state['page_to_return'] if st.session_state['page_to_return'] else 'home.py'
+    with cols[0]:
+        if st.button('⬅️ Voltar', use_container_width=True):
+            st.switch_page(f"pages/{page_to_return}")
+            msg_confirma('Saindo da aplicação')
+
     st.markdown(f'**URL:** {notice["URL"]}')
 
     cols_top = st.columns(3)
@@ -32,17 +43,17 @@ def notice_info(notice):
         uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
     with cols_bottom[2]:
-        region = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
+        reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
-    main_action_buttons(font, title, category, region, uf, notice['ID'])
+    main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return)
 
-    return font, title, category, region, uf
+    return font, title, category, region, uf, reg_noticia
 
-def main_action_buttons(font, title, category, region, uf, notice_id):
+def main_action_buttons(font, title, category, region, uf, notice_id, reg_noticia, page_to_return):
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1.2, 1, 6, 1, 1, 1])
+    cols = st.columns([1, 1, 1.5, 6, 1, 1, 1])
     with cols[0]:
         if st.button('Gravar', use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(
@@ -50,7 +61,8 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
                 TITULO=title,
                 CATEGORIA=category,
                 REGIAO=region,
-                UF=uf
+                UF=uf,
+                REG_NOTICIA=reg_noticia
             )
             try:
                 noticia_service.atualizar_noticia(notice_id, update_data)
@@ -59,18 +71,18 @@ def main_action_buttons(font, title, category, region, uf, notice_id):
             except Exception as e:
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
-        if st.button('Enviar para aprovação'):
-            update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
-            noticia_service.atualizar_noticia(notice_id, update_data)
-            msg_confirma('Notícia finalizada')
-            st.switch_page("pages/home.py")
-    with cols[2]:
         if st.button('Deletar', use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia deletada')
-            st.switch_page("pages/home.py")
-    with cols[6]:
-        if st.button('Sair', use_container_width=True):
-            st.switch_page("pages/home.py")
-            msg_confirma('Saindo da aplicação')
+            st.switch_page(f"pages/{page_to_return}")
+    with cols[2]:
+        if st.button('Enviar para aprovação'):
+            update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
+            noticia_service.atualizar_noticia(notice_id, update_data)
+            msg_confirma('Notícia finalizada')
+            st.switch_page(f"pages/{page_to_return}")
+    # with cols[6]:
+    #     if st.button('Sair', use_container_width=True):
+    #         st.switch_page("pages/home.py")
+    #         msg_confirma('Saindo da aplicação')

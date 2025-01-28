@@ -31,7 +31,9 @@ class NoticiaRepository:
 
     def get_by_id_with_names(self, noticia_id: int) -> Optional[NoticiaRaspadaModel]:
             return self.session.query(NoticiaRaspadaModel)\
-                .options(joinedload(NoticiaRaspadaModel.nomes_raspados))\
+                .options(joinedload(NoticiaRaspadaModel.nomes_raspados),
+                         joinedload(NoticiaRaspadaModel.mensagens)
+                        )\
                 .filter(NoticiaRaspadaModel.ID == noticia_id)\
                 .first()
     
@@ -71,7 +73,7 @@ class NoticiaRepository:
         return query.all()
 
     def list(self, offset: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> Tuple[List[NoticiaRaspadaModel], int]:
-        query = self.session.query(NoticiaRaspadaModel).options(joinedload(NoticiaRaspadaModel.nomes_raspados))
+        query = self.session.query(NoticiaRaspadaModel).options(joinedload(NoticiaRaspadaModel.nomes_raspados), joinedload(NoticiaRaspadaModel.mensagens))
 
         if filters:
             filter_conditions = []
@@ -120,55 +122,6 @@ class NoticiaRepository:
 
         query = query.order_by(NoticiaRaspadaModel.ID.desc()).offset(offset).limit(limit)
         return query.all(), total_count
-    # def list(self, offset: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> Tuple[List[NoticiaRaspadaModel], int]:
-    #     query = self.session.query(NoticiaRaspadaModel)
-    #     if filters:
-    #         filter_conditions = []
-    #         if 'FONTE' in filters and filters['FONTE']:
-    #             if isinstance(filters['FONTE'], list):
-    #                 filter_conditions.append(NoticiaRaspadaModel.FONTE.in_(filters['FONTE']))
-    #             else:
-    #                 filter_conditions.append(NoticiaRaspadaModel.FONTE.ilike(f"%{filters['FONTE']}%"))
-    #         if 'STATUS' in filters and filters['STATUS']:
-    #             filter_conditions.append(NoticiaRaspadaModel.STATUS.in_(filters['STATUS']))
-    #         if 'DATA_INICIO' in filters and 'DATA_FIM' in filters:
-    #             filter_conditions.append(
-    #                 NoticiaRaspadaModel.DATA_PUBLICACAO.between(filters['DATA_INICIO'], filters['DATA_FIM'])
-    #             )
-    #         if 'CATEGORIA' in filters and filters['CATEGORIA']:
-    #             if isinstance(filters['CATEGORIA'], list):
-    #                 filter_conditions.append(NoticiaRaspadaModel.CATEGORIA.in_(filters['CATEGORIA']))
-    #             else:
-    #                 filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
-    #         if 'PERIODO' in filters:
-    #             today = datetime.today()
-
-    #             if filters['PERIODO'] == 'dia':
-    #                 start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-
-    #             elif filters['PERIODO'] == 'semana':
-    #                 start_date = today - timedelta(days=today.weekday())
-    #                 start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-
-    #             elif filters['PERIODO'] == 'mes':
-    #                 start_date = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    #                 end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-    #                 filter_conditions.append(NoticiaRaspadaModel.DATA_PUBLICACAO.between(start_date, end_date))
-            
-    #         if 'USUARIO_ID' in filters and filters['USUARIO_ID']:
-    #             filter_conditions.append(NoticiaRaspadaModel.ID_USUARIO == filters['USUARIO_ID'])
-            
-    #         if filter_conditions:
-    #             query = query.filter(and_(*filter_conditions))
-
-    #     total_count = query.count()
-
-    #     query = query.order_by(NoticiaRaspadaModel.ID.desc()).offset(offset).limit(limit)
-    #     return query.all(), total_count
 
     def update(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaModel]:
         noticia = self.get_by_id(noticia_id)

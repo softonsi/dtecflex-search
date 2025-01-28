@@ -12,7 +12,7 @@ from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
 
 def init_page_layout():
-    st.set_page_config(layout='wide')
+    st.set_page_config(page_title="Página inicial", layout='wide')
     st.markdown("""
         <style>
             /* Remove blank space at top and bottom */
@@ -55,7 +55,7 @@ def main(current_user=None):
         st.session_state['edit_id'] = None
 
     def listar_noticias():
-        noticias, total_pages = filters(st, noticia_service)
+        noticias, total_pages = filters(st)
         st.session_state['noticias'] = noticias
 
         cols = st.columns([12,1,1,1])
@@ -107,10 +107,11 @@ def main(current_user=None):
 
                         if st.button("Analisar", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE') ):
                             with st.spinner("Analisando..."):
+                                st.session_state['page_to_return'] = 'home.py'
                                 st.session_state['id_notice_to_analyze'] = noticia['ID']
                                 st.session_state[f'notice_to_analyze_{noticia['ID']}'] = noticia
                                 st.session_state['url'] = noticia['URL']
-                                notice = noticia_service.get_by_id_with_names(noticia['ID'])
+                                # notice = noticia_service.get_by_id_with_names(noticia['ID'])
                                 # if notice['STATUS'] == '07-EDIT-MODE' and noticia['ID_USUARIO'] == current_user['user_id']:
                                 st.switch_page("pages/_extract_page.py")
                                 # else:

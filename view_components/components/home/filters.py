@@ -1,7 +1,14 @@
 from datetime import date, timedelta
+from backend.resources.notice.noticia_service import NoticiaService
+from database import  SessionLocal
+import streamlit as st
 
-def filters(st, noticia_service):
-    st.sidebar.header("Filtros")
+session = SessionLocal()
+noticia_service = NoticiaService(session)
+
+def filters(st):
+
+    st.sidebar.divider()
 
     def update_selected_categoria(categoria):
         if categoria in st.session_state['selected_categoria']:
@@ -36,73 +43,70 @@ def filters(st, noticia_service):
     if 'last_filters' not in st.session_state:
         st.session_state['last_filters'] = {}
 
-    with st.sidebar.expander("Filtrar por Período", expanded=True):
-        today = date.today()
-        options = ["-", "Últimos 3 dias", "Últimos 5 dias", "Últimos 10 dias", "Últimos 15 dias"]
+    # Filtro de Período
+    today = date.today()
+    options = ["-", "Últimos 3 dias", "Últimos 5 dias", "Últimos 10 dias", "Últimos 15 dias"]
 
-        selected_option = st.selectbox(
-            "Selecione o período:",
-            options,
-            index=options.index(st.session_state['selected_option']) if st.session_state['selected_option'] in options else 0,
-            key='selected_option_widget'
+    selected_option = st.sidebar.selectbox(
+        "Selecione o período:",
+        options,
+        index=options.index(st.session_state['selected_option']) if st.session_state['selected_option'] in options else 0,
+        key='selected_option_widget'
+    )
+
+    st.session_state['selected_option'] = selected_option
+    st.sidebar.divider()
+
+    # Filtro de Categoria
+    categoria_options = ['Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial', 'Fraude']
+    
+    for categoria in categoria_options:
+        checkbox_key = f'categoria_{categoria}'
+
+        if checkbox_key not in st.session_state:
+            st.session_state[checkbox_key] = categoria in st.session_state['selected_categoria']
+
+        st.sidebar.checkbox(
+            label=categoria,
+            value=st.session_state[checkbox_key],
+            key=checkbox_key,
+            on_change=lambda c=categoria: update_selected_categoria(c)
         )
 
-        st.session_state['selected_option'] = selected_option
+    st.sidebar.divider()  # Adiciona um divisor após o filtro de categoria
 
-    with st.sidebar.expander("Filtrar por Categoria", expanded=True):
-        categoria_options = ['Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial', 'Fraude']
+    # Filtro de Fontes
+    fontes_options = noticia_service.get_all_fontes()
 
-        for categoria in categoria_options:
-            checkbox_key = f'categoria_{categoria}'
+    selected_fontes = st.sidebar.multiselect(
+        'Selecione as fontes:',
+        options=fontes_options,
+        default=st.session_state['selected_fontes'],
+        key='selected_fontes_widget'
+    )
 
-            if checkbox_key not in st.session_state:
-                st.session_state[checkbox_key] = categoria in st.session_state['selected_categoria']
+    st.session_state['selected_fontes'] = selected_fontes
+    st.sidebar.divider()  # Adiciona um divisor após o filtro de fontes
 
-            st.checkbox(
-                label=categoria,
-                value=st.session_state[checkbox_key],
-                key=checkbox_key,
-                on_change=lambda c=categoria: update_selected_categoria(c)
-            )
+    # Filtro de Status
+    status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED"]
 
-    with st.sidebar.expander("Filtrar por Fonte", expanded=True):
-        fontes_options = noticia_service.get_all_fontes()
+    for status in status_options:
+        checkbox_key = f'status_{status}'
 
-        selected_fontes = st.multiselect(
-            'Selecione as fontes:',
-            options=fontes_options,
-            default=st.session_state['selected_fontes'],
-            key='selected_fontes_widget'
+        if checkbox_key not in st.session_state:
+            st.session_state[checkbox_key] = status in st.session_state['selected_status']
+
+        st.sidebar.checkbox(
+            label=status,
+            value=st.session_state[checkbox_key],
+            key=checkbox_key,
+            on_change=lambda s=status: update_selected_status(s)
         )
 
-        st.session_state['selected_fontes'] = selected_fontes
+    st.sidebar.divider()  # Adiciona um divisor após o filtro de status
 
-    with st.sidebar.expander("Filtrar por Status", expanded=True):
-        status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED", "07-EDIT-MODE"]
-
-        for status in status_options:
-            checkbox_key = f'status_{status}'
-
-            if checkbox_key not in st.session_state:
-                st.session_state[checkbox_key] = status in st.session_state['selected_status']
-
-            st.checkbox(
-                label=status,
-                value=st.session_state[checkbox_key],
-                key=checkbox_key,
-                on_change=lambda s=status: update_selected_status(s)
-            )
-
-    # with st.sidebar.expander("Notícias por Página", expanded=True):
-    #     per_page = st.number_input(
-    #         'Notícias por página',
-    #         min_value=1,
-    #         max_value=100,
-    #         value=st.session_state['per_page'],
-    #         key='per_page'
-    #     )
-
-    filters_applied = {}
+    filters_applied = {'STATUS': ['10-URL-OK', '15-URL-CHK']}
 
     if selected_option == "Últimos 3 dias":
         filters_applied.update({

@@ -76,28 +76,7 @@ def main(current_user=None):
         'FLG_PESSOA_PUBLICA', 'ENVOLVIMENTO_GOV'
     ]
 
-    st.markdown("""
-        <style>
-        .compact-input .stTextInput > div {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        .compact-input .stTextInput > div > label {
-            font-size: 8px !important;
-            margin-bottom: 0px !important;
-        }
-        .compact-input .stTextInput > div > div {
-            padding: 0 !important;
-        }
-        .compact-input .stTextInput > div > div > input {
-            height: 0px !important;
-            padding: 2px !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
     def generate_input_widget(coluna, valor, key_prefix, disabled=False):
-        st.markdown('<div class="compact-input">', unsafe_allow_html=True)
         if coluna == 'SEXO':
             input_value = st.selectbox(
                 label=coluna,
@@ -145,7 +124,7 @@ def main(current_user=None):
         elif coluna == 'INDICADOR_PPE':
             input_value = st.toggle(
                 label=coluna,
-                value=bool(valor) if valor else False,
+                value=False if valor == 'N/A' else True,
                 key=f"{key_prefix}_{coluna}",
                 disabled=disabled
             )
@@ -156,7 +135,6 @@ def main(current_user=None):
                 key=f"{key_prefix}_{coluna}",
                 disabled=disabled
             )
-        st.markdown('</div>', unsafe_allow_html=True)
         return input_value
 
     if saved_names_list:
@@ -170,20 +148,6 @@ def main(current_user=None):
                 key_prefix = f"saved_{item['ID']}"
 
                 with st.form(key=f'{key_prefix}form{item["ID"]}'):
-                    
-                    st.markdown("""
-                        <style>
-                            .st-emotion-cache-i6nec9 {
-                                gap: 0rem !important;  /* Remove completamente o gap */
-                            }
-                            div[data-testid="column"] {
-                                gap: 0rem !important;  /* Remove completamente o gap entre colunas */
-                            }
-                            .stTextInput, .stSelectbox, .stDateInput, .stNumberInput {
-                                margin-bottom: 5px !important;  /* Reduz o espaçamento entre os inputs */
-                            }
-                        </style>
-                    """, unsafe_allow_html=True)
 
                     cols_layout = st.columns([2, 8])
 
@@ -195,14 +159,10 @@ def main(current_user=None):
 
                             if coluna in ['SEXO', 'PESSOA']:
                                 with st.container():
-                                    st.markdown('<div class="compact-selectbox">', unsafe_allow_html=True)
                                     input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                                    st.markdown('</div>', unsafe_allow_html=True)
                             else:
                                 with st.container():
-                                    st.markdown('<div class="compact-input">', unsafe_allow_html=True)
                                     input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                                    st.markdown('</div>', unsafe_allow_html=True)
 
                             input_values[coluna] = input_value
 
@@ -255,21 +215,6 @@ def main(current_user=None):
                 key_prefix = f"deleted_{item['ID']}" if is_deleted else f"extracted_{item['ID']}"
 
                 with st.form(key=f'{key_prefix}form{item["ID"]}'):
-                    
-                    st.markdown("""
-                        <style>
-                            .st-emotion-cache-i6nec9 {
-                                gap: 0rem !important;  /* Remove completamente o gap */
-                            }
-                            div[data-testid="column"] {
-                                gap: 0rem !important;  /* Remove completamente o gap entre colunas */
-                            }
-                            .stTextInput, .stSelectbox, .stDateInput, .stNumberInput {
-                                margin-bottom: 5px !important;  /* Reduz o espaçamento entre os inputs */
-                            }
-                        </style>
-                    """, unsafe_allow_html=True)
-
                     cols_layout = st.columns([2, 8])
 
                     with cols_layout[0]:
@@ -280,14 +225,10 @@ def main(current_user=None):
 
                             if coluna in ['SEXO', 'PESSOA']:
                                 with st.container():
-                                    st.markdown('<div class="compact-selectbox">', unsafe_allow_html=True)
                                     input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                                    st.markdown('</div>', unsafe_allow_html=True)
                             else:
                                 with st.container():
-                                    st.markdown('<div class="compact-input">', unsafe_allow_html=True)
                                     input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                                    st.markdown('</div>', unsafe_allow_html=True)
 
                             input_values[coluna] = input_value
 

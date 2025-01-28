@@ -26,7 +26,7 @@ class AuthService:
             'user_id': user.ID,
             'username': user.USERNAME,
             'admin': user.ADMIN,
-            'exp': datetime.utcnow() + timedelta(hours=1)
+            'exp': datetime.utcnow() + timedelta(hours=24)
         }
 
         return self._generate_jwt_token(payload)

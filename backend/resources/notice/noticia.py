@@ -38,7 +38,9 @@ class NoticiaRaspadaBaseSchema(BaseModel):
     STATUS: Optional[str] = Field(None, max_length=25)
     TEXTO_NOTICIA: Optional[str] = None
     LINK_ORIGINAL: Optional[str] = Field(None, max_length=2000)
-
+    UF: Optional[str] = Field(None, max_length=200)
+    REGIAO: Optional[str] = Field(None, max_length=200)
+    
     model_config = ConfigDict(from_attributes=True)
 
 class NoticiaRaspadaCreateSchema(NoticiaRaspadaBaseSchema):
@@ -59,12 +61,31 @@ class NoticiaRaspadaUpdateSchema(BaseModel):
     STATUS: Optional[str] = Field(None, max_length=25)
     TEXTO_NOTICIA: Optional[str] = None
     LINK_ORIGINAL: Optional[str] = Field(None, max_length=2000)
-
+    REG_NOTICIA: Optional[str] = Field(None, max_length=20)
+    UF: Optional[str] = Field(None, max_length=200)
+    REGIAO: Optional[str] = Field(None, max_length=200)
     model_config = ConfigDict(from_attributes=True)
 
 class NoticiaRaspadaSchema(NoticiaRaspadaBaseSchema):
     ID: int
-
+    LINK_ID: Optional[str] = Field(None, max_length=64)
+    URL: Optional[str] = Field(None, max_length=1000)
+    FONTE: Optional[str] = Field(None, max_length=250)
+    DATA_PUBLICACAO: Optional[datetime] = None
+    CATEGORIA: Optional[str] = Field(None, max_length=50)
+    QUERY: Optional[str] = Field(None, max_length=250)
+    ID_ORIGINAL: Optional[str] = Field(None, max_length=2000)
+    DT_RASPAGEM: Optional[datetime] = None
+    DT_DECODE: Optional[datetime] = None
+    TITULO: Optional[str] = Field(None, max_length=250)
+    ID_USUARIO: Optional[int] = None
+    STATUS: Optional[str] = Field(None, max_length=25)
+    TEXTO_NOTICIA: Optional[str] = None
+    LINK_ORIGINAL: Optional[str] = Field(None, max_length=2000)
+    REG_NOTICIA: Optional[str] = Field(None, max_length=20)
+    UF: Optional[str] = Field(None, max_length=200)
+    REGIAO: Optional[str] = Field(None, max_length=200)
+    mensagens: Optional[list] = None
     nomes_raspados: Optional[list[NomeRaspadoSchema]] = None
 
     model_config = ConfigDict(from_attributes=True)

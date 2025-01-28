@@ -110,7 +110,6 @@ def edit_text_dialog(notice, noticia_service):
         unsafe_allow_html=True,
     )
 
-    st.write("Edite o texto da notícia")
     texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=300)
     if st.button("Atualizar"):
         update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)

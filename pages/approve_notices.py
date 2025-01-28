@@ -67,7 +67,6 @@ def main(current_user=None):
 
     if 'dialog_nome' not in st.session_state:
         st.session_state['dialog_nome'] = None
-
     if noticias:
         for noticia in noticias:
             with st.container():
@@ -77,6 +76,9 @@ def main(current_user=None):
                 st.markdown(f"###### {noticia.TITULO}")
                 st.write(f"Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
                 st.write(f"Fonte: {noticia.FONTE}")
+                st.write(f"Região: {noticia.REGIAO if noticia.REGIAO else ''}")
+                st.write(f"UF: {noticia.UF if noticia.UF else ''}")
+                st.write(f"Código: {noticia.REG_NOTICIA if noticia.REG_NOTICIA else ''}")
                 st.text_area(
                     label="Texto da Notícia:",
                     value=noticia.TEXTO_NOTICIA,
@@ -118,7 +120,6 @@ def main(current_user=None):
                         open_justificativa_dialog(noticia, current_user)
 
                 st.divider()
-
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
 
@@ -138,7 +139,6 @@ def main(current_user=None):
             if st.button("Próximo") and page < total_pages:
                 st.session_state['page'] += 1
                 st.rerun()
-
 
 @st.dialog("Justificativa para Devolução")
 def open_justificativa_dialog(noticia, current_user):
