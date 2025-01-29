@@ -22,7 +22,7 @@ def notice_info(notice):
 
     cols = st.columns([1.5, 8, 8])
     with cols[0]:
-        if st.button('⬅️ Voltar', use_container_width=True):
+        if st.button('Voltar', icon=":material/first_page:", use_container_width=True):
             st.switch_page(f"pages/{page_to_return}")
             msg_confirma('Saindo da aplicação')
 
@@ -58,9 +58,9 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1, 1.5, 6, 1, 1, 1])
+    cols = st.columns([1, 1, 1, 6, 1, 1, 1.2])
     with cols[0]:
-        if st.button('Gravar', use_container_width=True):
+        if st.button('Gravar', icon=":material/save:", use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(
                 FONTE=font,
                 TITULO=title,
@@ -76,13 +76,13 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             except Exception as e:
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
-        if st.button('Excluir', use_container_width=True):
+        if st.button('Excluir', icon=":material/delete_forever:", use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia deletada')
             st.switch_page(f"pages/{page_to_return}")
-    with cols[2]:
-        if st.button('Enviar para aprovação'):
+    with cols[6]:
+        if st.button('Aprovação', icon=":material/done_all:", type='primary', use_container_width=True):
             if notice['mensagens']:
                 msg_service = NoticiaRaspadaMsgService(session)
                 msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)

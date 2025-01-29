@@ -5,7 +5,7 @@ from openai import OpenAI
 
 
 class TextAnalyzer:
-    def __init__(self, model: str = 'gpt-4o-mini'):
+    def __init__(self, model: str = 'gpt-4o'):
         self.client = OpenAI()
         self.model = model
         self.prompt = """

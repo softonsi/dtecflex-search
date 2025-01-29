@@ -75,7 +75,7 @@ def text_with_highlighted_names(notice_id):
 
         col_analisar, col_editar, spacer_col = st.columns([1.5, 1.5, 14])
         with col_analisar:
-            if st.button("Analisar texto"):
+            if st.button("Analisar", icon=":material/find_in_page:"):
                 try:
                     with st.spinner('Analisando o texto...'):
                         analyzer = TextAnalyzer()
@@ -88,7 +88,7 @@ def text_with_highlighted_names(notice_id):
                 except Exception as e:
                     st.error(f"Erro ao processar a chamada à API: {e}")
         with col_editar:
-            if st.button("Editar texto"):
+            if st.button("Editar", icon=":material/edit_note:"):
                 edit_text_dialog(notice, noticia_service)
 
     return (
