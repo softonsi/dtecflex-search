@@ -1,3 +1,5 @@
+from io import StringIO
+import os
 import streamlit as st
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice_message_devolute.notice_message_devolute_service import NoticiaRaspadaMsgService
@@ -48,7 +50,13 @@ def notice_info(notice):
         uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
     with cols_bottom[2]:
-        reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
+        arquivo_up = st.file_uploader('Selecione o arquivo')
+
+        if arquivo_up is not None:
+            reg_noticia = os.path.splitext(arquivo_up.name)[0]
+        else:
+            reg_noticia = ''
+        # reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
     main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return, notice)
 
