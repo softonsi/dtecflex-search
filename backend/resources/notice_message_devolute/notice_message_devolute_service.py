@@ -18,3 +18,6 @@ class NoticiaRaspadaMsgService:
 
     def get_msgs_by_noticia_id(self, noticia_id: int) -> list[NoticiaRaspadaMsgModel]:
         return self.repository.get_msg_by_noticia_id(noticia_id)
+
+    def delete_msg(self, msg_id: int) -> None:
+        self.repository.delete_msg(msg_id)

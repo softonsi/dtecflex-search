@@ -117,14 +117,14 @@ def main(current_user=None):
             bool_value = True if str(valor) == 'True' else False
             input_value = st.toggle(
                 label=coluna,
-                value=bool_value,
+                value=valor,
                 key=f"{key_prefix}_{coluna}",
                 disabled=disabled
             )
         elif coluna == 'INDICADOR_PPE':
             input_value = st.toggle(
                 label=coluna,
-                value=False if valor == 'N/A' else True,
+                value=valor,
                 key=f"{key_prefix}_{coluna}",
                 disabled=disabled
             )

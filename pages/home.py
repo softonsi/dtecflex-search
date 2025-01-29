@@ -1,6 +1,5 @@
 from datetime import date, datetime
 import streamlit as st
-from backend.resources.auth.auth_service import AuthService
 from database import  SessionLocal
 from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
@@ -55,8 +54,8 @@ def main(current_user=None):
         st.session_state['edit_id'] = None
 
     def listar_noticias():
-        noticias, total_pages = filters(st)
-        st.session_state['noticias'] = noticias
+        noticias, total_pages = filters(st, session)
+        # st.session_state['noticias'] = noticias
 
         cols = st.columns([12,1,1,1])
         with cols[1]:

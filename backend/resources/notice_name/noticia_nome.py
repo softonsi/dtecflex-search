@@ -23,7 +23,7 @@ class NoticiaRaspadaBaseSchema(BaseModel):
 class NoticiaRaspadaNomeCreateSchema(BaseModel):
     NOME: Optional[str] = Field(None, max_length=2000)
     CPF: Optional[str] = Field(None, max_length=15)
-    NOME_CPF: Optional[str] = Field(None, max_length=15)
+    NOME_CPF: Optional[str] = Field(None, max_length=200)
     APELIDO: Optional[str] = Field(None, max_length=100)
     SEXO: Optional[str] = Field(None, max_length=100)
     PESSOA: Optional[str] = Field(None, max_length=100)

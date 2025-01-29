@@ -4,10 +4,11 @@ from database import  SessionLocal
 import streamlit as st
 
 session = SessionLocal()
-noticia_service = NoticiaService(session)
 
-def filters(st):
+def filters(st, session=session):
 
+    noticia_service = NoticiaService(session)
+    
     st.sidebar.divider()
 
     def update_selected_categoria(categoria):

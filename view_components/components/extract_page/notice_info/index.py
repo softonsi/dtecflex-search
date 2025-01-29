@@ -1,5 +1,6 @@
 import streamlit as st
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
+from backend.resources.notice_message_devolute.notice_message_devolute_service import NoticiaRaspadaMsgService
 from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
 from backend.resources.notice.noticia_service import NoticiaService
 from database import SessionLocal
@@ -10,12 +11,16 @@ noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
 def notice_info(notice):
+    if 'page_to_return' not in st.session_state:
+        st.session_state['page_to_return'] = 'home.py'
+
     if notice['mensagens']:
         for msg in notice['mensagens']:
             st.warning(f"NOTÍCIA REPROVADA.\n\n\"{msg.MSG_TEXT}\"", icon="⚠️")
 
+    page_to_return = st.session_state['page_to_return']
+
     cols = st.columns([1.5, 8, 8])
-    page_to_return = st.session_state['page_to_return'] if st.session_state['page_to_return'] else 'home.py'
     with cols[0]:
         if st.button('⬅️ Voltar', use_container_width=True):
             st.switch_page(f"pages/{page_to_return}")
@@ -45,11 +50,11 @@ def notice_info(notice):
     with cols_bottom[2]:
         reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
-    main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return)
+    main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return, notice)
 
     return font, title, category, region, uf, reg_noticia
 
-def main_action_buttons(font, title, category, region, uf, notice_id, reg_noticia, page_to_return):
+def main_action_buttons(font, title, category, region, uf, notice_id, reg_noticia, page_to_return, notice):
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
@@ -71,13 +76,16 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             except Exception as e:
                 st.error(f"Erro ao gravar a notícia: {e}")
     with cols[1]:
-        if st.button('Deletar', use_container_width=True):
+        if st.button('Excluir', use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia deletada')
             st.switch_page(f"pages/{page_to_return}")
     with cols[2]:
         if st.button('Enviar para aprovação'):
+            if notice['mensagens']:
+                msg_service = NoticiaRaspadaMsgService(session)
+                msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)
             update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')

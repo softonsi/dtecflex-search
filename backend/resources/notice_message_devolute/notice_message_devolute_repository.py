@@ -21,3 +21,9 @@ class NoticiaRaspadaMsgRepository:
 
     def get_msg_by_noticia_id(self, noticia_id: int) -> list[NoticiaRaspadaMsgModel]:
         return self.db_session.query(NoticiaRaspadaMsgModel).filter(NoticiaRaspadaMsgModel.NOTICIA_ID == noticia_id).all()
+    
+    def delete_msg(self, msg_id: int) -> None:
+        msg_to_delete = self.db_session.query(NoticiaRaspadaMsgModel).filter(NoticiaRaspadaMsgModel.ID == msg_id).first()
+        if msg_to_delete:
+            self.db_session.delete(msg_to_delete)
+            self.db_session.commit()

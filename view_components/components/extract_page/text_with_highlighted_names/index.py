@@ -48,7 +48,7 @@ def text_with_highlighted_names(notice_id):
 
     names_results = st.session_state.get(f'{notice["ID"]}_is_extracted', [])
 
-    with st.expander('Texto notícia e nomes destacados', expanded=True):
+    with st.expander('**Texto notícia e nomes destacados**', expanded=True):
         if names_results:
             extracted_names_list = names_results
             saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
