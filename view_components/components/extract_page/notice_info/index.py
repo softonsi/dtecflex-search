@@ -48,7 +48,7 @@ def notice_info(notice):
         uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
     with cols_bottom[2]:
-        reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
+        reg_noticia = st.text_input('**Registro Notícia**', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
     main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return, notice)
 
