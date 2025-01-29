@@ -9,38 +9,38 @@ class TextAnalyzer:
         self.client = OpenAI()
         self.model = model
         self.prompt = """
-            Você atuará como um interpretador avançado de textos jornalísticos e checador de fatos, com foco em identificar nomes de pessoas ou entidades envolvidas em crimes ou outras ilicitudes. Seu objetivo é extrair as informações solicitadas e apresentar somente o resultado em forma de array JSON.
+Você atuará como um interpretador avançado de textos jornalísticos e checador de fatos, com foco em identificar nomes de pessoas ou entidades envolvidas em crimes ou outros atos ilicitos. Seu objetivo é  localizar e extrair os nomes e as informações solicitadas, apresentando somente o resultado em formato de array JSON, onde cada nome será um elemento.
 
-            O texto a ser analisado será fornecido entre as tags artigo.
+O texto a ser analisado será fornecido entre as tags artigo.
 
-            Para cada ocorrência de NOME, ENTIDADE ou EMPRESA mencionada no texto, resuma seu envolvimento em possíveis ilicitudes ou crimes.
+Para cada NOME, ENTIDADE ou EMPRESA encontrada no texto, resuma seu envolvimento em possíveis crimes.
+Em seguida, classifique cada um conforme o contexto de envolvimento no texto, utilizando um dos seguintes termos: acusado, suspeito, investigado, denunciado, condenado, preso ou réu.
 
-            Em seguida, classifique cada sujeito conforme o contexto de envolvimento no texto, utilizando um dos seguintes termos: acusado, suspeito, investigado, denunciado, condenado, preso ou réu.
+Não devem ser incluídos no resultados pessoas que não estejam diretamente envolvidas ou suspeitas de crime. 
+Não inclua nomes de vítimas ou pessoas mencionadas como vítimas.
+Inclua *APENAS* nomes próprios de pessoas, empresas ou entidades, evitando gerneralizações como função, profissao, etc.
 
-            Não inclua nomes de vítimas ou pessoas apenas mencionadas como vítimas.
-            A resposta não deve conter nenhum outro texto ou formatação além de um array de objetos JSON.
+A resposta não deve conter nenhum outro texto ou formatação além de um array de objetos JSON.
 
-            Cada objeto no array deve conter todas as seguintes chaves (propriedades), mesmo que o valor seja null:
+Cada elemento do array deve conter todas as seguintes propriedades, mesmo que o valor seja null:
 
-            NOME
-            CPF
-            APELIDO
-            NOME CPF (caso haja uma forma específica de nome+CPF mencionada)
-            SEXO (usar 'M' para homem, 'F' para mulher; caso não identificável, null)
-            PESSOA (descrição curta, por exemplo "Político", "Empresário", "Cidadão comum", etc.)
-            IDADE
-            ANIVERSARIO
-            ATIVIDADE (ocupação, cargo ou atividade principal se mencionado)
-            ENVOLVIMENTO (termo de classificação: acusado, suspeito, investigado, denunciado, condenado, preso, réu)
-            OPERACAO (nome da operação policial ou judicial, se houver)
-            FLG_PESSOA_PUBLICA (retornar apenas true ou false)
-            INDICADOR_PPE (retornar apenas true ou false para Pessoa Politicamente Exposta)
-            ENVOLVIMENTO_GOV (retornar apenas true ou false se houver envolvimento com governo)
-            Caso não haja informação suficiente para determinada chave (exceto as booleans), retorne o valor null.
+    NOME (nome da pessoa ou entidade encontrada na notícia)
+    CPF (CPF para pessoa fisica ou CNPJ para pessoal jurídica encontrada na notícia)
+    APELIDO
+    NOME_CPF (fixo null)
+    SEXO (usar 'M' para homens, 'F' para mulheres)
+    PESSOA ('F' para pessoal física 'J' para pessoa jurídica ou entidades)
+    IDADE (idade da pessoa, se encontada no texto)
+    ANIVERSARIO (data de nascimento da pessoa, se encontada no texto )
+    ATIVIDADE (ocupação, cargo ou atividade principal da pessoa)
+    ENVOLVIMENTO (termo de classificação: acusado, suspeito, investigado, denunciado, condenado, preso, réu)
+    OPERACAO (nome da operação policial ou judicial)
+    FLG_PESSOA_PUBLICA (fixo false)
+    INDICADOR_PPE (fixo false)
+    ENVOLVIMENTO_GOV (retornar true se houver envolvimento com governo, ou false)
 
-            Para as propriedades booleanas (FLG_PESSOA_PUBLICA, INDICADOR_PPE, ENVOLVIMENTO_GOV), nunca retorne null; use true ou false.
-            Importante: Se não houver menção de envolvidos, retorne um array JSON vazio: [].
-        """
+Importante: Se não houver menção de envolvidos, retorne um array JSON vazio: [].
+"""
 
     def analyze_text(self, text: str) -> list:
         try:
