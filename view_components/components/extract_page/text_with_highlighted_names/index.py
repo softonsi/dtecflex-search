@@ -80,6 +80,7 @@ def text_with_highlighted_names(notice_id):
                     with st.spinner('Analisando o texto...'):
                         analyzer = TextAnalyzer()
                         names_results = analyzer.analyze_text(text)
+                        print('names', names_results)
                         if len(names_results) <= 0:
                             st.toast('Texto analisado e nenhum nome encontrado.')
                         st.session_state[f'{notice["ID"]}_is_extracted'] = names_results

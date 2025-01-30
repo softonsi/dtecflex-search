@@ -212,9 +212,9 @@ def main(current_user=None):
                 expander_label = f"~{expander_label}~ (Excluído)"
 
             with st.expander(expander_label, expanded=False):
-                key_prefix = f"deleted_{item['ID']}" if is_deleted else f"extracted_{item['ID']}"
+                key_prefix = f"deleted_{item['NOME']}" if is_deleted else f"extracted_{item['NOME']}"
 
-                with st.form(key=f'{key_prefix}form{item["ID"]}'):
+                with st.form(key=f'{key_prefix}form{item["NOME"]}'):
                     cols_layout = st.columns([2, 8])
 
                     with cols_layout[0]:

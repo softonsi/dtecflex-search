@@ -1,4 +1,5 @@
 import json
+import re
 import time
 import streamlit as st
 from openai import OpenAI
@@ -9,37 +10,39 @@ class TextAnalyzer:
         self.client = OpenAI()
         self.model = model
         self.prompt = """
-Você atuará como um interpretador avançado de textos jornalísticos e checador de fatos, com foco em identificar nomes de pessoas ou entidades envolvidas em crimes ou outros atos ilicitos. Seu objetivo é  localizar e extrair os nomes e as informações solicitadas, apresentando somente o resultado em formato de array JSON, onde cada nome será um elemento.
+            Você atuará como um interpretador avançado de textos jornalísticos e checador de fatos, com foco em identificar nomes de pessoas ou entidades envolvidas em crimes ou outras ilicitudes. Seu objetivo é extrair as informações solicitadas e apresentar somente o resultado em forma de array JSON.
 
-O texto a ser analisado será fornecido entre as tags artigo.
+            O texto a ser analisado será fornecido entre as tags artigo.
 
-Para cada NOME, ENTIDADE ou EMPRESA encontrada no texto, resuma seu envolvimento em possíveis crimes.
-Em seguida, classifique cada um conforme o contexto de envolvimento no texto, utilizando um dos seguintes termos: acusado, suspeito, investigado, denunciado, condenado, preso ou réu.
+            Para cada ocorrência de NOME, ENTIDADE ou EMPRESA mencionada no texto, resuma seu envolvimento em possíveis ilicitudes ou crimes.
 
-Não devem ser incluídos no resultados pessoas que não estejam diretamente envolvidas ou suspeitas de crime. 
-Não inclua nomes de vítimas ou pessoas mencionadas como vítimas.
-Inclua *APENAS* nomes próprios de pessoas, empresas ou entidades, evitando gerneralizações como função, profissao, etc.
+            Em seguida, classifique cada sujeito conforme o contexto de envolvimento no texto, utilizando um dos seguintes termos: acusado, suspeito, investigado, denunciado, condenado, preso ou réu.
 
-A resposta não deve conter nenhum outro texto ou formatação além de um array de objetos JSON.
+            Não inclua nomes de vítimas ou pessoas apenas mencionadas como vítimas.
+            A resposta não deve conter nenhum outro texto ou formatação além de um array de objetos JSON.
 
-Cada elemento do array deve conter todas as seguintes propriedades, mesmo que o valor seja null:
+            Cada objeto no array deve conter todas as seguintes chaves (propriedades), mesmo que o valor seja null:
 
-    NOME (nome da pessoa ou entidade encontrada na notícia)
-    CPF (CPF para pessoa fisica ou CNPJ para pessoal jurídica encontrada na notícia)
-    APELIDO
-    NOME_CPF (fixo null)
-    SEXO (usar 'M' para homens, 'F' para mulheres)
-    PESSOA ('F' para pessoal física 'J' para pessoa jurídica ou entidades)
-    IDADE (idade da pessoa, se encontada no texto)
-    ANIVERSARIO (data de nascimento da pessoa, se encontada no texto )
-    ATIVIDADE (ocupação, cargo ou atividade principal da pessoa)
-    ENVOLVIMENTO (termo de classificação: acusado, suspeito, investigado, denunciado, condenado, preso, réu)
-    OPERACAO (nome da operação policial ou judicial)
-    FLG_PESSOA_PUBLICA (fixo false)
-    INDICADOR_PPE (fixo false)
-    ENVOLVIMENTO_GOV (retornar true se houver envolvimento com governo, ou false)
+            NOME
+            CPF
+            APELIDO
+            NOME CPF (caso haja uma forma específica de nome+CPF mencionada)
+            SEXO (usar 'M' para homem, 'F' para mulher; caso não identificável, null)
+            PESSOA (descrição curta, por exemplo "Político", "Empresário", "Cidadão comum", etc.)
+            IDADE
+            ANIVERSARIO
+            ATIVIDADE (ocupação, cargo ou atividade principal se mencionado)
+            ENVOLVIMENTO (termo de classificação: acusado, suspeito, investigado, denunciado, condenado, preso, réu)
+            OPERACAO (nome da operação policial ou judicial, se houver)
+            FLG_PESSOA_PUBLICA (retornar apenas true ou false)
+            INDICADOR_PPE (retornar apenas true ou false para Pessoa Politicamente Exposta)
+            ENVOLVIMENTO_GOV (retornar apenas true ou false se houver envolvimento com governo)
+            Caso não haja informação suficiente para determinada chave (exceto as booleans), retorne o valor null.
 
-Importante: Se não houver menção de envolvidos, retorne um array JSON vazio: [].
+            Para as propriedades booleanas (FLG_PESSOA_PUBLICA, INDICADOR_PPE, ENVOLVIMENTO_GOV), nunca retorne null; use true ou false.
+            Importante: Se não houver menção de envolvidos, retorne um array JSON vazio: [].
+
+            Importante: certifique-se do formato json, é imprescindível para funcionamento da aplicação. Necessitamos que traga já formatado!
 """
 
     def analyze_text(self, text: str) -> list:
@@ -54,24 +57,36 @@ Importante: Se não houver menção de envolvidos, retorne um array JSON vazio: 
             )
             no_none_name = []
 
-            resposta = response.choices[0].message.content
+            resposta = response.choices[0].message.content.strip()
 
-            if isinstance(resposta, str) and resposta.strip():
-                resposta_dict = json.loads(resposta)
+            print(f"Resposta recebida: {resposta}")
+
+            match = re.search(r'```json\s*(\[\s*{.*}\s*\])\s*```', resposta, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+            else:
+                json_str = resposta
+
+            if json_str:
+                try:
+                    resposta_dict = json.loads(json_str)
+                except json.JSONDecodeError as json_err:
+                    print(f"Erro ao decodificar JSON: {json_err}")
+                    return []
+            else:
+                print("Resposta vazia ou formato inesperado.")
+                return []
 
             if isinstance(resposta_dict, list):
-                timestamp = int(time.time())
-                for i, item in enumerate(resposta_dict):
-                    item['ID'] = f"extracted_{i}_{timestamp}"
-                    item['deleted'] = False
-
-            for rd in resposta_dict:
-                if rd['NOME']:
-                    no_none_name.append(rd)
+                for rd in resposta_dict:
+                    if rd.get('NOME'):
+                        no_none_name.append(rd)
+            else:
+                print("A resposta JSON não é uma lista conforme esperado.")
+                return []
 
             return no_none_name
 
         except Exception as e:
-            print(e)
-            st.error(f"Erro ao processar a chamada à API2222: {e}")
+            print(f"Exceção geral: {e}")
             return []
