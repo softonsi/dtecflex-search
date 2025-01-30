@@ -85,7 +85,7 @@ def main(current_user=None):
                 else:
                     background_color = "#ffffff"
 
-                    col1, col2, col3 = st.columns([1, 8, 1])
+                    col1, col2, col3 = st.columns([1, 7, 1])
 
                     with col1:
                         st.markdown(render_box('ID', noticia["ID"]), unsafe_allow_html=True)
@@ -98,13 +98,13 @@ def main(current_user=None):
                                 st.toast(f"Notícia ID {noticia['ID']} recuperada com sucesso.")
                                 st.rerun()
                         else:
-                            if st.button("Excluir", key=f"delete_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True):
+                            if st.button("Excluir", icon=":material/delete_forever:", key=f"delete_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True):
                                 update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
                                 noticia_service.atualizar_noticia(noticia['ID'], update_data)
                                 st.toast(f"Notícia ID {noticia['ID']} excluída com sucesso.")
                                 st.rerun()
 
-                        if st.button("Analisar", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE') ):
+                        if st.button("Analisar", icon=":material/find_in_page:", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE') ):
                             with st.spinner("Analisando..."):
                                 st.session_state['page_to_return'] = 'home.py'
                                 st.session_state['id_notice_to_analyze'] = noticia['ID']
@@ -126,11 +126,11 @@ def main(current_user=None):
 
                         if noticia['URL'] is None or noticia['STATUS'] == '15-URL-CHK' or st.session_state[key_edit_mode]:
                             with st.form(key=f"link_form_{noticia['ID']}"):
-                                link_col, button_col = st.columns([9, 1])
+                                link_col, button_col = st.columns([10, 1])
                                 with link_col:
                                     link = st.text_input('**Link Notícia**', value=noticia.get('URL', ''), label_visibility="collapsed")
                                 with button_col:
-                                    salvar_link = st.form_submit_button('Salvar')
+                                    salvar_link = st.form_submit_button('', icon=":material/save:")
 
                                 if salvar_link:
                                     if salvar_link:
@@ -147,7 +147,7 @@ def main(current_user=None):
                             with link_col:
                                 st.markdown(f'**Link Notícia:** [{noticia["URL"]}]({noticia["URL"]})')
                             with button_col:
-                                if st.button('Editar', key=f"edit_link_{noticia['ID']}"):
+                                if st.button('', icon=":material/edit_note:", key=f"edit_link_{noticia['ID']}"):
                                     st.session_state[key_edit_mode] = True
                                     st.rerun()
                     with col3:

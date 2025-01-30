@@ -66,7 +66,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1, 1, 6, 1, 1, 1.2])
+    cols = st.columns([1, 1, 6, 1, 1 ])
     with cols[0]:
         if st.button('Gravar', icon=":material/save:", use_container_width=True):
             update_data = NoticiaRaspadaUpdateSchema(
@@ -89,8 +89,8 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia deletada')
             st.switch_page(f"pages/{page_to_return}")
-    with cols[6]:
-        if st.button('Aprovação', icon=":material/done_all:", type='primary', use_container_width=True):
+    with cols[4]:
+        if st.button('Aprovar', icon=":material/done_all:", type='primary', use_container_width=True):
             if notice['mensagens']:
                 msg_service = NoticiaRaspadaMsgService(session)
                 msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)
