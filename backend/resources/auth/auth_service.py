@@ -2,6 +2,8 @@ import os
 import jwt
 from datetime import datetime, timedelta
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from backend.exceptions.auth_exceptions import AuthenticationError
 from backend.resources.user.user_service import UserService
 from dotenv import load_dotenv
 
@@ -16,21 +18,20 @@ class AuthService:
         self.ph = ph
         
     def login(self, username, password):
-        user = self._find_by_username(username)
-        verify_pwd = self._decode_password(password, user.SENHA)
-
-        if not verify_pwd:
-            return 'Invalid username or password'
+        try:
+            user = self._find_by_username(username)
+            if not self._decode_password(password, user.SENHA):
+                raise AuthenticationError("Usuário ou senha inválidos")
+            payload = {
+                'user_id': user.ID,
+                'username': user.USERNAME,
+                'admin': user.ADMIN,
+                'exp': datetime.utcnow() + timedelta(hours=24)
+            }
+            return self._generate_jwt_token(payload)
+        except Exception as e:
+            raise e
         
-        payload = {
-            'user_id': user.ID,
-            'username': user.USERNAME,
-            'admin': user.ADMIN,
-            'exp': datetime.utcnow() + timedelta(hours=24)
-        }
-
-        return self._generate_jwt_token(payload)
-
     def verify_token(self, token):
         return self._decode_jwt(token)
 
@@ -52,7 +53,10 @@ class AuthService:
             raise Exception(f"Erro ao buscar usuário: {str(e)}")
 
     def _decode_password(self, input_password, hashed_password):
-        return self.ph.verify(hashed_password, input_password)
+        try:
+            return self.ph.verify(hashed_password, input_password)
+        except VerifyMismatchError:
+            return False
     
     def _generate_jwt_token(self, payload):
         return jwt.encode(payload, SECRET_KEY, algorithm='HS256')

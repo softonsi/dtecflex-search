@@ -6,13 +6,13 @@ from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice.noticia_service import NoticiaService
 from backend.resources.notice_message_devolute.notice_message_devolute_schema import NoticiaRaspadaMsgCreateSchema
 from backend.resources.notice_message_devolute.notice_message_devolute_service import NoticiaRaspadaMsgService
+from backend.resources.notice_name.noticia_nome import NoticiaRaspadaNomeCreateSchema
 from backend.resources.user.user_service import UserService
 from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
 from view_components.middleware.check_auth import require_authentication
 from view_components.components.shared.navsidebar import navsidebar
 from database import SessionLocal
 
-# Cria a sessão e os serviços
 session = SessionLocal()
 user_service = UserService(session)
 noticia_service = NoticiaService(session)
@@ -70,9 +70,6 @@ def main(current_user=None):
     if 'dialog_nome' not in st.session_state:
         st.session_state['dialog_nome'] = None
 
-    # ---------------------------
-    # Barra de Tarefas no Topo
-    # ---------------------------
     if noticias:
         with st.container():
             col_taskbar = st.columns([6, 2])
@@ -86,9 +83,6 @@ def main(current_user=None):
                     st.rerun()
         st.divider()
 
-    # ---------------------------
-    # Exibição de Notícias
-    # ---------------------------
     if noticias:
         for noticia in noticias:
             with st.container():
@@ -115,78 +109,95 @@ def main(current_user=None):
                     uf = st.selectbox("UF", options=uf_list, index=uf_list.index(uf_value), key=f"uf_{noticia.ID}")
                 with col_bottom3:
                     reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
-                    st.text_input("Número do Registro da Notícia (já existente)", value=reg_noticia if reg_noticia else 'NÃO PREENCHIDO', key=f"reg_noticia_{noticia.ID}", disabled=True)
+                    st.text_input("Número do Registro da Notícia (já existente)",
+                                  value=reg_noticia if reg_noticia else 'NÃO PREENCHIDO',
+                                  key=f"reg_noticia_{noticia.ID}",
+                                  disabled=True)
                     arquivo_up = st.file_uploader("SELECIONE O ARQUIVO", key=f"file_{noticia.ID}", label_visibility="hidden")
-                    
                     if arquivo_up is not None:
                         reg_noticia = os.path.splitext(arquivo_up.name)[0]
                     else:
                         reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
                     
                 card_height = 300
-                st.text_area(
-                    label="Texto da Notícia:",
-                    value=noticia.TEXTO_NOTICIA,
-                    height=card_height - 40,
-                    key=f"text_{noticia.ID}",
-                    disabled=True
+                # st.text_area(
+                #     label="Texto da Notícia:",
+                #     value=noticia.TEXTO_NOTICIA,
+                #     height=card_height - 40,
+                #     key=f"text_{noticia.ID}",
+                #     disabled=True
+                # )
+
+            if noticia.nomes_raspados:
+                headers = [
+                    "Editar", "Nome", "CPF", "Apelido", "Nome/CPF", "Sexo", "Pessoa",
+                    "Idade", "Aniversário", "Atividade", "Envolvimento", "Suspeita",
+                    "P.Pública", "PPE", "Operação"
+                ]
+                weights = [2, 1, 1.5, 1.5, 1.5, 1, 1, 0.7, 1.2, 1.5, 2, 1.5, 1, 1, 1.5]
+                header_cols = st.columns(weights)
+                for col, header in zip(header_cols, headers):
+                    col.markdown(f"<p style='text-align: center;'><strong>{header}</strong></p>", unsafe_allow_html=True)
+                
+                for nome_obj in noticia.nomes_raspados:
+                    row_cols = st.columns(weights)
+                    with row_cols[0]:
+                        inner_cols = st.columns([1, 1, 1])
+                        with inner_cols[1]:
+                            if st.button("", icon=":material/edit_square:", key=f"editar_nome_{nome_obj.ID}"):
+                                edit_nome_dialog(nome_obj)
+                    with row_cols[1]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME}</p>", unsafe_allow_html=True)
+                    with row_cols[2]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.CPF}</p>", unsafe_allow_html=True)
+                    with row_cols[3]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.APELIDO}</p>", unsafe_allow_html=True)
+                    with row_cols[4]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME_CPF}</p>", unsafe_allow_html=True)
+                    with row_cols[5]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.SEXO}</p>", unsafe_allow_html=True)
+                    with row_cols[6]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.PESSOA}</p>", unsafe_allow_html=True)
+                    with row_cols[7]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.IDADE}</p>", unsafe_allow_html=True)
+                    with row_cols[8]:
+                        date_str = nome_obj.ANIVERSARIO.strftime("%d/%m/%Y") if nome_obj.ANIVERSARIO else ""
+                        st.markdown(f"<p style='text-align: center;'>{date_str}</p>", unsafe_allow_html=True)
+                    with row_cols[9]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ATIVIDADE}</p>", unsafe_allow_html=True)
+                    with row_cols[10]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ENVOLVIMENTO}</p>", unsafe_allow_html=True)
+                    with row_cols[11]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.TIPO_SUSPEITA}</p>", unsafe_allow_html=True)
+                    with row_cols[12]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.FLG_PESSOA_PUBLICA}</p>", unsafe_allow_html=True)
+                    with row_cols[13]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.INDICADOR_PPE}</p>", unsafe_allow_html=True)
+                    with row_cols[14]:
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.OPERACAO}</p>", unsafe_allow_html=True)
+            else:
+                st.write("Nenhum nome extraído.")
+
+            if st.button('Gravar', use_container_width=True, key=f"salvar_{noticia.ID}"):
+                update_data = NoticiaRaspadaUpdateSchema(
+                    FONTE=font,
+                    TITULO=title,
+                    CATEGORIA=category,
+                    REGIAO=region,
+                    UF=uf,
+                    REG_NOTICIA=reg_noticia
                 )
-
-                if noticia.nomes_raspados:
-                    nomes_data = []
-                    for nome_obj in noticia.nomes_raspados:
-                        nomes_data.append({
-                            "ID": nome_obj.ID,
-                            "Nome": nome_obj.NOME,
-                            "CPF": nome_obj.CPF,
-                            "Apelido": nome_obj.APELIDO,
-                            "Nome/CPF": nome_obj.NOME_CPF,
-                            "Sexo": nome_obj.SEXO,
-                            "Pessoa": nome_obj.PESSOA,
-                            "Idade": nome_obj.IDADE,
-                            "Aniversário": nome_obj.ANIVERSARIO,
-                            "Atividade": nome_obj.ATIVIDADE,
-                            "Envolvimento": nome_obj.ENVOLVIMENTO,
-                            "Tipo de Suspeita": nome_obj.TIPO_SUSPEITA,
-                            "Pessoa Pública": nome_obj.FLG_PESSOA_PUBLICA,
-                            "Indicador PPE": nome_obj.INDICADOR_PPE,
-                            "Operação": nome_obj.OPERACAO
-                        })
-                    df_nomes = pd.DataFrame(nomes_data)
-                    st.table(df_nomes)
-                else:
-                    st.write("Nenhum nome extraído.")
-
-                action_cols = st.columns([1.2, 1, 8])
-                # Exemplo de botão para salvar a notícia (comentado)
-                # with action_cols[0]:
-                #     if st.button("Salvar Notícia", key=f"salvar_{noticia.ID}"):
-                #         update_data = NoticiaRaspadaUpdateSchema(
-                #             FONTE=font,
-                #             TITULO=title,
-                #             CATEGORIA=category,
-                #             REGIAO=region,
-                #             UF=uf,
-                #             REG_NOTICIA=reg_noticia
-                #         )
-                #         try:
-                #             noticia_service.atualizar_noticia(noticia.ID, update_data)
-                #             st.toast("Notícia gravada com sucesso!")
-                #             st.rerun()
-                #         except Exception as e:
-                #             st.error(f"Erro ao gravar a notícia: {e}")=
-                with action_cols[0]:
-                    if st.button("Devolver para análise", key=f"devolver_{noticia.ID}"):
-                        open_justificativa_dialog(noticia, current_user)
-                with action_cols[1]:
-                    if st.button("Editar Nomes", key=f"editar_nomes_{noticia.ID}"):
-                        edit_nomes_dialog(noticia)
-
-                st.divider()
+                try:
+                    noticia_service.atualizar_noticia(noticia.ID, update_data)
+                    st.toast("Notícia gravada com sucesso!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao gravar a notícia: {e}")
+            
+            st.divider()
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
 
-    # Paginação
     pagination_placeholder = st.empty()
     with pagination_placeholder:
         col_prev, col_page, col_next = st.columns([1, 2, 1])
@@ -266,11 +277,85 @@ def edit_nomes_dialog(noticia):
                 "INDICADOR_PPE": "S" if st.session_state.get(f"nome_edit_{nome_obj.ID}_INDICADOR_PPE", False) else "N"
             }
             try:
-                noticia_nome_service.atualizar_nome(nome_obj.ID, new_data)
+                noticia_nome_service.update(nome_obj.ID, new_data)
             except Exception as e:
                 st.error(f"Erro ao atualizar nome ID {nome_obj.ID}: {e}")
         st.toast("Nomes atualizados com sucesso!")
         st.rerun()
 
+@st.dialog("Editar Usuário")
+def edit_user_dialog(user):
+    st.markdown("Edite os dados do usuário abaixo:")
+    updated_username = st.text_input("Username", value=user.USERNAME, key=f"user_edit_{user.ID}_username")
+    updated_email = st.text_input("Email", value=getattr(user, 'EMAIL', ''), key=f"user_edit_{user.ID}_email")
+    
+    if st.button("Salvar Alterações"):
+        new_data = {
+            "USERNAME": st.session_state.get(f"user_edit_{user.ID}_username", user.USERNAME),
+            "EMAIL": st.session_state.get(f"user_edit_{user.ID}_email", getattr(user, 'EMAIL', ''))
+        }
+        try:
+            user_service.update(user.ID, new_data)
+            st.toast("Usuário atualizado com sucesso!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Erro ao atualizar usuário: {e}")
+
+@st.dialog("Editar Nome")
+def edit_nome_dialog(nome_obj):
+    st.markdown(f"### Editar Nome - ID: {nome_obj.ID}")
+    updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_dialog_{nome_obj.ID}_nome")
+    updated_cpf = st.text_input("CPF", value=nome_obj.CPF, key=f"nome_dialog_{nome_obj.ID}_cpf")
+    updated_apelido = st.text_input("Apelido", value=nome_obj.APELIDO, key=f"nome_dialog_{nome_obj.ID}_apelido")
+    updated_sexo = st.text_input("Sexo", value=nome_obj.SEXO, key=f"nome_dialog_{nome_obj.ID}_sexo")
+    updated_pessoa = st.text_input("Pessoa", value=nome_obj.PESSOA, key=f"nome_dialog_{nome_obj.ID}_pessoa")
+    updated_idade = st.number_input("Idade", value=nome_obj.IDADE if nome_obj.IDADE is not None else 0,
+                                    key=f"nome_dialog_{nome_obj.ID}_idade", min_value=0)
+    updated_atividade = st.text_input("Atividade", value=nome_obj.ATIVIDADE, key=f"nome_dialog_{nome_obj.ID}_atividade")
+    updated_envolvimento = st.text_area("Envolvimento", value=nome_obj.ENVOLVIMENTO,
+                                        key=f"nome_dialog_{nome_obj.ID}_envolvimento")
+    updated_tipo_suspeita = st.text_input("Tipo de Suspeita", value=nome_obj.TIPO_SUSPEITA,
+                                          key=f"nome_dialog_{nome_obj.ID}_tipo_suspeita")
+    updated_flg_pessoa_publica = st.checkbox(
+        "Pessoa Pública",
+        value=True if nome_obj.FLG_PESSOA_PUBLICA in ["S", "True", "true"] else False,
+        key=f"nome_dialog_{nome_obj.ID}_flg_pessoa_publica"
+    )
+    updated_indicador_ppe = st.checkbox(
+        "Indicador PPE",
+        value=True if nome_obj.INDICADOR_PPE in ["S", "True", "true"] else False,
+        key=f"nome_dialog_{nome_obj.ID}_indicador_ppe"
+    )
+    default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO is not None else datetime.date.today()
+    updated_aniversario = st.date_input("Aniversário", value=default_date,
+                                         key=f"nome_dialog_{nome_obj.ID}_aniversario")
+    
+    if st.button("Salvar Alterações"):
+        data = NoticiaRaspadaNomeCreateSchema(
+            CPF=st.session_state.get(f"nome_dialog_{nome_obj.ID}_cpf", nome_obj.CPF),
+            NOME=st.session_state.get(f"nome_dialog_{nome_obj.ID}_nome", nome_obj.NOME),
+            APELIDO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_apelido", nome_obj.APELIDO),
+            NOME_CPF=st.session_state.get(f"nome_dialog_{nome_obj.ID}_nome_cpf", 
+                                          nome_obj.NOME_CPF if hasattr(nome_obj, "NOME_CPF") else None),
+            SEXO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_sexo", nome_obj.SEXO),
+            PESSOA=st.session_state.get(f"nome_dialog_{nome_obj.ID}_pessoa", nome_obj.PESSOA),
+            IDADE=st.session_state.get(f"nome_dialog_{nome_obj.ID}_idade", nome_obj.IDADE),
+            ANIVERSARIO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_aniversario", nome_obj.ANIVERSARIO),
+            ATIVIDADE=st.session_state.get(f"nome_dialog_{nome_obj.ID}_atividade", nome_obj.ATIVIDADE),
+            ENVOLVIMENTO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_envolvimento", nome_obj.ENVOLVIMENTO),
+            OPERACAO=nome_obj.OPERACAO,
+            FLG_PESSOA_PUBLICA="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_flg_pessoa_publica", False) else "N",
+            ENVOLVIMENTO_GOV=None,
+            INDICADOR_PPE="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_indicador_ppe", False) else "N",
+            NOTICIA_ID=nome_obj.ID
+        )
+        try:
+            print('Atualizando nome ID:', nome_obj.ID)
+            print(data)
+            noticia_nome_service.update(nome_obj.ID, data)
+            st.toast("Nome atualizado com sucesso!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Erro ao atualizar nome ID {nome_obj.ID}: {e}")
 if __name__ == "__main__":
     main()
