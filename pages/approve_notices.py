@@ -1,7 +1,7 @@
 import os
 import datetime
-import pandas as pd
 import streamlit as st
+from database import SessionLocal
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice.noticia_service import NoticiaService
 from backend.resources.notice_message_devolute.notice_message_devolute_schema import NoticiaRaspadaMsgCreateSchema
@@ -11,7 +11,6 @@ from backend.resources.user.user_service import UserService
 from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
 from view_components.middleware.check_auth import require_authentication
 from view_components.components.shared.navsidebar import navsidebar
-from database import SessionLocal
 
 session = SessionLocal()
 user_service = UserService(session)
@@ -74,7 +73,7 @@ def main(current_user=None):
         with st.container():
             col_taskbar = st.columns([6, 2])
             with col_taskbar[0]:
-                if st.button("Aprovar Todas as Notícias", key="approve_all"):
+                if st.button("Aprovar Todas as Notícias", key="approve_all", icon=":material/done_all:", type='primary',):
                     with st.spinner("Aprovando todas as notícias..."):
                         for noticia in noticias:
                             update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
@@ -118,15 +117,6 @@ def main(current_user=None):
                         reg_noticia = os.path.splitext(arquivo_up.name)[0]
                     else:
                         reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
-                    
-                card_height = 300
-                # st.text_area(
-                #     label="Texto da Notícia:",
-                #     value=noticia.TEXTO_NOTICIA,
-                #     height=card_height - 40,
-                #     key=f"text_{noticia.ID}",
-                #     disabled=True
-                # )
 
             if noticia.nomes_raspados:
                 headers = [
@@ -145,36 +135,36 @@ def main(current_user=None):
                         inner_cols = st.columns([1, 1, 1])
                         with inner_cols[1]:
                             if st.button("", icon=":material/edit_square:", key=f"editar_nome_{nome_obj.ID}"):
-                                edit_nome_dialog(nome_obj)
+                                edit_nome_dialog(nome_obj, noticia.ID)
                     with row_cols[1]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME if nome_obj.NOME else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[2]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.CPF}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.CPF if nome_obj.CPF else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[3]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.APELIDO}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.APELIDO if nome_obj.APELIDO else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[4]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME_CPF}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME_CPF if nome_obj.NOME_CPF else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[5]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.SEXO}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.SEXO if nome_obj.SEXO else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[6]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.PESSOA}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.PESSOA if nome_obj.PESSOA else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[7]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.IDADE}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.IDADE if nome_obj.IDADE else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[8]:
                         date_str = nome_obj.ANIVERSARIO.strftime("%d/%m/%Y") if nome_obj.ANIVERSARIO else ""
-                        st.markdown(f"<p style='text-align: center;'>{date_str}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{date_str if date_str else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[9]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ATIVIDADE}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ATIVIDADE if nome_obj.ATIVIDADE else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[10]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ENVOLVIMENTO}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.ENVOLVIMENTO if nome_obj.ENVOLVIMENTO else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[11]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.TIPO_SUSPEITA}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.TIPO_SUSPEITA if nome_obj.TIPO_SUSPEITA else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[12]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.FLG_PESSOA_PUBLICA}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{'Positivo' if nome_obj.FLG_PESSOA_PUBLICA else 'Negativo'}</p>", unsafe_allow_html=True)
                     with row_cols[13]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.INDICADOR_PPE}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{'Positivo' if nome_obj.INDICADOR_PPE else 'Negativo'}</p>", unsafe_allow_html=True)
                     with row_cols[14]:
-                        st.markdown(f"<p style='text-align: center;'>{nome_obj.OPERACAO}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{nome_obj.OPERACAO if nome_obj.OPERACAO else '-'}</p>", unsafe_allow_html=True)
             else:
                 st.write("Nenhum nome extraído.")
 
@@ -231,78 +221,8 @@ def open_justificativa_dialog(noticia, current_user):
         else:
             st.warning("Por favor, forneça uma justificativa antes de enviar.")
 
-@st.dialog("Editar Nomes")
-def edit_nomes_dialog(noticia):
-    st.markdown("Edite os dados dos nomes extraídos abaixo:")
-    for nome_obj in noticia.nomes_raspados:
-        with st.expander(f"Nome ID: {nome_obj.ID}", expanded=False):
-            updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_edit_{nome_obj.ID}_NOME")
-            updated_cpf = st.text_input("CPF", value=nome_obj.CPF, key=f"nome_edit_{nome_obj.ID}_CPF")
-            updated_nome_cpf = st.text_input("Nome/CPF", value=nome_obj.NOME_CPF, key=f"nome_edit_{nome_obj.ID}_NOME_CPF")
-            updated_apelido = st.text_input("Apelido", value=nome_obj.APELIDO, key=f"nome_edit_{nome_obj.ID}_APELIDO")
-            updated_sexo = st.text_input("Sexo", value=nome_obj.SEXO, key=f"nome_edit_{nome_obj.ID}_SEXO")
-            updated_pessoa = st.text_input("Pessoa", value=nome_obj.PESSOA, key=f"nome_edit_{nome_obj.ID}_PESSOA")
-            updated_idade = st.number_input("Idade", value=nome_obj.IDADE if nome_obj.IDADE is not None else 0, key=f"nome_edit_{nome_obj.ID}_IDADE", min_value=0)
-            updated_atividade = st.text_input("Atividade", value=nome_obj.ATIVIDADE, key=f"nome_edit_{nome_obj.ID}_ATIVIDADE")
-            updated_envolvimento = st.text_area("Envolvimento", value=nome_obj.ENVOLVIMENTO, key=f"nome_edit_{nome_obj.ID}_ENVOLVIMENTO")
-            updated_tipo_suspeita = st.text_input("Tipo de Suspeita", value=nome_obj.TIPO_SUSPEITA, key=f"nome_edit_{nome_obj.ID}_TIPO_SUSPEITA")
-            updated_flg_pessoa_publica = st.checkbox(
-                "Pessoa Pública",
-                value=True if nome_obj.FLG_PESSOA_PUBLICA in ["S", "True", "true"] else False,
-                key=f"nome_edit_{nome_obj.ID}_FLG_PESSOA_PUBLICA"
-            )
-            updated_indicador_ppe = st.checkbox(
-                "Indicador PPE",
-                value=True if nome_obj.INDICADOR_PPE in ["S", "True", "true"] else False,
-                key=f"nome_edit_{nome_obj.ID}_INDICADOR_PPE"
-            )
-            default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO is not None else datetime.date.today()
-            updated_aniversario = st.date_input("Aniversário", value=default_date, key=f"nome_edit_{nome_obj.ID}_ANIVERSARIO")
-            st.divider()
-    if st.button("Salvar Alterações"):
-        for nome_obj in noticia.nomes_raspados:
-            new_data = {
-                "NOME": st.session_state.get(f"nome_edit_{nome_obj.ID}_NOME", nome_obj.NOME),
-                "CPF": st.session_state.get(f"nome_edit_{nome_obj.ID}_CPF", nome_obj.CPF),
-                "NOME_CPF": st.session_state.get(f"nome_edit_{nome_obj.ID}_NOME_CPF", nome_obj.NOME_CPF),
-                "APELIDO": st.session_state.get(f"nome_edit_{nome_obj.ID}_APELIDO", nome_obj.APELIDO),
-                "SEXO": st.session_state.get(f"nome_edit_{nome_obj.ID}_SEXO", nome_obj.SEXO),
-                "PESSOA": st.session_state.get(f"nome_edit_{nome_obj.ID}_PESSOA", nome_obj.PESSOA),
-                "IDADE": st.session_state.get(f"nome_edit_{nome_obj.ID}_IDADE", nome_obj.IDADE),
-                "ATIVIDADE": st.session_state.get(f"nome_edit_{nome_obj.ID}_ATIVIDADE", nome_obj.ATIVIDADE),
-                "ENVOLVIMENTO": st.session_state.get(f"nome_edit_{nome_obj.ID}_ENVOLVIMENTO", nome_obj.ENVOLVIMENTO),
-                "TIPO_SUSPEITA": st.session_state.get(f"nome_edit_{nome_obj.ID}_TIPO_SUSPEITA", nome_obj.TIPO_SUSPEITA),
-                "FLG_PESSOA_PUBLICA": "S" if st.session_state.get(f"nome_edit_{nome_obj.ID}_FLG_PESSOA_PUBLICA", False) else "N",
-                "ANIVERSARIO": st.session_state.get(f"nome_edit_{nome_obj.ID}_ANIVERSARIO", nome_obj.ANIVERSARIO),
-                "INDICADOR_PPE": "S" if st.session_state.get(f"nome_edit_{nome_obj.ID}_INDICADOR_PPE", False) else "N"
-            }
-            try:
-                noticia_nome_service.update(nome_obj.ID, new_data)
-            except Exception as e:
-                st.error(f"Erro ao atualizar nome ID {nome_obj.ID}: {e}")
-        st.toast("Nomes atualizados com sucesso!")
-        st.rerun()
-
-@st.dialog("Editar Usuário")
-def edit_user_dialog(user):
-    st.markdown("Edite os dados do usuário abaixo:")
-    updated_username = st.text_input("Username", value=user.USERNAME, key=f"user_edit_{user.ID}_username")
-    updated_email = st.text_input("Email", value=getattr(user, 'EMAIL', ''), key=f"user_edit_{user.ID}_email")
-    
-    if st.button("Salvar Alterações"):
-        new_data = {
-            "USERNAME": st.session_state.get(f"user_edit_{user.ID}_username", user.USERNAME),
-            "EMAIL": st.session_state.get(f"user_edit_{user.ID}_email", getattr(user, 'EMAIL', ''))
-        }
-        try:
-            user_service.update(user.ID, new_data)
-            st.toast("Usuário atualizado com sucesso!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Erro ao atualizar usuário: {e}")
-
 @st.dialog("Editar Nome")
-def edit_nome_dialog(nome_obj):
+def edit_nome_dialog(nome_obj, noticia_id):
     st.markdown(f"### Editar Nome - ID: {nome_obj.ID}")
     updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_dialog_{nome_obj.ID}_nome")
     updated_cpf = st.text_input("CPF", value=nome_obj.CPF, key=f"nome_dialog_{nome_obj.ID}_cpf")
@@ -347,15 +267,15 @@ def edit_nome_dialog(nome_obj):
             FLG_PESSOA_PUBLICA="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_flg_pessoa_publica", False) else "N",
             ENVOLVIMENTO_GOV=None,
             INDICADOR_PPE="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_indicador_ppe", False) else "N",
-            NOTICIA_ID=nome_obj.ID
+            NOTICIA_ID=noticia_id
         )
         try:
-            print('Atualizando nome ID:', nome_obj.ID)
-            print(data)
             noticia_nome_service.update(nome_obj.ID, data)
             st.toast("Nome atualizado com sucesso!")
             st.rerun()
         except Exception as e:
             st.error(f"Erro ao atualizar nome ID {nome_obj.ID}: {e}")
+
+
 if __name__ == "__main__":
     main()
