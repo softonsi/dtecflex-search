@@ -12,32 +12,43 @@ from view_components.middleware.check_auth import require_authentication
 
 def init_page_layout():
     st.set_page_config(page_title="Página inicial", layout='wide')
-    st.markdown("""
+    load_css()
+
+def load_css():
+    css = """
         <style>
-            /* Remove blank space at top and bottom */
+            /* Configuração geral compacta */
             .block-container {
-                padding-top: 0rem;
+                padding-top: 2.5rem;
                 padding-bottom: 0rem;
             }
-            /* Remove blank space at the center canvas */
-            .st-emotion-cache-z5fcl4 {
-                position: relative;
-                top: -62px;
-                }
-            /* Make the toolbar transparent and the content below it clickable */
-            .st-emotion-cache-18ni7ap {
-                pointer-events: none;
-                background: rgb(255 255 255 / 0%)
-                }
-            .st-emotion-cache-zq5wmm {
-                pointer-events: auto;
-                background: rgb(255 255 255);
-                border-radius: 5px;
-                }
+            .element-container {
+                margin-bottom: 0.5rem;
+            }
+            /* Estilo dos botões em azul pastel */
+            .stButton>button {
+                background-color: #E1F0FF;
+                color: #2C7BE5;
+                border: 1px solid #BFD9F9;
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                transition: all 0.2s;
+            }
+            .stButton>button:hover {
+                background-color: #CAE4FF;
+                border-color: #2C7BE5;
+            }
+            /* Textbox mais compacto */
+            .stTextInput input {
+                padding: 0.2rem 0.4rem;
+                line-height: 1.2;
+                font-size: 0.9rem;
+            }
+            /* Outros ajustes */
+            /* ... resto do CSS ... */
         </style>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auUHMUAnbYt6LPbKhT1Q1u1AL3LlmjMss0bGgi" crossorigin="anonymous">
-        """, unsafe_allow_html=True)
-
+    """
+    st.markdown(css, unsafe_allow_html=True)
 @require_authentication
 def main(current_user=None):
     init_page_layout()

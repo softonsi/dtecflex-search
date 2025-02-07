@@ -31,7 +31,6 @@ def notice_info(notice):
     st.markdown(f'**URL:** {notice["URL"]}')
 
     cols_top = st.columns(3)
-
     with cols_top[0]:
         font = st.text_input('Fonte', value=notice['FONTE'] if notice and notice['FONTE'] else '')
     with cols_top[1]:
@@ -40,23 +39,20 @@ def notice_info(notice):
         category = st.text_input('Categoria', value=notice['CATEGORIA'] if notice and notice['CATEGORIA'] else '')
 
     cols_bottom = st.columns(3)
-
     with cols_bottom[0]:
         region = st.text_input('Região', value=notice['REGIAO'] if notice and hasattr(notice, 'REGIAO') and notice['REGIAO'] else '')
     with cols_bottom[1]:
         uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-                'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-                'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+                   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+                   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
         uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
         uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
     with cols_bottom[2]:
         arquivo_up = st.file_uploader('Selecione o arquivo')
-
         if arquivo_up is not None:
             reg_noticia = os.path.splitext(arquivo_up.name)[0]
         else:
             reg_noticia = ''
-        # reg_noticia = st.text_input('Código', value=notice['REG_NOTICIA'] if notice and hasattr(notice, 'REG_NOTICIA') and notice['REG_NOTICIA'] else '')
 
     main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return, notice)
 
@@ -66,9 +62,19 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 1, 6, 1, 1 ])
+    # Layout com apenas os botões de Excluir e Aprovar
+    cols = st.columns([1, 6, 1])
+    
     with cols[0]:
-        if st.button('Gravar', icon=":material/save:", use_container_width=True):
+        if st.button('Excluir', icon=":material/delete_forever:", use_container_width=True):
+            update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
+            noticia_service.atualizar_noticia(notice_id, update_data)
+            msg_confirma('Notícia deletada')
+            st.switch_page(f"pages/{page_to_return}")
+    
+    with cols[2]:
+        if st.button('Aprovar', icon=":material/done_all:", type='primary', use_container_width=True):
+            # Primeiro, grava as alterações realizadas pelo usuário:
             update_data = NoticiaRaspadaUpdateSchema(
                 FONTE=font,
                 TITULO=title,
@@ -79,18 +85,11 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             )
             try:
                 noticia_service.atualizar_noticia(notice_id, update_data)
-                msg_confirma('Notícia gravada com sucesso!')
-                st.rerun()
             except Exception as e:
-                st.error(f"Erro ao gravar a notícia: {e}")
-    with cols[1]:
-        if st.button('Excluir', icon=":material/delete_forever:", use_container_width=True):
-            update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
-            noticia_service.atualizar_noticia(notice_id, update_data)
-            msg_confirma('Notícia deletada')
-            st.switch_page(f"pages/{page_to_return}")
-    with cols[4]:
-        if st.button('Aprovar', icon=":material/done_all:", type='primary', use_container_width=True):
+                st.error(f"Erro ao gravar as alterações: {e}")
+                return
+
+            # Em seguida, executa a lógica já existente do botão Aprovar
             if notice['mensagens']:
                 msg_service = NoticiaRaspadaMsgService(session)
                 msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)
@@ -98,7 +97,3 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')
             st.switch_page(f"pages/{page_to_return}")
-    # with cols[6]:
-    #     if st.button('Sair', use_container_width=True):
-    #         st.switch_page("pages/home.py")
-    #         msg_confirma('Saindo da aplicação')

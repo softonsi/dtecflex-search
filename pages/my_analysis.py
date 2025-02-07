@@ -13,32 +13,32 @@ def main(current_user=None):
     st.set_page_config(page_title="Minhas análises", layout='wide')
     navsidebar(current_user)
 
+    # Configura valores padrão na session_state, se ainda não existirem
     if 'per_page' not in st.session_state:
         st.session_state['per_page'] = 30
-
     if 'selected_tab' not in st.session_state:
         st.session_state['selected_tab'] = '07-EDIT-MODE'
-    if st.session_state.get('per_page'):
-        per_page = st.session_state['per_page']
-    else:
-        per_page = 30
+    
+    per_page = st.session_state.get('per_page', 30)
     
     noticia_service = NoticiaService(session)
-
+    
     status_options = ['07-EDIT-MODE', '200-TO-APPROVE', '06-REPROVED', '201-APPROVED']
-
+    
+    # Calcula a contagem correta de notícias para cada status usando o total retornado
     status_counts = {}
     for status in status_options:
         filters_applied = {'STATUS': [status], 'USUARIO_ID': current_user['user_id']}
-        noticias, _ = noticia_service.listar_noticias(
+        # Aqui, o serviço retorna (lista_de_noticias, total_de_noticias)
+        _, total_count = noticia_service.listar_noticias(
             page=1,
-            per_page=1,
+            per_page=1,  # limitamos a 1 para não carregar muitas notícias, mas o total é calculado internamente
             filters=filters_applied
         )
-        status_counts[status] = len(noticias)
+        status_counts[status] = total_count
 
+    # Layout dos botões das abas
     cols = st.columns([5, 1.4, 1.7, 1.5, 1.4, 5])
-
     with cols[1]:
         if st.button(f'Em Edição ({status_counts["07-EDIT-MODE"]})', key='edit', help='Notícias em edição'):
             st.session_state['selected_tab'] = '07-EDIT-MODE'
@@ -54,6 +54,7 @@ def main(current_user=None):
 
     selected_tab = st.session_state['selected_tab']
 
+    # Busca as notícias para a aba selecionada
     filters_applied = {'STATUS': [selected_tab], 'USUARIO_ID': current_user['user_id']}
     noticias, total_noticias = noticia_service.listar_noticias(
         page=st.session_state.get('page_number', 1),
@@ -70,12 +71,12 @@ def main(current_user=None):
                 st.write(f"Fonte: {noticia.FONTE}")
 
                 if noticia.mensagens:
-                    for nome_obj in noticia.mensagens:
-                        with st.expander(f"Detalhes de justificativa", expanded=True):
+                    for mensagem in noticia.mensagens:
+                        with st.expander("Detalhes de justificativa", expanded=True):
                             st.text_area(
                                 label="",
-                                value=nome_obj.MSG_TEXT,
-                                height=400 - 40,
+                                value=mensagem.MSG_TEXT,
+                                height=360,  # 400 - 40
                                 key=f"just_{noticia.ID}",
                                 disabled=True
                             )
@@ -83,17 +84,12 @@ def main(current_user=None):
                 cols = st.columns([1, 2, 6, 1, 1])
                 with cols[0]:
                     if st.button('Analisar', key=f"analisar_{noticia.ID}"):
-                            with st.spinner("Analisando..."):
-                                st.session_state['page_to_return'] = 'my_analysis.py'
-                                st.session_state['id_notice_to_analyze'] = noticia.ID
-                                st.session_state[f'notice_to_analyze_{noticia.ID}'] = noticia
-                                st.session_state['url'] = noticia.URL
-                                st.switch_page("pages/_extract_page.py")
-                
-                # with cols[1]:
-                #     if st.button('Devolver para análise', key=f"devolver_{noticia.ID}"):
-                #         open_justificativa_dialog(noticia, current_user)
-
+                        with st.spinner("Analisando..."):
+                            st.session_state['page_to_return'] = 'my_analysis.py'
+                            st.session_state['id_notice_to_analyze'] = noticia.ID
+                            st.session_state[f'notice_to_analyze_{noticia.ID}'] = noticia
+                            st.session_state['url'] = noticia.URL
+                            st.switch_page("pages/_extract_page.py")
                 
                 st.divider()
     else:
