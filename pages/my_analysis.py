@@ -8,12 +8,48 @@ from view_components.middleware.check_auth import require_authentication
 session = SessionLocal()
 noticia_repository = NoticiaRepository(session)
 
+def load_css():
+    css = """
+        <style>
+            /* Configuração geral compacta */
+            .block-container {
+                padding-top: 2.5rem;
+                padding-bottom: 0rem;
+            }
+            .element-container {
+                margin-bottom: 0.5rem;
+            }
+            /* Estilo dos botões em azul pastel */
+            .stButton>button {
+                background-color: #E1F0FF;
+                color: #2C7BE5;
+                border: 1px solid #BFD9F9;
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                transition: all 0.2s;
+            }
+            .stButton>button:hover {
+                background-color: #CAE4FF;
+                border-color: #2C7BE5;
+            }
+            /* Textbox mais compacto */
+            .stTextInput input {
+                padding: 0.2rem 0.4rem;
+                line-height: 1.2;
+                font-size: 0.9rem;
+            }
+            /* Outros ajustes */
+            /* ... resto do CSS ... */
+        </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
 @require_authentication
 def main(current_user=None):
     st.set_page_config(page_title="Minhas análises", layout='wide')
+    load_css()
     navsidebar(current_user)
 
-    # Configura valores padrão na session_state, se ainda não existirem
     if 'per_page' not in st.session_state:
         st.session_state['per_page'] = 30
     if 'selected_tab' not in st.session_state:
@@ -25,19 +61,16 @@ def main(current_user=None):
     
     status_options = ['07-EDIT-MODE', '200-TO-APPROVE', '06-REPROVED', '201-APPROVED']
     
-    # Calcula a contagem correta de notícias para cada status usando o total retornado
     status_counts = {}
     for status in status_options:
         filters_applied = {'STATUS': [status], 'USUARIO_ID': current_user['user_id']}
-        # Aqui, o serviço retorna (lista_de_noticias, total_de_noticias)
         _, total_count = noticia_service.listar_noticias(
             page=1,
-            per_page=1,  # limitamos a 1 para não carregar muitas notícias, mas o total é calculado internamente
+            per_page=1,
             filters=filters_applied
         )
         status_counts[status] = total_count
 
-    # Layout dos botões das abas
     cols = st.columns([5, 1.4, 1.7, 1.5, 1.4, 5])
     with cols[1]:
         if st.button(f'Em Edição ({status_counts["07-EDIT-MODE"]})', key='edit', help='Notícias em edição'):
@@ -54,7 +87,6 @@ def main(current_user=None):
 
     selected_tab = st.session_state['selected_tab']
 
-    # Busca as notícias para a aba selecionada
     filters_applied = {'STATUS': [selected_tab], 'USUARIO_ID': current_user['user_id']}
     noticias, total_noticias = noticia_service.listar_noticias(
         page=st.session_state.get('page_number', 1),

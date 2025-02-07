@@ -49,6 +49,7 @@ def load_css():
         </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
 @require_authentication
 def main(current_user=None):
     init_page_layout()
