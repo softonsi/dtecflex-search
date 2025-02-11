@@ -13,7 +13,6 @@ def main(current_user=None):
     session = SessionLocal()
     user_service = UserService(session)
     
-    # --- Formulário para registrar um novo usuário ---
     st.subheader("Registrar Novo Usuário")
     with st.form(key='registration_form'):
         username = st.text_input("Nome de Usuário")
@@ -36,7 +35,6 @@ def main(current_user=None):
             except Exception as e:
                 st.error(f"Ocorreu um erro: {str(e)}")
     
-    # --- Recupera a lista de usuários para gerenciamento ---
     try:
         users = user_service.find_all()
     except Exception as e:
@@ -44,7 +42,6 @@ def main(current_user=None):
         users = []
     
     if users:
-        # --- Formulário para alterar um usuário existente ---
         st.subheader("Alterar Usuário")
         with st.form(key='update_form'):
             selected_user = st.selectbox(
@@ -66,7 +63,6 @@ def main(current_user=None):
                     st.error("As senhas não correspondem.")
                 else:
                     try:
-                        # Caso nenhuma nova senha seja informada, envia None para não atualizar o campo de senha
                         user_service.update(
                             user_id=selected_user.ID,
                             username=new_username,
@@ -77,7 +73,6 @@ def main(current_user=None):
                     except Exception as e:
                         st.error(f"Erro ao atualizar usuário: {str(e)}")
     
-        # --- Formulário para excluir um usuário ---
         st.subheader("Excluir Usuário")
         with st.form(key='delete_form'):
             selected_user_to_delete = st.selectbox(
@@ -89,7 +84,6 @@ def main(current_user=None):
             delete_submit = st.form_submit_button("Excluir Usuário")
     
             if delete_submit:
-                # Evita que o usuário logado se exclua
                 if selected_user_to_delete.ID == current_user['user_id']:
                     st.error("Você não pode excluir a si mesmo.")
                 else:

@@ -1,0 +1,56 @@
+/* Configuração geral compacta */
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 0rem;
+}
+.element-container {
+    margin-bottom: 0.5rem;
+}
+
+/* Estilo dos botões em azul pastel */
+.stButton>button {
+    background-color: #E1F0FF;  /* Azul pastel claro */
+    color: #2C7BE5;             /* Azul mais escuro para o texto */
+    border: 1px solid #BFD9F9;  /* Borda em azul claro */
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.stButton>button:hover {
+    background-color: #CAE4FF;  /* Azul pastel um pouco mais escuro no hover */
+    border-color: #2C7BE5;      /* Borda mais escura no hover */
+}
+
+/* Textbox mais compacto */
+.stTextInput input {
+    padding: 0.2rem 0.4rem;     /* Padding interno menor */
+    line-height: 1.2;           /* Altura da linha reduzida */
+    font-size: 0.9rem;          /* Tamanho da fonte um pouco menor */
+}
+
+/* Outros ajustes de compactação */
+p {
+    margin-bottom: 0.3rem;
+}
+.css-1d391kg {
+    padding-top: 1rem;
+}
+.streamlit-expanderHeader {
+    margin-top: 0.5rem;
+}
+.stSelectbox {
+    margin-bottom: 0.5rem;
+}
+.row-widget.stRadio > div {
+    gap: 0.5rem;
+}
+.stMarkdown {
+    padding: 0.3rem;
+}
+h1, h2, h3 {
+    margin-top: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+[data-testid="stSidebar"] {
+    padding-top: 0.5rem;
+}
