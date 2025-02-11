@@ -70,10 +70,24 @@ def main(current_user=None):
         st.session_state['selected_user'] = "-"
     if 'page' not in st.session_state:
         st.session_state['page'] = 1
+    # Nova flag para controlar o fluxo de aprovação
+    if 'approval_started' not in st.session_state:
+        st.session_state['approval_started'] = False
 
-    col_title, col_filters = st.columns([3, 2])
-    with col_title:
-        selected_user = st.sidebar.selectbox(
+    # Verifica se já existem notícias com status "00-START-APPROVE"
+    noticias_editaveis, count_editaveis = noticia_service.listar_noticias(
+        page=1, 
+        per_page=1, 
+        filters={'STATUS': ['00-START-APPROVE']}
+    )
+    print(count_editaveis)
+    if count_editaveis > 0:
+        st.session_state['approval_started'] = True
+    else:
+        st.session_state['approval_started'] = False
+
+    with st.sidebar:
+        selected_user = st.selectbox(
             "Usuário:",
             user_options,
             index=user_options.index(st.session_state['selected_user'])
@@ -84,7 +98,14 @@ def main(current_user=None):
     if st.session_state['selected_period'] != "-" or st.session_state['selected_user'] != "-":
         st.session_state['page'] = 1
 
-    filters = {'STATUS': ['200-TO-APPROVE']}
+    # Define o filtro de STATUS de acordo com o fluxo
+    if st.session_state['approval_started']:
+        print('if')
+        filters = {'STATUS': ['00-START-APPROVE']}
+    else:
+        print('else')
+        filters = {'STATUS': ['200-TO-APPROVE']}
+
     if st.session_state['selected_period'] and st.session_state['selected_period'] != "-":
         filters['PERIODO'] = st.session_state['selected_period'].lower()
     if st.session_state['selected_user'] and st.session_state['selected_user'] != "-":
@@ -108,20 +129,35 @@ def main(current_user=None):
         st.session_state['dialog_nome'] = None
 
     if noticias:
-        with st.container():
-            col_taskbar = st.columns([6, 2])
-            with col_taskbar[0]:
-                if st.button("Aprovar Todas as Notícias", key="approve_all", icon=":material/done_all:", type='primary',):
-                    with st.spinner("Aprovando todas as notícias..."):
+        # Exibe o botão de fluxo dependendo do status atual
+        if not st.session_state['approval_started']:
+            with st.container():
+                if st.button("Iniciar Aprovação", key="start_approval", icon=":material/play_arrow:"):
+                    with st.spinner("Iniciando aprovação..."):
                         for noticia in noticias:
-                            update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
+                            update_data = NoticiaRaspadaUpdateSchema(STATUS='00-START-APPROVE')
                             noticia_service.atualizar_noticia(noticia.ID, update_data)
-                    st.toast("Todas as notícias foram aprovadas!")
+                    st.session_state['approval_started'] = True
+                    st.toast("Aprovação iniciada!")
                     st.rerun()
+        else:
+            with st.container():
+                col_taskbar = st.columns([6, 2])
+                with col_taskbar[0]:
+                    if st.button("Aprovar Todas as Notícias", key="approve_all", icon=":material/done_all:", type='primary'):
+                        with st.spinner("Aprovando todas as notícias..."):
+                            for noticia in noticias:
+                                update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
+                                noticia_service.atualizar_noticia(noticia.ID, update_data)
+                        st.toast("Todas as notícias foram aprovadas!")
+                        st.rerun()
         st.divider()
 
+    # Lista cada notícia com os inputs condicionais
     if noticias:
         for noticia in noticias:
+            # Define se os inputs devem ser editáveis somente quando o status for 00-START-APPROVE
+            is_editable = (noticia.STATUS == "00-START-APPROVE")
             with st.container():
                 st.markdown(f"###### Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
                 if hasattr(noticia, 'URL'):
@@ -129,33 +165,37 @@ def main(current_user=None):
 
                 col_top1, col_top2, col_top3 = st.columns(3)
                 with col_top1:
-                    font = st.text_input("Fonte", value=noticia.FONTE, key=f"fonte_{noticia.ID}")
+                    font = st.text_input("Fonte", value=noticia.FONTE, key=f"fonte_{noticia.ID}", disabled=not is_editable)
                 with col_top2:
-                    title = st.text_input("Título", value=noticia.TITULO, key=f"titulo_{noticia.ID}")
+                    title = st.text_input("Título", value=noticia.TITULO, key=f"titulo_{noticia.ID}", disabled=not is_editable)
                 with col_top3:
-                    category = st.text_input("Categoria", value=noticia.CATEGORIA, key=f"categoria_{noticia.ID}")
+                    category = st.text_input("Categoria", value=noticia.CATEGORIA, key=f"categoria_{noticia.ID}", disabled=not is_editable)
 
                 col_bottom1, col_bottom2, col_bottom3 = st.columns(3)
                 with col_bottom1:
-                    region = st.text_input("Região", value=noticia.REGIAO if noticia.REGIAO else "", key=f"regiao_{noticia.ID}")
+                    region = st.text_input("Região", value=noticia.REGIAO if noticia.REGIAO else "", key=f"regiao_{noticia.ID}", disabled=not is_editable)
                 with col_bottom2:
                     uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
                                'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
                                'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
                     uf_value = noticia.UF if noticia.UF in uf_list else 'N/A'
-                    uf = st.selectbox("UF", options=uf_list, index=uf_list.index(uf_value), key=f"uf_{noticia.ID}")
+                    uf = st.selectbox("UF", options=uf_list, index=uf_list.index(uf_value), key=f"uf_{noticia.ID}", disabled=not is_editable)
                 with col_bottom3:
                     reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
                     st.text_input("Número do Registro da Notícia (já existente)",
                                   value=reg_noticia if reg_noticia else 'NÃO PREENCHIDO',
                                   key=f"reg_noticia_{noticia.ID}",
                                   disabled=True)
-                    arquivo_up = st.file_uploader("SELECIONE O ARQUIVO", key=f"file_{noticia.ID}", label_visibility="hidden")
-                    if arquivo_up is not None:
-                        reg_noticia = os.path.splitext(arquivo_up.name)[0]
+                    if is_editable:
+                        arquivo_up = st.file_uploader("SELECIONE O ARQUIVO", key=f"file_{noticia.ID}", label_visibility="hidden")
+                        if arquivo_up is not None:
+                            reg_noticia = os.path.splitext(arquivo_up.name)[0]
+                        else:
+                            reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
                     else:
-                        reg_noticia = noticia.REG_NOTICIA if noticia.REG_NOTICIA else ""
+                        st.write(f"Arquivo: {reg_noticia if reg_noticia else 'Não definido'}")
 
+            # Exibe os nomes raspados com opção de editar (caso existam)
             if noticia.nomes_raspados:
                 headers = [
                     "Editar", "Nome", "CPF", "Apelido", "Nome/CPF", "Sexo", "Pessoa",
@@ -172,8 +212,11 @@ def main(current_user=None):
                     with row_cols[0]:
                         inner_cols = st.columns([1, 1, 1])
                         with inner_cols[1]:
-                            if st.button("", icon=":material/edit_square:", key=f"editar_nome_{nome_obj.ID}"):
-                                edit_nome_dialog(nome_obj, noticia.ID)
+                            if is_editable:
+                                if st.button("", icon=":material/edit_square:", key=f"editar_nome_{nome_obj.ID}"):
+                                    edit_nome_dialog(nome_obj, noticia.ID)
+                            else:
+                                st.button("", icon=":material/edit_square:", key=f"editar_nome_{nome_obj.ID}", disabled=True)
                     with row_cols[1]:
                         st.markdown(f"<p style='text-align: center;'>{nome_obj.NOME if nome_obj.NOME else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[2]:
@@ -206,26 +249,29 @@ def main(current_user=None):
             else:
                 st.write("Nenhum nome extraído.")
 
-            if st.button('Gravar', use_container_width=True, key=f"salvar_{noticia.ID}"):
-                update_data = NoticiaRaspadaUpdateSchema(
-                    FONTE=font,
-                    TITULO=title,
-                    CATEGORIA=category,
-                    REGIAO=region,
-                    UF=uf,
-                    REG_NOTICIA=reg_noticia
-                )
-                try:
-                    noticia_service.atualizar_noticia(noticia.ID, update_data)
-                    st.toast("Notícia gravada com sucesso!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Erro ao gravar a notícia: {e}")
+            # Botão para gravar as alterações – somente se editável
+            if is_editable:
+                if st.button('Gravar', use_container_width=True, key=f"salvar_{noticia.ID}"):
+                    update_data = NoticiaRaspadaUpdateSchema(
+                        FONTE=font,
+                        TITULO=title,
+                        CATEGORIA=category,
+                        REGIAO=region,
+                        UF=uf,
+                        REG_NOTICIA=reg_noticia
+                    )
+                    try:
+                        noticia_service.atualizar_noticia(noticia.ID, update_data)
+                        st.toast("Notícia gravada com sucesso!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erro ao gravar a notícia: {e}")
             
             st.divider()
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
 
+    # Paginação
     pagination_placeholder = st.empty()
     with pagination_placeholder:
         col_prev, col_page, col_next = st.columns([1, 2, 1])
@@ -239,6 +285,7 @@ def main(current_user=None):
             if st.button("Próximo") and page < total_pages:
                 st.session_state['page'] += 1
                 st.rerun()
+
 
 @st.dialog("Justificativa para Devolução")
 def open_justificativa_dialog(noticia, current_user):
@@ -258,6 +305,7 @@ def open_justificativa_dialog(noticia, current_user):
             st.rerun()
         else:
             st.warning("Por favor, forneça uma justificativa antes de enviar.")
+
 
 @st.dialog("Editar Nome")
 def edit_nome_dialog(nome_obj, noticia_id):
