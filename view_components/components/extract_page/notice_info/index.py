@@ -12,57 +12,111 @@ session = SessionLocal()
 noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
+uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+                   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+                   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+
 def notice_info(notice):
     if 'page_to_return' not in st.session_state:
         st.session_state['page_to_return'] = 'home.py'
+    page_to_return = st.session_state['page_to_return']
 
     if notice['mensagens']:
         for msg in notice['mensagens']:
             st.warning(f"NOTÍCIA REPROVADA.\n\n\"{msg.MSG_TEXT}\"", icon="⚠️")
 
-    page_to_return = st.session_state['page_to_return']
-
-    cols = st.columns([1.5, 8, 8])
-    with cols[0]:
+    cols_voltar = st.columns([1.5, 8, 8])
+    with cols_voltar[0]:
         if st.button('Voltar', icon=":material/first_page:", use_container_width=True):
-            st.switch_page(f"pages/{page_to_return}")
-            msg_confirma('Saindo da aplicação')
+            unsaved = False
+            if st.session_state.get('font_input', '') != (notice.get('FONTE') or ''):
+                unsaved = True
+            if st.session_state.get('title_input', '') != (notice.get('TITULO') or ''):
+                unsaved = True
+            if st.session_state.get('category_input', '') != (notice.get('CATEGORIA') or ''):
+                unsaved = True
+            if st.session_state.get('region_input', '') != (notice.get('REGIAO') or ''):
+                unsaved = True
+            if st.session_state.get('uf_input', 'N/A') != (notice.get('UF') if notice.get('UF') in uf_list else 'N/A'):
+                unsaved = True
+            # if reg_noticia != '':
+            #     unsaved = True
 
+            if unsaved:
+                st.toast("Você tem alterações não salvas. Por favor, salve ou descarte as alterações antes de sair.", icon="⚠️")
+            else:
+                st.switch_page(f"pages/{page_to_return}")
+                st.toast('Saindo da aplicação', icon="✅")
+    
     st.markdown(f'**URL:** {notice["URL"]}')
 
     cols_top = st.columns(3)
     with cols_top[0]:
-        font = st.text_input('Fonte', value=notice['FONTE'] if notice and notice['FONTE'] else '')
+        font = st.text_input(
+            'Fonte',
+            value=notice.get('FONTE') or '',
+            key='font_input'
+        )
     with cols_top[1]:
-        title = st.text_input('Título', value=notice['TITULO'] if notice and notice['TITULO'] else '')
+        title = st.text_input(
+            'Título',
+            value=notice.get('TITULO') or '',
+            key='title_input'
+        )
     with cols_top[2]:
-        category = st.text_input('Categoria', value=notice['CATEGORIA'] if notice and notice['CATEGORIA'] else '')
+        category = st.text_input(
+            'Categoria',
+            value=notice.get('CATEGORIA') or '',
+            key='category_input'
+        )
 
     cols_bottom = st.columns(3)
     with cols_bottom[0]:
-        region = st.text_input('Região', value=notice['REGIAO'] if notice and hasattr(notice, 'REGIAO') and notice['REGIAO'] else '')
+        region = st.text_input(
+            'Região',
+            value=notice.get('REGIAO') or '',
+            key='region_input'
+        )
     with cols_bottom[1]:
-        uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-                   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-                   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
-        uf_value = notice['UF'] if notice and hasattr(notice, 'UF') and notice['UF'] in uf_list else 'N/A'
-        uf = st.selectbox('UF', options=uf_list, index=uf_list.index(uf_value))
+        uf_value = notice.get('UF') if notice.get('UF') in uf_list else 'N/A'
+        uf = st.selectbox(
+            'UF',
+            options=uf_list,
+            index=uf_list.index(uf_value),
+            key='uf_input'
+        )
     with cols_bottom[2]:
-        arquivo_up = st.file_uploader('Selecione o arquivo')
+        arquivo_up = st.file_uploader('Selecione o arquivo', key='arquivo_up')
         if arquivo_up is not None:
             reg_noticia = os.path.splitext(arquivo_up.name)[0]
         else:
             reg_noticia = ''
 
-    main_action_buttons(font, title, category, region, uf, notice['ID'], reg_noticia, page_to_return, notice)
+    main_action_buttons(
+        st.session_state.get('font_input', ''),
+        st.session_state.get('title_input', ''),
+        st.session_state.get('category_input', ''),
+        st.session_state.get('region_input', ''),
+        st.session_state.get('uf_input', 'N/A'),
+        notice['ID'],
+        reg_noticia,
+        page_to_return,
+        notice
+    )
 
-    return font, title, category, region, uf, reg_noticia
+    return (
+        st.session_state.get('font_input', ''),
+        st.session_state.get('title_input', ''),
+        st.session_state.get('category_input', ''),
+        st.session_state.get('region_input', ''),
+        st.session_state.get('uf_input', 'N/A'),
+        reg_noticia
+    )
 
 def main_action_buttons(font, title, category, region, uf, notice_id, reg_noticia, page_to_return, notice):
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    # Layout com apenas os botões de Excluir e Aprovar
     cols = st.columns([1, 6, 1])
     
     with cols[0]:
@@ -74,7 +128,10 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     
     with cols[2]:
         if st.button('Aprovar', icon=":material/done_all:", type='primary', use_container_width=True):
-            # Primeiro, grava as alterações realizadas pelo usuário:
+            if not font or not title or not category or not region or not reg_noticia:
+                st.toast("Todos os campos devem ser preenchidos antes de aprovar a notícia.", icon="⚠️")
+                return
+            
             update_data = NoticiaRaspadaUpdateSchema(
                 FONTE=font,
                 TITULO=title,
@@ -89,10 +146,10 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
                 st.error(f"Erro ao gravar as alterações: {e}")
                 return
 
-            # Em seguida, executa a lógica já existente do botão Aprovar
             if notice['mensagens']:
                 msg_service = NoticiaRaspadaMsgService(session)
                 msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)
+            
             update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')

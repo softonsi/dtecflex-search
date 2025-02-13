@@ -70,11 +70,9 @@ def main(current_user=None):
         st.session_state['selected_user'] = "-"
     if 'page' not in st.session_state:
         st.session_state['page'] = 1
-    # Nova flag para controlar o fluxo de aprovação
     if 'approval_started' not in st.session_state:
         st.session_state['approval_started'] = False
 
-    # Verifica se já existem notícias com status "00-START-APPROVE"
     noticias_editaveis, count_editaveis = noticia_service.listar_noticias(
         page=1, 
         per_page=1, 
@@ -98,12 +96,9 @@ def main(current_user=None):
     if st.session_state['selected_period'] != "-" or st.session_state['selected_user'] != "-":
         st.session_state['page'] = 1
 
-    # Define o filtro de STATUS de acordo com o fluxo
     if st.session_state['approval_started']:
-        print('if')
         filters = {'STATUS': ['00-START-APPROVE']}
     else:
-        print('else')
         filters = {'STATUS': ['200-TO-APPROVE']}
 
     if st.session_state['selected_period'] and st.session_state['selected_period'] != "-":
@@ -129,7 +124,6 @@ def main(current_user=None):
         st.session_state['dialog_nome'] = None
 
     if noticias:
-        # Exibe o botão de fluxo dependendo do status atual
         if not st.session_state['approval_started']:
             with st.container():
                 if st.button("Iniciar Aprovação", key="start_approval", icon=":material/play_arrow:"):
@@ -153,10 +147,8 @@ def main(current_user=None):
                         st.rerun()
         st.divider()
 
-    # Lista cada notícia com os inputs condicionais
     if noticias:
         for noticia in noticias:
-            # Define se os inputs devem ser editáveis somente quando o status for 00-START-APPROVE
             is_editable = (noticia.STATUS == "00-START-APPROVE")
             with st.container():
                 st.markdown(f"###### Data Publicação: {noticia.DATA_PUBLICACAO.strftime('%d/%m/%Y')}")
@@ -195,7 +187,6 @@ def main(current_user=None):
                     else:
                         st.write(f"Arquivo: {reg_noticia if reg_noticia else 'Não definido'}")
 
-            # Exibe os nomes raspados com opção de editar (caso existam)
             if noticia.nomes_raspados:
                 headers = [
                     "Editar", "Nome", "CPF", "Apelido", "Nome/CPF", "Sexo", "Pessoa",
@@ -241,15 +232,14 @@ def main(current_user=None):
                     with row_cols[11]:
                         st.markdown(f"<p style='text-align: center;'>{nome_obj.TIPO_SUSPEITA if nome_obj.TIPO_SUSPEITA else '-'}</p>", unsafe_allow_html=True)
                     with row_cols[12]:
-                        st.markdown(f"<p style='text-align: center;'>{'Positivo' if nome_obj.FLG_PESSOA_PUBLICA else 'Negativo'}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{'Sim' if nome_obj.FLG_PESSOA_PUBLICA else 'Não'}</p>", unsafe_allow_html=True)
                     with row_cols[13]:
-                        st.markdown(f"<p style='text-align: center;'>{'Positivo' if nome_obj.INDICADOR_PPE else 'Negativo'}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='text-align: center;'>{'Sim' if nome_obj.INDICADOR_PPE else 'Não'}</p>", unsafe_allow_html=True)
                     with row_cols[14]:
                         st.markdown(f"<p style='text-align: center;'>{nome_obj.OPERACAO if nome_obj.OPERACAO else '-'}</p>", unsafe_allow_html=True)
             else:
                 st.write("Nenhum nome extraído.")
 
-            # Botão para gravar as alterações – somente se editável
             if is_editable:
                 if st.button('Gravar', use_container_width=True, key=f"salvar_{noticia.ID}"):
                     update_data = NoticiaRaspadaUpdateSchema(
@@ -271,7 +261,6 @@ def main(current_user=None):
     else:
         st.write("Nenhuma notícia encontrada para os filtros selecionados.")
 
-    # Paginação
     pagination_placeholder = st.empty()
     with pagination_placeholder:
         col_prev, col_page, col_next = st.columns([1, 2, 1])
@@ -309,50 +298,63 @@ def open_justificativa_dialog(noticia, current_user):
 
 @st.dialog("Editar Nome")
 def edit_nome_dialog(nome_obj, noticia_id):
+    import datetime
     st.markdown(f"### Editar Nome - ID: {nome_obj.ID}")
+    
     updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_dialog_{nome_obj.ID}_nome")
     updated_cpf = st.text_input("CPF", value=nome_obj.CPF, key=f"nome_dialog_{nome_obj.ID}_cpf")
     updated_apelido = st.text_input("Apelido", value=nome_obj.APELIDO, key=f"nome_dialog_{nome_obj.ID}_apelido")
     updated_sexo = st.text_input("Sexo", value=nome_obj.SEXO, key=f"nome_dialog_{nome_obj.ID}_sexo")
     updated_pessoa = st.text_input("Pessoa", value=nome_obj.PESSOA, key=f"nome_dialog_{nome_obj.ID}_pessoa")
-    updated_idade = st.number_input("Idade", value=nome_obj.IDADE if nome_obj.IDADE is not None else 0,
-                                    key=f"nome_dialog_{nome_obj.ID}_idade", min_value=0)
+    updated_idade = st.number_input(
+        "Idade", 
+        value=nome_obj.IDADE if nome_obj.IDADE is not None else 0,
+        key=f"nome_dialog_{nome_obj.ID}_idade", 
+        min_value=0
+    )
     updated_atividade = st.text_input("Atividade", value=nome_obj.ATIVIDADE, key=f"nome_dialog_{nome_obj.ID}_atividade")
     updated_envolvimento = st.text_area("Envolvimento", value=nome_obj.ENVOLVIMENTO,
                                         key=f"nome_dialog_{nome_obj.ID}_envolvimento")
     updated_tipo_suspeita = st.text_input("Tipo de Suspeita", value=nome_obj.TIPO_SUSPEITA,
                                           key=f"nome_dialog_{nome_obj.ID}_tipo_suspeita")
-    updated_flg_pessoa_publica = st.checkbox(
+    
+    updated_flg_pessoa_publica = st.toggle(
         "Pessoa Pública",
-        value=True if nome_obj.FLG_PESSOA_PUBLICA in ["S", "True", "true"] else False,
+        value=True if nome_obj.FLG_PESSOA_PUBLICA in [True, "True", "true", "S", 1] else False,
         key=f"nome_dialog_{nome_obj.ID}_flg_pessoa_publica"
     )
-    updated_indicador_ppe = st.checkbox(
+    updated_indicador_ppe = st.toggle(
         "Indicador PPE",
-        value=True if nome_obj.INDICADOR_PPE in ["S", "True", "true"] else False,
+        value=True if nome_obj.INDICADOR_PPE in [True, "True", "true", "S", 1] else False,
         key=f"nome_dialog_{nome_obj.ID}_indicador_ppe"
     )
+    
     default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO is not None else datetime.date.today()
-    updated_aniversario = st.date_input("Aniversário", value=default_date,
-                                         key=f"nome_dialog_{nome_obj.ID}_aniversario")
+    updated_aniversario = st.date_input(
+        "Aniversário", 
+        value=default_date,
+        key=f"nome_dialog_{nome_obj.ID}_aniversario"
+    )
     
     if st.button("Salvar Alterações"):
         data = NoticiaRaspadaNomeCreateSchema(
-            CPF=st.session_state.get(f"nome_dialog_{nome_obj.ID}_cpf", nome_obj.CPF),
-            NOME=st.session_state.get(f"nome_dialog_{nome_obj.ID}_nome", nome_obj.NOME),
-            APELIDO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_apelido", nome_obj.APELIDO),
-            NOME_CPF=st.session_state.get(f"nome_dialog_{nome_obj.ID}_nome_cpf", 
-                                          nome_obj.NOME_CPF if hasattr(nome_obj, "NOME_CPF") else None),
-            SEXO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_sexo", nome_obj.SEXO),
-            PESSOA=st.session_state.get(f"nome_dialog_{nome_obj.ID}_pessoa", nome_obj.PESSOA),
-            IDADE=st.session_state.get(f"nome_dialog_{nome_obj.ID}_idade", nome_obj.IDADE),
-            ANIVERSARIO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_aniversario", nome_obj.ANIVERSARIO),
-            ATIVIDADE=st.session_state.get(f"nome_dialog_{nome_obj.ID}_atividade", nome_obj.ATIVIDADE),
-            ENVOLVIMENTO=st.session_state.get(f"nome_dialog_{nome_obj.ID}_envolvimento", nome_obj.ENVOLVIMENTO),
+            CPF=updated_cpf,
+            NOME=updated_nome,
+            APELIDO=updated_apelido,
+            NOME_CPF=st.session_state.get(
+                f"nome_dialog_{nome_obj.ID}_nome_cpf", 
+                nome_obj.NOME_CPF if hasattr(nome_obj, "NOME_CPF") else None
+            ),
+            SEXO=updated_sexo,
+            PESSOA=updated_pessoa,
+            IDADE=updated_idade,
+            ANIVERSARIO=updated_aniversario,
+            ATIVIDADE=updated_atividade,
+            ENVOLVIMENTO=updated_envolvimento,
             OPERACAO=nome_obj.OPERACAO,
-            FLG_PESSOA_PUBLICA="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_flg_pessoa_publica", False) else "N",
+            FLG_PESSOA_PUBLICA=updated_flg_pessoa_publica,
             ENVOLVIMENTO_GOV=None,
-            INDICADOR_PPE="S" if st.session_state.get(f"nome_dialog_{nome_obj.ID}_indicador_ppe", False) else "N",
+            INDICADOR_PPE=updated_indicador_ppe,
             NOTICIA_ID=noticia_id
         )
         try:
@@ -361,7 +363,6 @@ def edit_nome_dialog(nome_obj, noticia_id):
             st.rerun()
         except Exception as e:
             st.error(f"Erro ao atualizar nome ID {nome_obj.ID}: {e}")
-
 
 if __name__ == "__main__":
     main()
