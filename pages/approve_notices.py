@@ -78,7 +78,6 @@ def main(current_user=None):
         per_page=1, 
         filters={'STATUS': ['00-START-APPROVE']}
     )
-    print(count_editaveis)
     if count_editaveis > 0:
         st.session_state['approval_started'] = True
     else:
@@ -329,7 +328,7 @@ def edit_nome_dialog(nome_obj, noticia_id):
         key=f"nome_dialog_{nome_obj.ID}_indicador_ppe"
     )
     
-    default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO is not None else datetime.date.today()
+    default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO is not None else '-'
     updated_aniversario = st.date_input(
         "Aniversário", 
         value=default_date,
