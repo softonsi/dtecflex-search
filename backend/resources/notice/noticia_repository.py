@@ -21,7 +21,8 @@ class NoticiaRepository:
     def create(self, noticia_data: NoticiaRaspadaCreateSchema) -> NoticiaRaspadaModel:
         #noticia = NoticiaRaspadaModel(**noticia_data.dict(exclude_unset=True))
         noticia = NoticiaRaspadaModel(**noticia_data.model_dump())
-        self.session.add(noticia)
+        test = self.session.add(noticia)
+        print('aqqqq', test)
         self.session.commit()
         self.session.refresh(noticia)
         return noticia

@@ -33,7 +33,11 @@ class NoticiaService:
         return noticia_schema.model_dump()
 
     def atualizar_noticia(self, noticia_id: int, noticia_data: NoticiaRaspadaUpdateSchema) -> Optional[NoticiaRaspadaSchema]:
-        noticia = self.noticia_repository.update(noticia_id, noticia_data)
+        try:
+            noticia = self.noticia_repository.update(noticia_id, noticia_data)
+        except Exception as e:
+                print(e)
+
         if noticia:
             return NoticiaRaspadaSchema.model_validate(noticia, from_attributes=True)
         return None

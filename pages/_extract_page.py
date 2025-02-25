@@ -1,3 +1,4 @@
+import re
 from view_components.components.extract_page.notice_info.index import notice_info
 from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
@@ -10,6 +11,55 @@ from backend.resources.notice.noticia_service import NoticiaService
 import streamlit as st
 import pandas as pd
 from database import SessionLocal
+
+def validate_cpf_cnpj(value: str) -> bool:
+    """Valida o CPF ou CNPJ verificando o dígito verificador."""
+    value = re.sub(r'\D', '', value)
+    if len(value) == 11:  # CPF
+        return validate_cpf(value)
+    elif len(value) == 14:  # CNPJ
+        return validate_cnpj(value)
+    return False
+
+def validate_cpf(cpf: str) -> bool:
+    """Valida o CPF pelo cálculo do dígito verificador."""
+    if not cpf or len(cpf) != 11 or cpf in ["00000000000", "11111111111", "22222222222", "33333333333"]:
+        return False
+
+    def calculate_digit(digits, weights):
+        sum_digits = sum(int(d) * w for d, w in zip(digits, weights))
+        remainder = (sum_digits * 10) % 11
+        return 0 if remainder == 10 else remainder
+
+    # Primeiro dígito
+    if calculate_digit(cpf[:9], range(10, 1, -1)) != int(cpf[9]):
+        return False
+
+    # Segundo dígito
+    if calculate_digit(cpf[:10], range(11, 1, -1)) != int(cpf[10]):
+        return False
+
+    return True
+
+def validate_cnpj(cnpj: str) -> bool:
+    """Valida o CNPJ pelo cálculo do dígito verificador."""
+    if not cnpj or len(cnpj) != 14:
+        return False
+
+    def calculate_digit(digits, weights):
+        sum_digits = sum(int(d) * w for d, w in zip(digits, weights))
+        remainder = sum_digits % 11
+        return 0 if remainder < 2 else 11 - remainder
+
+    # Primeiro dígito
+    if calculate_digit(cnpj[:12], [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) != int(cnpj[12]):
+        return False
+
+    # Segundo dígito
+    if calculate_digit(cnpj[:13], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) != int(cnpj[13]):
+        return False
+
+    return True
 
 def load_css():
     css = """
@@ -47,6 +97,134 @@ def load_css():
     """
     st.markdown(css, unsafe_allow_html=True)
 
+def validate_name_fields(cpf: str, nome_cpf: str, pessoa_tipo: str) -> (bool, str):
+    cpf = cpf.strip()
+    nome_cpf = nome_cpf.strip()
+    pessoa_tipo = pessoa_tipo.strip()
+
+    if (cpf or nome_cpf) and (not cpf or not nome_cpf):
+        return False, "Se o CPF/CNPJ estiver preenchido, o campo NOME_CPF também deve estar preenchido (e vice-versa)."
+
+    if pessoa_tipo == "N/A" and cpf:
+        return False, "Se a PESSOA for 'N/A', o CPF/CNPJ deve estar vazio."
+
+    if pessoa_tipo in ["PF", "PJ"] and cpf:
+        if not validate_cpf_cnpj(cpf):
+            return False, "CPF/CNPJ inválido! Verifique os dados antes de salvar."
+
+    return True, ""
+
+def generate_input_widget(coluna, valor, key_prefix, disabled=False):
+    if coluna == 'SEXO':
+        input_value = st.selectbox(
+            label=coluna,
+            options=['M', 'F', 'N/A'],
+            index=['M', 'F', 'N/A'].index(valor) if valor in ['M', 'F', 'N/A'] else 2,
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    elif coluna == 'PESSOA':
+        input_value = st.selectbox(
+            label=coluna,
+            options=['PF', 'PJ', 'NA'],
+            index=['PF', 'PJ', 'NA'].index(valor) if valor in ['PF', 'PJ', 'NA'] else 2,
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    elif coluna == 'IDADE':
+        input_value = st.number_input(
+            label=coluna,
+            value=int(valor) if valor and str(valor).isdigit() else 0,
+            min_value=0,
+            max_value=199,
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    elif coluna == 'ANIVERSARIO':
+        try:
+            date_value = pd.to_datetime(valor).date() if valor else None
+        except Exception:
+            date_value = None
+        input_value = st.date_input(
+            label=coluna,
+            value=date_value if date_value else None,
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    elif coluna in ['ENVOLVIMENTO_GOV', 'FLG_PESSOA_PUBLICA', 'INDICADOR_PPE']:
+        input_value = st.toggle(
+            label=coluna,
+            value=valor,
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    else:
+        input_value = st.text_input(
+            label=coluna,
+            value=valor if valor is not None else '',
+            key=f"{key_prefix}_{coluna}",
+            disabled=disabled
+        )
+    return input_value
+
+def render_input_fields(item, colunas, key_prefix, disabled=False):
+    input_values = {}
+    i = 0
+    while i < len(colunas):
+        coluna = colunas[i]
+        # Agrupa APELIDO e NOME
+        if coluna == 'APELIDO' and i + 1 < len(colunas) and colunas[i+1] == 'NOME':
+            cols = st.columns(2)
+            with cols[0]:
+                valor_apelido = item.get('APELIDO', '')
+                input_val_apelido = generate_input_widget('APELIDO', valor_apelido, key_prefix, disabled)
+            with cols[1]:
+                valor_nome = item.get('NOME', '')
+                input_val_nome = generate_input_widget('NOME', valor_nome, key_prefix, disabled)
+            input_values['APELIDO'] = input_val_apelido
+            input_values['NOME'] = input_val_nome
+            i += 2
+        elif coluna == 'CPF' and i + 1 < len(colunas) and colunas[i+1] == 'NOME CPF':
+            cols = st.columns(2)
+            with cols[0]:
+                valor_cpf = item.get('CPF', '')
+                input_val_cpf = generate_input_widget('CPF', valor_cpf, key_prefix, disabled)
+            with cols[1]:
+                valor_nome_cpf = item.get('NOME CPF', '')
+                input_val_nome_cpf = generate_input_widget('NOME CPF', valor_nome_cpf, key_prefix, disabled)
+            input_values['CPF'] = input_val_cpf
+            input_values['NOME CPF'] = input_val_nome_cpf
+            i += 2
+        elif coluna == 'PESSOA' and i + 1 < len(colunas) and colunas[i+1] == 'SEXO':
+            cols = st.columns(2)
+            with cols[0]:
+                valor_pessoa = item.get('PESSOA', '')
+                input_val_pessoa = generate_input_widget('PESSOA', valor_pessoa, key_prefix, disabled)
+            with cols[1]:
+                valor_sexo = item.get('SEXO', '')
+                input_val_sexo = generate_input_widget('SEXO', valor_sexo, key_prefix, disabled)
+            input_values['PESSOA'] = input_val_pessoa
+            input_values['SEXO'] = input_val_sexo
+            i += 2
+        elif coluna == 'IDADE' and i + 1 < len(colunas) and colunas[i+1] == 'ANIVERSARIO':
+            cols = st.columns(2)
+            with cols[0]:
+                valor_idade = item.get('IDADE', '')
+                input_val_idade = generate_input_widget('IDADE', valor_idade, key_prefix, disabled)
+            with cols[1]:
+                valor_aniversario = item.get('ANIVERSARIO', '')
+                input_val_aniversario = generate_input_widget('ANIVERSARIO', valor_aniversario, key_prefix, disabled)
+            input_values['IDADE'] = input_val_idade
+            input_values['ANIVERSARIO'] = input_val_aniversario
+            i += 2
+        else:
+            with st.container():
+                valor = item.get(coluna, '')
+                input_val = generate_input_widget(coluna, valor, key_prefix, disabled)
+            input_values[coluna] = input_val
+            i += 1
+    return input_values
+
 @require_authentication
 def main(current_user=None):
     st.set_page_config(
@@ -62,14 +240,12 @@ def main(current_user=None):
     noticia_name_service = NoticiaNomeService(session)
     noticia_service = NoticiaService(session)
 
-
     if 'noticia_id' in st.query_params:
         noticia_id = st.query_params['noticia_id']
     else:
         noticia_id = st.session_state.get('id_notice_to_analyze')
 
     noticia = noticia_service.get_by_id_with_names(noticia_id)
-
     extracted_names_list = []
 
     if 'url' not in st.session_state:
@@ -96,12 +272,9 @@ def main(current_user=None):
                 extracted_text = fetcher.fetch_and_extract_text(noticia["URL"])
                 update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=extracted_text)
                 noticia_service.atualizar_noticia(noticia['ID'], update_data)
-                message = "Notícia atualizada com sucesso!"
-                st.toast(message)
+                st.toast("Notícia atualizada com sucesso!")
             except Exception as e:
-                print('erro')
-                message = f"Erro ao tentar extrair o conteúdo: {str(e)}"
-                st.toast(message)
+                st.toast(f"Erro ao tentar extrair o conteúdo: {str(e)}")
 
     notice_info(noticia)
 
@@ -113,125 +286,51 @@ def main(current_user=None):
         'FLG_PESSOA_PUBLICA', 'ENVOLVIMENTO_GOV'
     ]
 
-    def generate_input_widget(coluna, valor, key_prefix, disabled=False):
-        if coluna == 'SEXO':
-            input_value = st.selectbox(
-                label=coluna,
-                options=['M', 'F', 'N/A'],
-                index=['M', 'F', 'N/A'].index(valor) if valor in ['M', 'F', 'N/A'] else 2,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        elif coluna == 'PESSOA':
-            input_value = st.selectbox(
-                label=coluna,
-                options=['PF', 'PJ', 'NA'],
-                index=['PF', 'PJ', 'NA'].index(valor) if valor in ['PF', 'PJ', 'NA'] else 2,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        elif coluna == 'IDADE':
-            input_value = st.number_input(
-                label=coluna,
-                value=int(valor) if valor and str(valor).isdigit() else 0,
-                min_value=0,
-                max_value=199,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        elif coluna == 'ANIVERSARIO':
-            try:
-                date_value = pd.to_datetime(valor).date() if valor else None
-            except Exception:
-                date_value = None
-            input_value = st.date_input(
-                label=coluna,
-                value=date_value if date_value else None,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        elif coluna == 'ENVOLVIMENTO_GOV' or coluna == 'FLG_PESSOA_PUBLICA':
-            bool_value = True if str(valor) == 'True' else False
-            input_value = st.toggle(
-                label=coluna,
-                value=valor,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        elif coluna == 'INDICADOR_PPE':
-            input_value = st.toggle(
-                label=coluna,
-                value=valor,
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        else:
-            input_value = st.text_input(
-                label=coluna,
-                value=valor if valor is not None else '',
-                key=f"{key_prefix}_{coluna}",
-                disabled=disabled
-            )
-        return input_value
-
     if saved_names_list:
         st.markdown("#### Nomes Salvos")
         for idx, item in enumerate(saved_names_list):
             is_deleted = False
-            
             expander_label = f"{item.get('NOME', '')}"
-
             with st.expander(expander_label, expanded=False):
                 key_prefix = f"saved_{item['ID']}"
-
                 with st.form(key=f'{key_prefix}form{item["ID"]}'):
-
                     cols_layout = st.columns([2, 8])
-
                     with cols_layout[0]:
-                        input_values = {}
-                        for coluna in colunas:
-                            valor = item.get(coluna, '')
-                            disabled = is_deleted
-
-                            if coluna in ['SEXO', 'PESSOA']:
-                                with st.container():
-                                    input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                            else:
-                                with st.container():
-                                    input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-
-                            input_values[coluna] = input_value
-
+                        input_values = render_input_fields(item, colunas, key_prefix, disabled=is_deleted)
                     with cols_layout[0]:
                         col_buttons = st.columns([9, 9, 8])
                         with col_buttons[0]:
                             submitted = st.form_submit_button("Atualizar")
                         with col_buttons[1]:
                             delete_submitted = st.form_submit_button("Deletar")
-
                     if submitted:
-                        data = NoticiaRaspadaNomeCreateSchema(
-                            CPF=input_values.get('CPF'),
-                            NOME=input_values.get('NOME'),
-                            APELIDO=input_values.get('APELIDO'),
-                            NOME_CPF=input_values.get('NOME CPF'),
-                            SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                            PESSOA=input_values.get('PESSOA'),
-                            IDADE=input_values.get('IDADE'),
-                            ANIVERSARIO=input_values.get('ANIVERSARIO'),
-                            ATIVIDADE=input_values.get('ATIVIDADE'),
-                            ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
-                            OPERACAO=input_values.get('OPERACAO'),
-                            FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
-                            ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
-                            INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
-                            NOTICIA_ID=noticia_id
-                        )
-                        noticia_name_service.update(item['ID'], data)
-                        st.toast(f"Dados de {input_values.get('NOME')} atualizados com sucesso!")
-                        st.rerun()
-
+                        cpf = input_values.get('CPF', '')
+                        nome_cpf = input_values.get('NOME CPF', '')
+                        pessoa_tipo = input_values.get('PESSOA', 'N/A')
+                        valid, error_msg = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
+                        if not valid:
+                            st.error(error_msg)
+                        else:
+                            data = NoticiaRaspadaNomeCreateSchema(
+                                CPF=cpf,
+                                NOME=input_values.get('NOME'),
+                                APELIDO=input_values.get('APELIDO'),
+                                NOME_CPF=nome_cpf,
+                                SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
+                                PESSOA=pessoa_tipo,
+                                IDADE=input_values.get('IDADE'),
+                                ANIVERSARIO=input_values.get('ANIVERSARIO'),
+                                ATIVIDADE=input_values.get('ATIVIDADE'),
+                                ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
+                                OPERACAO=input_values.get('OPERACAO'),
+                                FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
+                                ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
+                                INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
+                                NOTICIA_ID=noticia_id
+                            )
+                            noticia_name_service.update(item['ID'], data)
+                            st.toast(f"Dados de {input_values.get('NOME')} atualizados com sucesso!")
+                            st.rerun()
                     if delete_submitted:
                         sucesso = noticia_name_service.delete(item['ID'])
                         if sucesso:
@@ -247,28 +346,12 @@ def main(current_user=None):
             expander_label = f"{item.get('NOME', '')}"
             if is_deleted:
                 expander_label = f"~{expander_label}~ (Excluído)"
-
             with st.expander(expander_label, expanded=False):
                 key_prefix = f"deleted_{item['NOME']}" if is_deleted else f"extracted_{item['NOME']}"
-
                 with st.form(key=f'{key_prefix}form{item["NOME"]}'):
                     cols_layout = st.columns([2, 8])
-
                     with cols_layout[0]:
-                        input_values = {}
-                        for coluna in colunas:
-                            valor = item.get(coluna, '')
-                            disabled = is_deleted
-
-                            if coluna in ['SEXO', 'PESSOA']:
-                                with st.container():
-                                    input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                            else:
-                                with st.container():
-                                    input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-
-                            input_values[coluna] = input_value
-
+                        input_values = render_input_fields(item, colunas, key_prefix, disabled=is_deleted)
                     with cols_layout[0]:
                         col_buttons = st.columns([9, 9, 8])
                         with col_buttons[0]:
@@ -279,37 +362,39 @@ def main(current_user=None):
                         with col_buttons[1]:
                             if not is_deleted:
                                 delete_submitted = st.form_submit_button("Excluir")
-
-
                     if not is_deleted and submitted:
-                        data = NoticiaRaspadaNomeCreateSchema(
-                            CPF=input_values.get('CPF'),
-                            NOME=input_values.get('NOME'),
-                            APELIDO=input_values.get('APELIDO'),
-                            NOME_CPF=input_values.get('NOME CPF'),
-                            SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                            PESSOA=input_values.get('PESSOA'),
-                            IDADE=input_values.get('IDADE'),
-                            ANIVERSARIO=input_values.get('ANIVERSARIO'),
-                            ATIVIDADE=input_values.get('ATIVIDADE'),
-                            # ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
-                            OPERACAO=input_values.get('OPERACAO'),
-                            FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
-                            ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
-                            INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
-                            NOTICIA_ID=noticia_id
-                        )
-                        noticia_name_service.create(data)
-                        st.toast(f"Dados de {input_values.get('NOME')} salvos com sucesso!")
-                        extracted_names_list.pop(idx)
-                        st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
-                        st.rerun()
-
+                        cpf = input_values.get('CPF', '')
+                        nome_cpf = input_values.get('NOME CPF', '')
+                        pessoa_tipo = input_values.get('PESSOA', 'N/A')
+                        valid, error_msg = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
+                        if not valid:
+                            st.error(error_msg)
+                        else:
+                            data = NoticiaRaspadaNomeCreateSchema(
+                                CPF=cpf,
+                                NOME=input_values.get('NOME'),
+                                APELIDO=input_values.get('APELIDO'),
+                                NOME_CPF=nome_cpf,
+                                SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
+                                PESSOA=pessoa_tipo,
+                                IDADE=input_values.get('IDADE'),
+                                ANIVERSARIO=input_values.get('ANIVERSARIO'),
+                                ATIVIDADE=input_values.get('ATIVIDADE'),
+                                OPERACAO=input_values.get('OPERACAO'),
+                                FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
+                                ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
+                                INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
+                                NOTICIA_ID=noticia_id
+                            )
+                            noticia_name_service.create(data)
+                            st.toast(f"Dados de {input_values.get('NOME')} salvos com sucesso!")
+                            extracted_names_list.pop(idx)
+                            st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
+                            st.rerun()
                     if not is_deleted and delete_submitted:
                         item['deleted'] = True
                         st.session_state[f'{noticia_id}_is_extracted'][idx] = item
                         st.rerun()
-
                     if is_deleted and restore_submitted:
                         item['deleted'] = False
                         st.session_state[f'{noticia_id}_is_extracted'][idx] = item

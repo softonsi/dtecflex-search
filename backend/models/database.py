@@ -11,6 +11,8 @@ class NoticiaRaspadaModel(Base):
     URL = Column(String(1000), nullable=False)
     FONTE = Column(String(250), nullable=False)
     DATA_PUBLICACAO = Column(DateTime, nullable=True)
+    REGIAO = Column(String(250), nullable=True)
+    UF = Column(String(2), nullable=True)
     # DATA_ANALISE = Column(DateTime, nullable=True)
     CATEGORIA = Column(String(50), nullable=False)
     REG_NOTICIA = Column(String(20), nullable=True)

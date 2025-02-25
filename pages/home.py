@@ -1,5 +1,9 @@
 from datetime import date, datetime
+import hashlib
+import uuid
 import streamlit as st
+from backend.resources.notice_name.noticia_nome import NoticiaRaspadaBaseSchema
+from backend.resources.notice_name.noticia_nome_service import NoticiaNomeService
 from database import  SessionLocal
 from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
@@ -9,6 +13,12 @@ from backend.resources.notice.noticia_service import NoticiaService
 
 from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
+from database import SessionLocal
+
+session = SessionLocal()
+
+noticia_name_service = NoticiaNomeService(session)
+noticia_service = NoticiaService(session)
 
 def init_page_layout():
     st.set_page_config(page_title="Página inicial", layout='wide')
@@ -67,19 +77,21 @@ def main(current_user=None):
 
     def listar_noticias():
         noticias, total_pages = filters(st, session)
-        # st.session_state['noticias'] = noticias
 
-        cols = st.columns([12,1,1,1])
-        with cols[1]:
+        cols = st.columns([2,15,1,1,1])
+        with cols[0]:
+            if st.button('Registrar', icon=":material/done_all:", type='primary', use_container_width=True):
+                notice_register_dialog()
+        with cols[2]:
             if st.button("", icon=":material/chevron_backward:", disabled=st.session_state['page_number'] <= 1):
                 st.session_state['page_number'] -= 1
                 st.rerun()
-        with cols[2]:
+        with cols[3]:
             st.markdown(
                 f"<div style='text-align: center; padding-top: 10px;'>{st.session_state['page_number']} - {total_pages}</div>",
                 unsafe_allow_html=True
             )
-        with cols[3]:
+        with cols[4]:
             if st.button("", icon=":material/chevron_forward:", disabled=st.session_state['page_number'] >= total_pages):
 
                 st.session_state['page_number'] += 1
@@ -306,6 +318,66 @@ def render_status(txt_label, txt):
         </div>
     </div>
 """
+
+@st.dialog("Você possui alterações não salvas.")
+def notice_register_dialog():
+    st.write("Preencha os campos para registrar a notícia.")
+
+    if "url_input" not in st.session_state:
+        st.session_state["url_input"] = ""
+    if "fonte_input" not in st.session_state:
+        st.session_state["fonte_input"] = ""
+    if "categoria_input" not in st.session_state:
+        st.session_state["categoria_input"] = ""
+    if "titulo_input" not in st.session_state:
+        st.session_state["titulo_input"] = ""
+
+    url = st.text_input("URL", key="url_input")
+    fonte_input = st.text_input("Fonte", key="fonte_input")
+    categoria_input = st.selectbox("Categoria:", ["", "Lavagem de Dinheiro", "Crime", "Ambiental", "Empresarial"], index=0, key="categoria_input")
+    titulo = st.text_input("Título", key="titulo_input")
+
+    def generate_hash() -> str:
+        return hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16]
+
+    cols = st.columns([1, 1])
+    with cols[0]:
+        if st.button("Salvar", use_container_width=True):
+            noticia_data = NoticiaRaspadaBaseSchema(
+                LINK_ID=generate_hash(),
+                URL=url.strip() if url else None,
+                FONTE=fonte_input.strip(),
+                DATA_PUBLICACAO=datetime.now(),
+                CATEGORIA=categoria_input.strip(),
+                QUERY="",
+                ID_ORIGINAL=generate_hash(),
+                DT_RASPAGEM=datetime.now(),
+                TITULO=titulo.strip() if titulo else None,
+                LINK_ORIGINAL=None,
+                UF=None,
+                REGIAO=None,
+                TEXTO_NOTICIA=None,
+                STATUS="10-URL-OK"
+            )
+
+            try:
+                created_notice = noticia_service.criar_noticia(noticia_data)
+                st.session_state['page_to_return'] = 'home.py'
+                st.session_state['id_notice_to_analyze'] = created_notice.ID
+                st.session_state[f'notice_to_analyze_{created_notice.ID}'] = created_notice
+                st.session_state['url'] = created_notice.URL
+                # notice = noticia_service.get_by_id_with_names(noticia['ID'])
+                # if notice['STATUS'] == '07-EDIT-MODE' and noticia['ID_USUARIO'] == current_user['user_id']:
+                st.switch_page("pages/_extract_page.py")
+
+                # st.rerun()
+
+            except Exception as e:
+                st.error(f"Erro ao criar notícia: {e}")
+
+    with cols[1]:
+        if st.button("Descartar", use_container_width=True):
+            st.toast("Cadastro cancelado.", icon="⚠️")
 
 if __name__ == "__main__":
     main()

@@ -297,7 +297,6 @@ def open_justificativa_dialog(noticia, current_user):
 
 @st.dialog("Editar Nome")
 def edit_nome_dialog(nome_obj, noticia_id):
-    import datetime
     st.markdown(f"### Editar Nome - ID: {nome_obj.ID}")
     
     updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_dialog_{nome_obj.ID}_nome")

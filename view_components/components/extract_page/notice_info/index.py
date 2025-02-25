@@ -1,4 +1,3 @@
-from io import StringIO
 import os
 import streamlit as st
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
@@ -12,9 +11,10 @@ session = SessionLocal()
 noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
-uf_list = ['N/A', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+uf_list = ['-', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
                    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
                    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
+
 
 def notice_info(notice):
     if 'page_to_return' not in st.session_state:
@@ -37,16 +37,15 @@ def notice_info(notice):
                 unsaved = True
             if st.session_state.get('region_input', '') != (notice.get('REGIAO') or ''):
                 unsaved = True
-            if st.session_state.get('uf_input', 'N/A') != (notice.get('UF') if notice.get('UF') in uf_list else 'N/A'):
+            if st.session_state.get('uf_input', '-') != (notice.get('UF') if notice.get('UF') in uf_list else '-'):
                 unsaved = True
             # if reg_noticia != '':
             #     unsaved = True
 
             if unsaved:
-                st.toast("Você tem alterações não salvas. Por favor, salve ou descarte as alterações antes de sair.", icon="⚠️")
+                discard_or_save_dialog(page_to_return, notice['ID'])
             else:
                 st.switch_page(f"pages/{page_to_return}")
-                st.toast('Saindo da aplicação', icon="✅")
     
     st.markdown(f'**URL:** {notice["URL"]}')
 
@@ -78,7 +77,7 @@ def notice_info(notice):
             key='region_input'
         )
     with cols_bottom[1]:
-        uf_value = notice.get('UF') if notice.get('UF') in uf_list else 'N/A'
+        uf_value = notice.get('UF') if notice.get('UF') in uf_list else '-'
         uf = st.selectbox(
             'UF',
             options=uf_list,
@@ -153,4 +152,33 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
             noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')
+            st.switch_page(f"pages/{page_to_return}")
+
+@st.dialog("Você possui alterações não salvas.")
+def discard_or_save_dialog(page_to_return, notice_id):
+    st.write(f"Deseja salvar?")
+    cols = st.columns([1,1])
+    with cols[0]:
+        if st.button('Salvar', use_container_width=True):
+            font = st.session_state.get('font_input', '')
+            title = st.session_state.get('title_input', '')
+            category = st.session_state.get('category_input', '')
+            region = st.session_state.get('region_input', '')
+            uf = st.session_state.get('uf_input', '-')
+
+            update_data = NoticiaRaspadaUpdateSchema(
+                FONTE=font,
+                TITULO=title,
+                CATEGORIA=category,
+                REGIAO=region,
+                UF=uf
+            )
+
+            try:
+                noticia_service.atualizar_noticia(notice_id, update_data)
+            except Exception as e:
+                st.error(f"Erro ao salvar as alterações: {e}")
+
+    with cols[1]:
+        if st.button('Descartar', use_container_width=True):
             st.switch_page(f"pages/{page_to_return}")

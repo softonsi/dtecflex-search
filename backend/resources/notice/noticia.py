@@ -62,7 +62,7 @@ class NoticiaRaspadaUpdateSchema(BaseModel):
     TEXTO_NOTICIA: Optional[str] = None
     LINK_ORIGINAL: Optional[str] = Field(None, max_length=2000)
     REG_NOTICIA: Optional[str] = Field(None, max_length=20)
-    UF: Optional[str] = Field(None, max_length=200)
+    UF: Optional[str] = Field(None, max_length=2)
     REGIAO: Optional[str] = Field(None, max_length=200)
     model_config = ConfigDict(from_attributes=True)
 
