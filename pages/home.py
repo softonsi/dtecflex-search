@@ -20,6 +20,9 @@ session = SessionLocal()
 noticia_name_service = NoticiaNomeService(session)
 noticia_service = NoticiaService(session)
 
+def generate_hash() -> str:
+        return hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16]
+
 def init_page_layout():
     st.set_page_config(page_title="Página inicial", layout='wide')
     load_css()
@@ -80,7 +83,7 @@ def main(current_user=None):
 
         cols = st.columns([2,15,1,1,1])
         with cols[0]:
-            if st.button('Registrar', icon=":material/done_all:", type='primary', use_container_width=True):
+            if st.button('Cadastrar notícia', type='primary', use_container_width=True):
                 notice_register_dialog()
         with cols[2]:
             if st.button("", icon=":material/chevron_backward:", disabled=st.session_state['page_number'] <= 1):
@@ -337,13 +340,7 @@ def notice_register_dialog():
     categoria_input = st.selectbox("Categoria:", ["", "Lavagem de Dinheiro", "Crime", "Ambiental", "Empresarial"], index=0, key="categoria_input")
     titulo = st.text_input("Título", key="titulo_input")
 
-    def generate_hash() -> str:
-        return hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16]
-
-    cols = st.columns([1, 1])
-    with cols[0]:
-        if st.button("Salvar", use_container_width=True):
-            noticia_data = NoticiaRaspadaBaseSchema(
+    noticia_data = NoticiaRaspadaBaseSchema(
                 LINK_ID=generate_hash(),
                 URL=url.strip() if url else None,
                 FONTE=fonte_input.strip(),
@@ -358,7 +355,11 @@ def notice_register_dialog():
                 REGIAO=None,
                 TEXTO_NOTICIA=None,
                 STATUS="10-URL-OK"
-            )
+        )
+
+    cols = st.columns([1, 1])
+    with cols[0]:
+        if st.button("Ir para notícia", use_container_width=True):
 
             try:
                 created_notice = noticia_service.criar_noticia(noticia_data)
@@ -376,8 +377,12 @@ def notice_register_dialog():
                 st.error(f"Erro ao criar notícia: {e}")
 
     with cols[1]:
-        if st.button("Descartar", use_container_width=True):
-            st.toast("Cadastro cancelado.", icon="⚠️")
+        if st.button("Continuar cadastro", use_container_width=True):
+            try:
+                created_notice = noticia_service.criar_noticia(noticia_data)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Erro ao criar notícia: {e}")
 
 if __name__ == "__main__":
     main()

@@ -50,6 +50,9 @@ def main(current_user=None):
     load_css()
     navsidebar(current_user)
 
+    if current_user['admin']:
+        show_all_news = st.checkbox("Mostrar todas as notícias (ignorar filtro de usuário)")
+
     if 'per_page' not in st.session_state:
         st.session_state['per_page'] = 30
     if 'selected_tab' not in st.session_state:
@@ -63,7 +66,9 @@ def main(current_user=None):
     
     status_counts = {}
     for status in status_options:
-        filters_applied = {'STATUS': [status], 'USUARIO_ID': current_user['user_id']}
+        filters_applied = {'STATUS': [status]}
+        if not show_all_news:
+            filters_applied['USUARIO_ID'] = current_user['user_id']
         _, total_count = noticia_service.listar_noticias(
             page=1,
             per_page=1,
@@ -87,7 +92,10 @@ def main(current_user=None):
 
     selected_tab = st.session_state['selected_tab']
 
-    filters_applied = {'STATUS': [selected_tab], 'USUARIO_ID': current_user['user_id']}
+    # Filtro para listagem das notícias
+    filters_applied = {'STATUS': [selected_tab]}
+    if not show_all_news:
+        filters_applied['USUARIO_ID'] = current_user['user_id']
     noticias, total_noticias = noticia_service.listar_noticias(
         page=st.session_state.get('page_number', 1),
         per_page=per_page,
@@ -108,7 +116,7 @@ def main(current_user=None):
                             st.text_area(
                                 label="",
                                 value=mensagem.MSG_TEXT,
-                                height=360,  # 400 - 40
+                                height=360,
                                 key=f"just_{noticia.ID}",
                                 disabled=True
                             )
