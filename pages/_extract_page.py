@@ -22,8 +22,10 @@ def validate_cpf_cnpj(value: str) -> bool:
     return False
 
 def validate_cpf(cpf: str) -> bool:
-    """Valida o CPF pelo cálculo do dígito verificador."""
-    if not cpf or len(cpf) != 11 or cpf in ["00000000000", "11111111111", "22222222222", "33333333333"]:
+    """Valida o CPF pelo cálculo do dígito verificador.
+       Além disso, descarta CPFs com todos os dígitos iguais.
+    """
+    if not cpf or len(cpf) != 11 or cpf == cpf[0] * 11:
         return False
 
     def calculate_digit(digits, weights):
@@ -42,8 +44,10 @@ def validate_cpf(cpf: str) -> bool:
     return True
 
 def validate_cnpj(cnpj: str) -> bool:
-    """Valida o CNPJ pelo cálculo do dígito verificador."""
-    if not cnpj or len(cnpj) != 14:
+    """Valida o CNPJ pelo cálculo do dígito verificador.
+       Também descarta CNPJs com todos os dígitos iguais.
+    """
+    if not cnpj or len(cnpj) != 14 or cnpj == cnpj[0] * 14:
         return False
 
     def calculate_digit(digits, weights):
@@ -98,16 +102,25 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 
 def validate_name_fields(cpf: str, nome_cpf: str, pessoa_tipo: str) -> (bool, str):
+    """
+    Valida os campos CPF/CNPJ e NOME_CPF conforme as regras:
+    1) Se CPF/CNPJ estiver preenchido, o campo NOME_CPF deve estar preenchido (e vice-versa);
+    2) Se o tipo de pessoa for "NA" (não aplicável), o CPF/CNPJ deve estar vazio;
+    3) Se o tipo de pessoa for "PF" ou "PJ" e CPF/CNPJ estiver preenchido, validar o dígito verificador.
+    """
     cpf = cpf.strip()
     nome_cpf = nome_cpf.strip()
     pessoa_tipo = pessoa_tipo.strip()
 
+    # Regra 1
     if (cpf or nome_cpf) and (not cpf or not nome_cpf):
         return False, "Se o CPF/CNPJ estiver preenchido, o campo NOME_CPF também deve estar preenchido (e vice-versa)."
 
-    if pessoa_tipo == "N/A" and cpf:
-        return False, "Se a PESSOA for 'N/A', o CPF/CNPJ deve estar vazio."
+    # Regra 2
+    if pessoa_tipo in ["NA", "N/A"] and cpf:
+        return False, "Se a PESSOA for 'NA', o CPF/CNPJ deve estar vazio."
 
+    # Regra 3
     if pessoa_tipo in ["PF", "PJ"] and cpf:
         if not validate_cpf_cnpj(cpf):
             return False, "CPF/CNPJ inválido! Verifique os dados antes de salvar."
@@ -296,28 +309,37 @@ def main(current_user=None):
                 with st.form(key=f'{key_prefix}form{item["ID"]}'):
                     cols_layout = st.columns([2, 8])
                     with cols_layout[0]:
-                        input_values = render_input_fields(item, colunas, key_prefix, disabled=is_deleted)
+                        input_values = {}
+                        for coluna in colunas:
+                            valor = item.get(coluna, '')
+                            disabled = is_deleted
+                            with st.container():
+                                input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
+                            input_values[coluna] = input_value
+
                     with cols_layout[0]:
                         col_buttons = st.columns([9, 9, 8])
                         with col_buttons[0]:
                             submitted = st.form_submit_button("Atualizar")
                         with col_buttons[1]:
                             delete_submitted = st.form_submit_button("Deletar")
+
+                    # Validação antes de atualizar
                     if submitted:
                         cpf = input_values.get('CPF', '')
                         nome_cpf = input_values.get('NOME CPF', '')
-                        pessoa_tipo = input_values.get('PESSOA', 'N/A')
+                        pessoa_tipo = input_values.get('PESSOA', 'NA')
                         valid, error_msg = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
                         if not valid:
                             st.error(error_msg)
                         else:
                             data = NoticiaRaspadaNomeCreateSchema(
-                                CPF=cpf,
+                                CPF=input_values.get('CPF'),
                                 NOME=input_values.get('NOME'),
                                 APELIDO=input_values.get('APELIDO'),
-                                NOME_CPF=nome_cpf,
+                                NOME_CPF=input_values.get('NOME CPF'),
                                 SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                                PESSOA=pessoa_tipo,
+                                PESSOA=input_values.get('PESSOA'),
                                 IDADE=input_values.get('IDADE'),
                                 ANIVERSARIO=input_values.get('ANIVERSARIO'),
                                 ATIVIDADE=input_values.get('ATIVIDADE'),
@@ -331,6 +353,7 @@ def main(current_user=None):
                             noticia_name_service.update(item['ID'], data)
                             st.toast(f"Dados de {input_values.get('NOME')} atualizados com sucesso!")
                             st.rerun()
+
                     if delete_submitted:
                         sucesso = noticia_name_service.delete(item['ID'])
                         if sucesso:
@@ -351,7 +374,13 @@ def main(current_user=None):
                 with st.form(key=f'{key_prefix}form{item["NOME"]}'):
                     cols_layout = st.columns([2, 8])
                     with cols_layout[0]:
-                        input_values = render_input_fields(item, colunas, key_prefix, disabled=is_deleted)
+                        input_values = {}
+                        for coluna in colunas:
+                            valor = item.get(coluna, '')
+                            disabled = is_deleted
+                            with st.container():
+                                input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
+                            input_values[coluna] = input_value
                     with cols_layout[0]:
                         col_buttons = st.columns([9, 9, 8])
                         with col_buttons[0]:
@@ -365,18 +394,18 @@ def main(current_user=None):
                     if not is_deleted and submitted:
                         cpf = input_values.get('CPF', '')
                         nome_cpf = input_values.get('NOME CPF', '')
-                        pessoa_tipo = input_values.get('PESSOA', 'N/A')
+                        pessoa_tipo = input_values.get('PESSOA', 'NA')
                         valid, error_msg = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
                         if not valid:
                             st.error(error_msg)
                         else:
                             data = NoticiaRaspadaNomeCreateSchema(
-                                CPF=cpf,
+                                CPF=input_values.get('CPF'),
                                 NOME=input_values.get('NOME'),
                                 APELIDO=input_values.get('APELIDO'),
-                                NOME_CPF=nome_cpf,
+                                NOME_CPF=input_values.get('NOME CPF'),
                                 SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                                PESSOA=pessoa_tipo,
+                                PESSOA=input_values.get('PESSOA'),
                                 IDADE=input_values.get('IDADE'),
                                 ANIVERSARIO=input_values.get('ANIVERSARIO'),
                                 ATIVIDADE=input_values.get('ATIVIDADE'),
@@ -391,10 +420,6 @@ def main(current_user=None):
                             extracted_names_list.pop(idx)
                             st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
                             st.rerun()
-                    if not is_deleted and delete_submitted:
-                        item['deleted'] = True
-                        st.session_state[f'{noticia_id}_is_extracted'][idx] = item
-                        st.rerun()
                     if is_deleted and restore_submitted:
                         item['deleted'] = False
                         st.session_state[f'{noticia_id}_is_extracted'][idx] = item
