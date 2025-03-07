@@ -1,14 +1,42 @@
 from datetime import date, timedelta
 from backend.resources.notice.noticia_service import NoticiaService
-from database import  SessionLocal
+from database import SessionLocal
 import streamlit as st
 
 session = SessionLocal()
 
-def filters(st, session=session):
-
+def filters(session=session):
     noticia_service = NoticiaService(session)
-    
+
+    for key, default in {
+        'selected_categoria': [],
+        'selected_status': [],
+        'selected_fontes': [],
+        'per_page': 30,
+        'selected_option': "-",
+        'page_number': 1,
+        'last_filters': {}
+    }.items():
+        if key not in st.session_state:
+            st.session_state[key] = default
+
+    st.sidebar.divider()
+
+    period_options = ["-", "Últimos 3 dias", "Últimos 5 dias", "Últimos 10 dias", "Últimos 15 dias"]
+    selected_option = st.sidebar.selectbox(
+        "Selecione o período:",
+        options=period_options,
+        index=period_options.index(st.session_state['selected_option']),
+        key='selected_option'
+    )
+    st.sidebar.divider()
+
+    fontes_options = noticia_service.get_all_fontes()
+    selected_fontes = st.sidebar.multiselect(
+        'Selecione as fontes:',
+        options=fontes_options,
+        key='selected_fontes'
+    )
     st.sidebar.divider()
 
     def update_selected_categoria(categoria):
@@ -17,140 +45,62 @@ def filters(st, session=session):
         else:
             st.session_state['selected_categoria'].append(categoria)
 
-    def update_selected_status(status):
-        if status in st.session_state['selected_status']:
-            st.session_state['selected_status'].remove(status)
-        else:
-            st.session_state['selected_status'].append(status)
-
-    if 'selected_categoria' not in st.session_state:
-        st.session_state['selected_categoria'] = []
-
-    if 'selected_status' not in st.session_state:
-        st.session_state['selected_status'] = []
-
-    if 'selected_fontes' not in st.session_state:
-        st.session_state['selected_fontes'] = []
-
-    if 'per_page' not in st.session_state:
-        st.session_state['per_page'] = 30
-
-    if 'selected_option' not in st.session_state:
-        st.session_state['selected_option'] = "-"
-
-    if 'page_number' not in st.session_state:
-        st.session_state['page_number'] = 1
-
-    if 'last_filters' not in st.session_state:
-        st.session_state['last_filters'] = {}
-
-    # Filtro de Período
-    today = date.today()
-    options = ["-", "Últimos 3 dias", "Últimos 5 dias", "Últimos 10 dias", "Últimos 15 dias"]
-
-    selected_option = st.sidebar.selectbox(
-        "Selecione o período:",
-        options,
-        index=options.index(st.session_state['selected_option']) if st.session_state['selected_option'] in options else 0,
-        key='selected_option_widget'
-    )
-
-    st.session_state['selected_option'] = selected_option
-    st.sidebar.divider()
-
-    # Filtro de Categoria
     categoria_options = ['Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial', 'Fraude']
-    
     for categoria in categoria_options:
         checkbox_key = f'categoria_{categoria}'
-
         if checkbox_key not in st.session_state:
-            st.session_state[checkbox_key] = categoria in st.session_state['selected_categoria']
-
+            st.session_state[checkbox_key] = False
         st.sidebar.checkbox(
             label=categoria,
             value=st.session_state[checkbox_key],
             key=checkbox_key,
             on_change=lambda c=categoria: update_selected_categoria(c)
         )
+    st.sidebar.divider()
 
-    st.sidebar.divider()  # Adiciona um divisor após o filtro de categoria
+    def update_selected_status(status):
+        if status in st.session_state['selected_status']:
+            st.session_state['selected_status'].remove(status)
+        else:
+            st.session_state['selected_status'].append(status)
 
-    # Filtro de Fontes
-    fontes_options = noticia_service.get_all_fontes()
-
-    selected_fontes = st.sidebar.multiselect(
-        'Selecione as fontes:',
-        options=fontes_options,
-        default=st.session_state['selected_fontes'],
-        key='selected_fontes_widget'
-    )
-
-    st.session_state['selected_fontes'] = selected_fontes
-    st.sidebar.divider()  # Adiciona um divisor após o filtro de fontes
-
-    # Filtro de Status
     status_options = ["10-URL-OK", "15-URL-CHK", "99-DELETED"]
-
     for status in status_options:
         checkbox_key = f'status_{status}'
-
         if checkbox_key not in st.session_state:
-            st.session_state[checkbox_key] = status in st.session_state['selected_status']
-
+            st.session_state[checkbox_key] = False
         st.sidebar.checkbox(
             label=status,
             value=st.session_state[checkbox_key],
             key=checkbox_key,
             on_change=lambda s=status: update_selected_status(s)
         )
-
-    st.sidebar.divider()  # Adiciona um divisor após o filtro de status
+    st.sidebar.divider()
 
     filters_applied = {'STATUS': ['10-URL-OK', '15-URL-CHK']}
-
-    if selected_option == "Últimos 3 dias":
+    today = date.today()
+    period_map = {
+        "Últimos 3 dias": 3,
+        "Últimos 5 dias": 5,
+        "Últimos 10 dias": 10,
+        "Últimos 15 dias": 15
+    }
+    if selected_option in period_map:
         filters_applied.update({
             'PERIODO': 'dias',
-            'DATA_INICIO': today - timedelta(days=3),
-            'DATA_FIM': today
-        })
-    elif selected_option == "Últimos 5 dias":
-        filters_applied.update({
-            'PERIODO': 'dias',
-            'DATA_INICIO': today - timedelta(days=5),
-            'DATA_FIM': today
-        })
-    elif selected_option == "Últimos 10 dias":
-        filters_applied.update({
-            'PERIODO': 'dias',
-            'DATA_INICIO': today - timedelta(days=10),
-            'DATA_FIM': today
-        })
-    elif selected_option == "Últimos 15 dias":
-        filters_applied.update({
-            'PERIODO': 'dias',
-            'DATA_INICIO': today - timedelta(days=15),
+            'DATA_INICIO': today - timedelta(days=period_map[selected_option]),
             'DATA_FIM': today
         })
 
-    if st.session_state.get('selected_status'):
+    if st.session_state['selected_status']:
         filters_applied['STATUS'] = st.session_state['selected_status']
-
-    if st.session_state.get('selected_categoria'):
+    if st.session_state['selected_categoria']:
         filters_applied['CATEGORIA'] = st.session_state['selected_categoria']
+    if selected_fontes:
+        filters_applied['FONTE'] = selected_fontes
 
-    if st.session_state.get('selected_fontes'):
-        filters_applied['FONTE'] = st.session_state['selected_fontes']
-
-    if st.session_state.get('per_page'):
-        per_page = st.session_state['per_page']
-    else:
-        per_page = 30
-
-    if 'last_filters' not in st.session_state:
-        st.session_state['last_filters'] = filters_applied
-    elif filters_applied != st.session_state['last_filters']:
+    per_page = st.session_state.get('per_page', 30)
+    if st.session_state['last_filters'] != filters_applied:
         st.session_state['page_number'] = 1
         st.session_state['last_filters'] = filters_applied
 

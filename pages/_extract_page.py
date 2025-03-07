@@ -13,7 +13,6 @@ import pandas as pd
 from database import SessionLocal
 
 def validate_cpf_cnpj(value: str) -> bool:
-    """Valida o CPF ou CNPJ verificando o dígito verificador."""
     value = re.sub(r'\D', '', value)
     if len(value) == 11:  # CPF
         return validate_cpf(value)
@@ -22,9 +21,6 @@ def validate_cpf_cnpj(value: str) -> bool:
     return False
 
 def validate_cpf(cpf: str) -> bool:
-    """Valida o CPF pelo cálculo do dígito verificador.
-       Além disso, descarta CPFs com todos os dígitos iguais.
-    """
     if not cpf or len(cpf) != 11 or cpf == cpf[0] * 11:
         return False
 
@@ -33,20 +29,15 @@ def validate_cpf(cpf: str) -> bool:
         remainder = (sum_digits * 10) % 11
         return 0 if remainder == 10 else remainder
 
-    # Primeiro dígito
     if calculate_digit(cpf[:9], range(10, 1, -1)) != int(cpf[9]):
         return False
 
-    # Segundo dígito
     if calculate_digit(cpf[:10], range(11, 1, -1)) != int(cpf[10]):
         return False
 
     return True
 
 def validate_cnpj(cnpj: str) -> bool:
-    """Valida o CNPJ pelo cálculo do dígito verificador.
-       Também descarta CNPJs com todos os dígitos iguais.
-    """
     if not cnpj or len(cnpj) != 14 or cnpj == cnpj[0] * 14:
         return False
 
@@ -55,11 +46,9 @@ def validate_cnpj(cnpj: str) -> bool:
         remainder = sum_digits % 11
         return 0 if remainder < 2 else 11 - remainder
 
-    # Primeiro dígito
     if calculate_digit(cnpj[:12], [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) != int(cnpj[12]):
         return False
 
-    # Segundo dígito
     if calculate_digit(cnpj[:13], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) != int(cnpj[13]):
         return False
 
@@ -69,9 +58,11 @@ def load_css():
     css = """
         <style>
             /* Configuração geral compacta */
+            [data-testid="stExpander"] > div {      
+                width: 100% !important;
+            }
             .block-container {
                 padding-top: 2.5rem;
-                padding-bottom: 0rem;
             }
             .element-container {
                 margin-bottom: 0.5rem;
@@ -102,25 +93,16 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 
 def validate_name_fields(cpf: str, nome_cpf: str, pessoa_tipo: str) -> (bool, str):
-    """
-    Valida os campos CPF/CNPJ e NOME_CPF conforme as regras:
-    1) Se CPF/CNPJ estiver preenchido, o campo NOME_CPF deve estar preenchido (e vice-versa);
-    2) Se o tipo de pessoa for "NA" (não aplicável), o CPF/CNPJ deve estar vazio;
-    3) Se o tipo de pessoa for "PF" ou "PJ" e CPF/CNPJ estiver preenchido, validar o dígito verificador.
-    """
     cpf = cpf.strip()
     nome_cpf = nome_cpf.strip()
     pessoa_tipo = pessoa_tipo.strip()
 
-    # Regra 1
     if (cpf or nome_cpf) and (not cpf or not nome_cpf):
         return False, "Se o CPF/CNPJ estiver preenchido, o campo NOME_CPF também deve estar preenchido (e vice-versa)."
 
-    # Regra 2
     if pessoa_tipo in ["NA", "N/A"] and cpf:
         return False, "Se a PESSOA for 'NA', o CPF/CNPJ deve estar vazio."
 
-    # Regra 3
     if pessoa_tipo in ["PF", "PJ"] and cpf:
         if not validate_cpf_cnpj(cpf):
             return False, "CPF/CNPJ inválido! Verifique os dados antes de salvar."
@@ -180,64 +162,6 @@ def generate_input_widget(coluna, valor, key_prefix, disabled=False):
         )
     return input_value
 
-def render_input_fields(item, colunas, key_prefix, disabled=False):
-    input_values = {}
-    i = 0
-    while i < len(colunas):
-        coluna = colunas[i]
-        # Agrupa APELIDO e NOME
-        if coluna == 'APELIDO' and i + 1 < len(colunas) and colunas[i+1] == 'NOME':
-            cols = st.columns(2)
-            with cols[0]:
-                valor_apelido = item.get('APELIDO', '')
-                input_val_apelido = generate_input_widget('APELIDO', valor_apelido, key_prefix, disabled)
-            with cols[1]:
-                valor_nome = item.get('NOME', '')
-                input_val_nome = generate_input_widget('NOME', valor_nome, key_prefix, disabled)
-            input_values['APELIDO'] = input_val_apelido
-            input_values['NOME'] = input_val_nome
-            i += 2
-        elif coluna == 'CPF' and i + 1 < len(colunas) and colunas[i+1] == 'NOME CPF':
-            cols = st.columns(2)
-            with cols[0]:
-                valor_cpf = item.get('CPF', '')
-                input_val_cpf = generate_input_widget('CPF', valor_cpf, key_prefix, disabled)
-            with cols[1]:
-                valor_nome_cpf = item.get('NOME CPF', '')
-                input_val_nome_cpf = generate_input_widget('NOME CPF', valor_nome_cpf, key_prefix, disabled)
-            input_values['CPF'] = input_val_cpf
-            input_values['NOME CPF'] = input_val_nome_cpf
-            i += 2
-        elif coluna == 'PESSOA' and i + 1 < len(colunas) and colunas[i+1] == 'SEXO':
-            cols = st.columns(2)
-            with cols[0]:
-                valor_pessoa = item.get('PESSOA', '')
-                input_val_pessoa = generate_input_widget('PESSOA', valor_pessoa, key_prefix, disabled)
-            with cols[1]:
-                valor_sexo = item.get('SEXO', '')
-                input_val_sexo = generate_input_widget('SEXO', valor_sexo, key_prefix, disabled)
-            input_values['PESSOA'] = input_val_pessoa
-            input_values['SEXO'] = input_val_sexo
-            i += 2
-        elif coluna == 'IDADE' and i + 1 < len(colunas) and colunas[i+1] == 'ANIVERSARIO':
-            cols = st.columns(2)
-            with cols[0]:
-                valor_idade = item.get('IDADE', '')
-                input_val_idade = generate_input_widget('IDADE', valor_idade, key_prefix, disabled)
-            with cols[1]:
-                valor_aniversario = item.get('ANIVERSARIO', '')
-                input_val_aniversario = generate_input_widget('ANIVERSARIO', valor_aniversario, key_prefix, disabled)
-            input_values['IDADE'] = input_val_idade
-            input_values['ANIVERSARIO'] = input_val_aniversario
-            i += 2
-        else:
-            with st.container():
-                valor = item.get(coluna, '')
-                input_val = generate_input_widget(coluna, valor, key_prefix, disabled)
-            input_values[coluna] = input_val
-            i += 1
-    return input_values
-
 @require_authentication
 def main(current_user=None):
     st.set_page_config(
@@ -294,9 +218,9 @@ def main(current_user=None):
     names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia['ID'])
     
     colunas = [
-        'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'INDICADOR_PPE', 'IDADE',
+        'APELIDO', 'NOME', 'CPF', 'NOME CPF', 'ATIVIDADE', 'PESSOA', 'SEXO', 'IDADE',
         'ANIVERSARIO', 'ENVOLVIMENTO', 'OPERACAO',
-        'FLG_PESSOA_PUBLICA', 'ENVOLVIMENTO_GOV'
+        'FLG_PESSOA_PUBLICA', 'ENVOLVIMENTO_GOV', 'INDICADOR_PPE'
     ]
 
     if saved_names_list:
@@ -306,25 +230,24 @@ def main(current_user=None):
             expander_label = f"{item.get('NOME', '')}"
             with st.expander(expander_label, expanded=False):
                 key_prefix = f"saved_{item['ID']}"
-                with st.form(key=f'{key_prefix}form{item["ID"]}'):
-                    cols_layout = st.columns([2, 8])
-                    with cols_layout[0]:
-                        input_values = {}
-                        for coluna in colunas:
+                with st.form(key=f'{key_prefix}_form_{item["ID"]}'):
+                    input_values = {}
+                    for i in range(0, len(colunas), 3):
+                        row_fields = colunas[i:i+3]
+                        cols = st.columns(3)
+                        for j, coluna in enumerate(row_fields):
                             valor = item.get(coluna, '')
                             disabled = is_deleted
-                            with st.container():
+                            with cols[j]:
                                 input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                            input_values[coluna] = input_value
+                                input_values[coluna] = input_value
 
-                    with cols_layout[0]:
-                        col_buttons = st.columns([9, 9, 8])
-                        with col_buttons[0]:
-                            submitted = st.form_submit_button("Atualizar")
-                        with col_buttons[1]:
-                            delete_submitted = st.form_submit_button("Deletar")
+                    btn_cols = st.columns(3)
+                    with btn_cols[0]:
+                        submitted = st.form_submit_button("Atualizar")
+                    with btn_cols[1]:
+                        delete_submitted = st.form_submit_button("Deletar")
 
-                    # Validação antes de atualizar
                     if submitted:
                         cpf = input_values.get('CPF', '')
                         nome_cpf = input_values.get('NOME CPF', '')
@@ -371,26 +294,28 @@ def main(current_user=None):
                 expander_label = f"~{expander_label}~ (Excluído)"
             with st.expander(expander_label, expanded=False):
                 key_prefix = f"deleted_{item['NOME']}" if is_deleted else f"extracted_{item['NOME']}"
-                with st.form(key=f'{key_prefix}form{item["NOME"]}'):
-                    cols_layout = st.columns([2, 8])
-                    with cols_layout[0]:
-                        input_values = {}
-                        for coluna in colunas:
+                with st.form(key=f'{key_prefix}_form_{item["NOME"]}'):
+                    input_values = {}
+                    for i in range(0, len(colunas), 3):
+                        row_fields = colunas[i:i+3]
+                        cols = st.columns(3)
+                        for j, coluna in enumerate(row_fields):
                             valor = item.get(coluna, '')
                             disabled = is_deleted
-                            with st.container():
+                            with cols[j]:
                                 input_value = generate_input_widget(coluna, valor, key_prefix=key_prefix, disabled=disabled)
-                            input_values[coluna] = input_value
-                    with cols_layout[0]:
-                        col_buttons = st.columns([9, 9, 8])
-                        with col_buttons[0]:
-                            if not is_deleted:
-                                submitted = st.form_submit_button("Salvar")
-                            else:
-                                restore_submitted = st.form_submit_button("Restaurar")
-                        with col_buttons[1]:
-                            if not is_deleted:
-                                delete_submitted = st.form_submit_button("Excluir")
+                                input_values[coluna] = input_value
+
+                    btn_cols = st.columns(3)
+                    with btn_cols[0]:
+                        if not is_deleted:
+                            submitted = st.form_submit_button("Salvar")
+                        else:
+                            restore_submitted = st.form_submit_button("Restaurar")
+                    with btn_cols[1]:
+                        if not is_deleted:
+                            delete_submitted = st.form_submit_button("Excluir")
+
                     if not is_deleted and submitted:
                         cpf = input_values.get('CPF', '')
                         nome_cpf = input_values.get('NOME CPF', '')
@@ -420,6 +345,7 @@ def main(current_user=None):
                             extracted_names_list.pop(idx)
                             st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
                             st.rerun()
+
                     if is_deleted and restore_submitted:
                         item['deleted'] = False
                         st.session_state[f'{noticia_id}_is_extracted'][idx] = item

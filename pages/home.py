@@ -79,7 +79,7 @@ def main(current_user=None):
         st.session_state['edit_id'] = None
 
     def listar_noticias():
-        noticias, total_pages = filters(st, session)
+        noticias, total_pages = filters(session)
 
         cols = st.columns([2,15,1,1,1])
         with cols[0]:
