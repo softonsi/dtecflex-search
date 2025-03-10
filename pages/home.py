@@ -8,9 +8,9 @@ from database import SessionLocal
 from backend.resources.notice.noticia import (
     NoticiaRaspadaUpdateSchema,
 )
-from view_components.components.home.filters import filters
 from backend.resources.notice.noticia_service import NoticiaService
 
+from view_components.components.home.filters.index import filters
 from view_components.components.shared.navsidebar import navsidebar
 from view_components.middleware.check_auth import require_authentication
 from database import SessionLocal
@@ -100,17 +100,9 @@ def main(current_user=None):
                 st.rerun()
 
         if noticias:
-            index = 0
             noticias_data = [noticia.model_dump() for noticia in noticias]
 
             for noticia in noticias_data:
-                index += 1
-
-                if index % 2 == 1:
-                    background_color = "#f0f0f0"
-                else:
-                    background_color = "#ffffff"
-
                 col1, col2, col3 = st.columns([1, 7, 1])
 
                 with col1:
