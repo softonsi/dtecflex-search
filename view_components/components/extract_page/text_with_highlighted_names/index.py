@@ -78,9 +78,8 @@ def text_with_highlighted_names(notice_id):
             if st.button("Analisar", icon=":material/find_in_page:"):
                 try:
                     with st.spinner('Analisando o texto...'):
-                        analyzer = TextAnalyzer()
+                        analyzer = TextAnalyzer(notice_categoria=notice['CATEGORIA'])
                         names_results = analyzer.analyze_text(text)
-                        print('names', names_results)
                         if len(names_results) <= 0:
                             st.toast('Texto analisado e nenhum nome encontrado.')
                         st.session_state[f'{notice["ID"]}_is_extracted'] = names_results

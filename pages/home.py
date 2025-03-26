@@ -83,7 +83,7 @@ def main(current_user=None):
 
         cols = st.columns([2,15,1,1,1])
         with cols[0]:
-            if st.button('Cadastrar notícia', type='primary', use_container_width=True):
+            if st.button('Cadastrar', icon=":material/note_add:", type='primary', use_container_width=True):
                 notice_register_dialog()
         with cols[2]:
             if st.button("", icon=":material/chevron_backward:", disabled=st.session_state['page_number'] <= 1):

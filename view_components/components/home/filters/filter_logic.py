@@ -21,6 +21,8 @@ def apply_filters(noticia_service, selected_option, selected_fontes):
         filters_applied['STATUS'] = st.session_state['selected_status']
     if st.session_state['selected_categoria']:
         filters_applied['CATEGORIA'] = st.session_state['selected_categoria']
+    if st.session_state['selected_subcategoria']:  # Adicionar subcategoria ao filtro
+        filters_applied['SUBCATEGORIA'] = st.session_state['selected_subcategoria']
     if selected_fontes:
         filters_applied['FONTE'] = selected_fontes
 

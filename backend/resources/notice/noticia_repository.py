@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 
@@ -93,6 +93,13 @@ class NoticiaRepository:
                     filter_conditions.append(NoticiaRaspadaModel.CATEGORIA.in_(filters['CATEGORIA']))
                 else:
                     filter_conditions.append(NoticiaRaspadaModel.CATEGORIA == filters['CATEGORIA'])
+                    
+                if 'SUBCATEGORIA' in filters and filters['SUBCATEGORIA']:
+                    subcategorias = " ".join(filters['SUBCATEGORIA'])
+                    query = query.filter(
+                        text(f"MATCH(QUERY) AGAINST (:subcategorias IN BOOLEAN MODE)")
+                    ).params(subcategorias=subcategorias)
+
             if 'PERIODO' in filters:
                 today = datetime.today()
 
