@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
 from backend.resources.notice_message_devolute.notice_message_devolute_service import NoticiaRaspadaMsgService
@@ -137,7 +138,8 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
                 CATEGORIA=category,
                 REGIAO=region,
                 UF=uf,
-                REG_NOTICIA=reg_noticia
+                REG_NOTICIA=reg_noticia,
+                STATUS='200-TO-APPROVE'
             )
             try:
                 noticia_service.atualizar_noticia(notice_id, update_data)
@@ -149,9 +151,11 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
                 msg_service = NoticiaRaspadaMsgService(session)
                 msg_service.delete_msg(msg_id=notice['mensagens'][0].ID)
             
-            update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
-            noticia_service.atualizar_noticia(notice_id, update_data)
+            # update_data = NoticiaRaspadaUpdateSchema(STATUS='200-TO-APPROVE')
+            # noticia_service.atualizar_noticia(notice_id, update_data)
             msg_confirma('Notícia finalizada')
+            with st.spinner('Finalizando, por favor aguarde...'):
+                time.sleep(2)
             st.switch_page(f"pages/{page_to_return}")
 
 @st.dialog("Você possui alterações não salvas.")

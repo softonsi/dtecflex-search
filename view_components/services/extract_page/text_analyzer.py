@@ -9,7 +9,7 @@ class TextAnalyzer:
         self.notice_categoria = notice_categoria
         self.model = model
         
-        if self.notice_categoria == 'Ambiental':
+        if self.notice_categoria == 'Ambiental' or self.notice_categoria == 'Empresarial':
             self.prompt = self.prompt_is_ambiental
         else:
             self.prompt = self.prompt_not_ambiental
