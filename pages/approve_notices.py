@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import date, datetime
 import streamlit as st
 from database import SessionLocal
 from backend.resources.notice.noticia import NoticiaRaspadaUpdateSchema
@@ -163,7 +163,7 @@ def main(current_user=None):
                                  disabled=global_unsaved):
                         with st.spinner("Aprovando todas as notícias..."):
                             for noticia in noticias:
-                                update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED')
+                                update_data = NoticiaRaspadaUpdateSchema(STATUS='201-APPROVED', DT_APROVACAO=datetime.now())
                                 noticia_service.atualizar_noticia(noticia.ID, update_data)
                         st.toast("Todas as notícias foram aprovadas!")
                         st.rerun()

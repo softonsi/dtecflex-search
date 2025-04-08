@@ -32,6 +32,7 @@ class NoticiaRaspadaBaseSchema(BaseModel):
     QUERY: Optional[str] = Field(None, max_length=250)
     ID_ORIGINAL: str = Field(..., max_length=2000)
     DT_RASPAGEM: Optional[datetime] = None
+    DT_APROVACAO: Optional[datetime] = None
     DT_DECODE: Optional[datetime] = None
     TITULO: Optional[str] = Field(None, max_length=250)
     ID_USUARIO: Optional[int] = None
@@ -55,6 +56,7 @@ class NoticiaRaspadaUpdateSchema(BaseModel):
     QUERY: Optional[str] = Field(None, max_length=250)
     ID_ORIGINAL: Optional[str] = Field(None, max_length=2000)
     DT_RASPAGEM: Optional[datetime] = None
+    DT_APROVACAO: Optional[datetime] = None
     DT_DECODE: Optional[datetime] = None
     TITULO: Optional[str] = Field(None, max_length=250)
     ID_USUARIO: Optional[int] = None
@@ -75,6 +77,7 @@ class NoticiaRaspadaSchema(NoticiaRaspadaBaseSchema):
     CATEGORIA: Optional[str] = Field(None, max_length=50)
     QUERY: Optional[str] = Field(None, max_length=250)
     ID_ORIGINAL: Optional[str] = Field(None, max_length=2000)
+    DT_APROVACAO: Optional[datetime] = None
     DT_RASPAGEM: Optional[datetime] = None
     DT_DECODE: Optional[datetime] = None
     TITULO: Optional[str] = Field(None, max_length=250)
