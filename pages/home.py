@@ -322,7 +322,7 @@ def notice_register_dialog():
 
     url = st.text_input("URL", key="url_input")
     fonte_input = st.text_input("Fonte", key="fonte_input")
-    categoria_input = st.selectbox("Categoria:", ["", "Lavagem de Dinheiro", "Crime", "Ambiental", "Empresarial"], index=0, key="categoria_input")
+    categoria_input = st.selectbox("Categoria:", ["", "Lavagem de Dinheiro", "Crime", "Ambiental", "Empresarial", "Fraude"], index=0, key="categoria_input")
     titulo = st.text_input("Título", key="titulo_input")
 
     noticia_data = NoticiaRaspadaBaseSchema(

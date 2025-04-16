@@ -121,10 +121,15 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     
     with cols[0]:
         if st.button('Excluir', icon=":material/delete_forever:", use_container_width=True):
-            update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
-            noticia_service.atualizar_noticia(notice_id, update_data)
-            msg_confirma('Notícia deletada')
-            st.switch_page(f"pages/{page_to_return}")
+            try:
+                update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
+                noticia_service.atualizar_noticia(notice_id, update_data)
+                msg_confirma('Notícia deletada')
+                st.switch_page(f"pages/{page_to_return}")
+            except Exception as err:
+                st.toast('Ocorreu um problema ao excluir notícia')
+            finally:
+                session.close()
     
     with cols[2]:
         if st.button('Aprovar', icon=":material/done_all:", type='primary', use_container_width=True):
@@ -146,6 +151,8 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
             except Exception as e:
                 st.error(f"Erro ao gravar as alterações: {e}")
                 return
+            finally:
+                session.close()
 
             if notice['mensagens']:
                 msg_service = NoticiaRaspadaMsgService(session)
@@ -182,6 +189,8 @@ def discard_or_save_dialog(page_to_return, notice_id):
                 noticia_service.atualizar_noticia(notice_id, update_data)
             except Exception as e:
                 st.error(f"Erro ao salvar as alterações: {e}")
+            finally:
+                session.close()
 
     with cols[1]:
         if st.button('Descartar', use_container_width=True):

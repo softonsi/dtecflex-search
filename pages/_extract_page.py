@@ -249,8 +249,14 @@ def main(current_user=None):
         st.session_state[f'{noticia_id}_is_extracted'] = []
 
     if not noticia['ID_USUARIO']:
-        update_data = NoticiaRaspadaUpdateSchema(ID_USUARIO=current_user['user_id'], STATUS='07-EDIT-MODE')
-        noticia_service.atualizar_noticia(noticia['ID'], update_data)
+        try:
+            update_data = NoticiaRaspadaUpdateSchema(ID_USUARIO=current_user['user_id'], STATUS='07-EDIT-MODE')
+            noticia_service.atualizar_noticia(noticia['ID'], update_data)
+        except Exception as excep:
+            print(excep)
+            st.error('Erro ao atualizar a notícia')
+        finally:
+            session.close()
 
     if noticia:
         TEXT = noticia.get('TEXTO_NOTICIA')
@@ -263,6 +269,8 @@ def main(current_user=None):
                 st.toast("Notícia atualizada com sucesso!")
             except Exception as e:
                 st.toast(f"Erro ao tentar extrair o conteúdo: {str(e)}")
+            finally:
+                session.close()
 
     notice_info(noticia)
     names_to_highlight, saved_names_list, extracted_names_list = text_with_highlighted_names(noticia['ID'])
@@ -308,36 +316,47 @@ def main(current_user=None):
                     if not valid:
                         st.error(error_msg)
                     else:
-                        data = NoticiaRaspadaNomeCreateSchema(
-                            CPF=input_values.get('CPF'),
-                            NOME=input_values.get('NOME'),
-                            APELIDO=input_values.get('APELIDO'),
-                            NOME_CPF=input_values.get('NOME CPF'),
-                            SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                            PESSOA=input_values.get('PESSOA'),
-                            IDADE=input_values.get('IDADE'),
-                            ANIVERSARIO=input_values.get('ANIVERSARIO'),
-                            ATIVIDADE=input_values.get('ATIVIDADE'),
-                            ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
-                            OPERACAO=input_values.get('OPERACAO'),
-                            FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
-                            # ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
-                            INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
-                            NOTICIA_ID=noticia_id
-                        )
-                        if 'ID' in item:
-                            noticia_name_service.update(item['ID'], data)
-                        else:
-                            noticia_name_service.create(data)
-                        st.toast(f"Dados de {input_values.get('NOME')} atualizados com sucesso!")
-                        st.rerun()
+                        try:
+                            data = NoticiaRaspadaNomeCreateSchema(
+                                CPF=input_values.get('CPF'),
+                                NOME=input_values.get('NOME'),
+                                APELIDO=input_values.get('APELIDO'),
+                                NOME_CPF=input_values.get('NOME CPF'),
+                                SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
+                                PESSOA=input_values.get('PESSOA'),
+                                IDADE=input_values.get('IDADE'),
+                                ANIVERSARIO=input_values.get('ANIVERSARIO'),
+                                ATIVIDADE=input_values.get('ATIVIDADE'),
+                                ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
+                                OPERACAO=input_values.get('OPERACAO'),
+                                FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
+                                # ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
+                                INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
+                                NOTICIA_ID=noticia_id
+                            )
+                            if 'ID' in item:
+                                noticia_name_service.update(item['ID'], data)
+                            else:
+                                noticia_name_service.create(data)
+                            st.toast(f"Dados de {input_values.get('NOME')} atualizados com sucesso!")
+                            st.rerun()
+                        except:
+                            st.toast('Erro ao cadastrar nome.')
+                        finally:
+                            session.close()
                 if delete_submitted and 'ID' in item:
-                    sucesso = noticia_name_service.delete(item['ID'])
-                    if sucesso:
-                        st.toast(f"Dados de {input_values.get('NOME')} deletados com sucesso!")
-                        st.rerun()
-                    else:
-                        st.error(f"Erro ao deletar {item.get('NOME')}")
+                    try:
+                        sucesso = noticia_name_service.delete(item['ID'])
+                        if sucesso:
+                            st.toast(f"Dados de {input_values.get('NOME')} deletados com sucesso!")
+                            st.rerun()
+                        else:
+                            st.error(f"Erro ao deletar {item.get('NOME')}")
+                    except Exception as err:
+                        print(err)
+                        st.toast('Erro ao deletar nome.')
+                    finally:
+                        session.close()
 
     if extracted_names_list:
         st.markdown("#### Nomes Extraídos")
@@ -374,28 +393,34 @@ def main(current_user=None):
                         if not valid:
                             st.error(error_msg)
                         else:
-                            data = NoticiaRaspadaNomeCreateSchema(
-                                CPF=input_values.get('CPF'),
-                                NOME=input_values.get('NOME'),
-                                APELIDO=input_values.get('APELIDO'),
-                                NOME_CPF=input_values.get('NOME CPF'),
-                                SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
-                                PESSOA=input_values.get('PESSOA'),
-                                IDADE=input_values.get('IDADE'),
-                                ANIVERSARIO=input_values.get('ANIVERSARIO'),
-                                ATIVIDADE=input_values.get('ATIVIDADE'),
-                                ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
-                                OPERACAO=input_values.get('OPERACAO'),
-                                FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
-                                # ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
-                                INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
-                                NOTICIA_ID=noticia_id
-                            )
-                            noticia_name_service.create(data)
-                            st.toast(f"Dados de {input_values.get('NOME')} salvos com sucesso!")
-                            extracted_names_list.pop(idx)
-                            st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
-                            st.rerun()
+                            try:
+                                data = NoticiaRaspadaNomeCreateSchema(
+                                    CPF=input_values.get('CPF'),
+                                    NOME=input_values.get('NOME'),
+                                    APELIDO=input_values.get('APELIDO'),
+                                    NOME_CPF=input_values.get('NOME CPF'),
+                                    SEXO=None if input_values.get('SEXO') == 'N/A' else input_values.get('SEXO'),
+                                    PESSOA=input_values.get('PESSOA'),
+                                    IDADE=input_values.get('IDADE'),
+                                    ANIVERSARIO=input_values.get('ANIVERSARIO'),
+                                    ATIVIDADE=input_values.get('ATIVIDADE'),
+                                    ENVOLVIMENTO=input_values.get('ENVOLVIMENTO'),
+                                    OPERACAO=input_values.get('OPERACAO'),
+                                    FLG_PESSOA_PUBLICA=input_values.get('FLG_PESSOA_PUBLICA'),
+                                    # ENVOLVIMENTO_GOV=input_values.get('ENVOLVIMENTO_GOV'),
+                                    INDICADOR_PPE=input_values.get('INDICADOR_PPE'),
+                                    NOTICIA_ID=noticia_id
+                                )
+                                noticia_name_service.create(data)
+                                st.toast(f"Dados de {input_values.get('NOME')} salvos com sucesso!")
+                                extracted_names_list.pop(idx)
+                                st.session_state[f'{noticia_id}_is_extracted'] = extracted_names_list
+                                st.rerun()
+                            except Exception as err:
+                                print(err)
+                                st.toast('Erro ao salvar nome.')
+                            finally:
+                                session.close()
                     if is_deleted and restore_submitted:
                         item['deleted'] = False
                         st.session_state[f'{noticia_id}_is_extracted'][idx] = item
