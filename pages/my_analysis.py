@@ -9,8 +9,14 @@ session = SessionLocal()
 noticia_repository = NoticiaRepository(session)
 
 def load_css():
-    css = """
+    css = """ 
         <style>
+            .stMainBlockContainer{
+                padding-top: 2rem;
+                padding-bottom: 0rem;
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
             /* Configuração geral compacta */
             .block-container {
                 padding-top: 2.5rem;
@@ -42,7 +48,7 @@ def load_css():
             /* ... resto do CSS ... */
         </style>
     """
-    st.markdown(css, unsafe_allow_html=True)
+    st.markdown(css, unsafe_allow_html=True )
 
 @require_authentication
 def main(current_user=None):
@@ -76,22 +82,22 @@ def main(current_user=None):
         )
         status_counts[status] = total_count
 
-    cols = st.columns([5, 1.4, 1.7, 1.5, 1.4, 5])
-    with cols[1]:
+    cols = st.columns(4)
+    with cols[0]:
         if st.button(f'Em Edição ({status_counts["07-EDIT-MODE"]})', key='edit', help='Notícias em edição'):
             st.session_state['selected_tab'] = '07-EDIT-MODE'
-    with cols[2]:
+    with cols[1]:
         if st.button(f'Para Aprovação ({status_counts["200-TO-APPROVE"]})', key='approve', help='Notícias para aprovação'):
             st.session_state['selected_tab'] = '200-TO-APPROVE'
-    with cols[3]:
+    with cols[2]:
         if st.button(f'Reprovadas ({status_counts["06-REPROVED"]})', key='reproved', help='Notícias reprovadas'):
             st.session_state['selected_tab'] = '06-REPROVED'
-    with cols[4]:
+    with cols[3]:
         if st.button(f'Aprovadas ({status_counts["201-APPROVED"]})', key='approved', help='Notícias aprovadas'):
             st.session_state['selected_tab'] = '201-APPROVED'
 
     selected_tab = st.session_state['selected_tab']
-
+    st.markdown('---')
     # Filtro para listagem das notícias
     filters_applied = {'STATUS': [selected_tab]}
     if not show_all_news:

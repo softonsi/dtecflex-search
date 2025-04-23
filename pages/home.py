@@ -30,6 +30,12 @@ def init_page_layout():
 def load_css():
     css = """
         <style>
+            .stMainBlockContainer{
+                padding-top: 2rem;
+                padding-bottom: 0rem;
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
             /* Configuração geral compacta */
             .block-container {
                 padding-top: 2.5rem;
@@ -81,7 +87,7 @@ def main(current_user=None):
     def listar_noticias():
         noticias, total_pages = filters(session)
 
-        cols = st.columns([2,15,1,1,1])
+        cols = st.columns([3,15,1,1,1])
         with cols[0]:
             if st.button('Cadastrar', icon=":material/note_add:", type='primary', use_container_width=True):
                 notice_register_dialog()

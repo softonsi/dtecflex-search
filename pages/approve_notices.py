@@ -21,6 +21,12 @@ noticia_nome_service = NoticiaNomeService(session)
 def load_css():
     css = """
         <style>
+            .stMainBlockContainer{
+                padding-top: 2rem;
+                padding-bottom: 0rem;
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
             /* Configuração geral compacta */
             .block-container {
                 padding-top: 2.5rem;
