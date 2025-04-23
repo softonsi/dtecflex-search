@@ -8,7 +8,6 @@ from view_components.middleware.check_auth import require_authentication
 def main(current_user=None):
     # Configuração da página e layout
     st.set_page_config(page_title="Registro e Gerenciamento de Usuário", layout="centered")
-    st.title("Registro e Gerenciamento de Usuário")
     navsidebar(current_user)
 
     # Inicializa a sessão e o serviço de usuários
