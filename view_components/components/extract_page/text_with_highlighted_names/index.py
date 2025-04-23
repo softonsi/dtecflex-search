@@ -73,9 +73,9 @@ def text_with_highlighted_names(notice_id):
                 else:
                     st.write(text)
 
-        col_analisar, col_editar, spacer_col = st.columns([1.5, 1.5, 14])
+        col_analisar, col_editar, spacer_col = st.columns([2, 2, 6])
         with col_analisar:
-            if st.button("Analisar", icon=":material/find_in_page:"):
+            if st.button("Analisar", icon=":material/find_in_page:", use_container_width=True):
                 try:
                     with st.spinner('Analisando o texto...'):
                         analyzer = TextAnalyzer(notice_categoria=notice['CATEGORIA'])
@@ -88,9 +88,9 @@ def text_with_highlighted_names(notice_id):
                 except Exception as e:
                     st.error(f"Erro ao processar a chamada à API: {e}")
         with col_editar:
-            if st.button("Editar", icon=":material/edit_note:"):
+            if st.button("Editar", icon=":material/edit_note:", use_container_width=True):
                 edit_text_dialog(notice, noticia_service)
-
+            
     return (
         names_to_highlight if names_to_highlight else [], 
         saved_names_list if saved_names_list else [], 
@@ -110,8 +110,8 @@ def edit_text_dialog(notice, noticia_service):
         unsafe_allow_html=True,
     )
 
-    texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=300)
-    if st.button("Atualizar"):
+    texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=500)
+    if st.button("Atualizar", use_container_width=True):
         update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
         try:
             noticia_service.atualizar_noticia(notice['ID'], update_data)

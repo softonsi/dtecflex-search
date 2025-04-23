@@ -26,7 +26,7 @@ def notice_info(notice):
         for msg in notice['mensagens']:
             st.warning(f"NOTÍCIA REPROVADA.\n\n\"{msg.MSG_TEXT}\"", icon="⚠️")
 
-    cols_voltar = st.columns([1.5, 8, 8])
+    cols_voltar = st.columns([1, 9])
     with cols_voltar[0]:
         if st.button('Voltar', icon=":material/first_page:", use_container_width=True):
             unsaved = False
@@ -117,7 +117,7 @@ def main_action_buttons(font, title, category, region, uf, notice_id, reg_notici
     def msg_confirma(msg):
         st.toast(msg, icon="✅")
     
-    cols = st.columns([1, 6, 1])
+    cols = st.columns([1, 1, 1])
     
     with cols[0]:
         if st.button('Excluir', icon=":material/delete_forever:", use_container_width=True):
