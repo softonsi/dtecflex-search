@@ -68,14 +68,16 @@ def load_css():
         </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+    #st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">', unsafe_allow_html=True)
+    st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">', unsafe_allow_html=True)
 
 @require_authentication
 def main(current_user=None):
     init_page_layout()
     navsidebar(current_user)
 
-    st.markdown("#### Lista de Notícias")
-
+    st.markdown('####  <i class="bi bi-newspaper"></i> Notícias', unsafe_allow_html=True)
+    
     session = SessionLocal()
     noticia_service = NoticiaService(session)
 
@@ -87,9 +89,9 @@ def main(current_user=None):
     def listar_noticias():
         noticias, total_pages = filters(session)
 
-        cols = st.columns([3,15,1,1,1])
+        cols = st.columns([4,14,1,1,1])
         with cols[0]:
-            if st.button('Incluir', icon=":material/newspaper:", type='primary', use_container_width=True):
+            if st.button('Incluir', icon=":material/newspaper:", type='primary'):
                 notice_register_dialog()
         with cols[2]:
             if st.button("", icon=":material/chevron_backward:", disabled=st.session_state['page_number'] <= 1):
@@ -109,35 +111,12 @@ def main(current_user=None):
             noticias_data = [noticia.model_dump() for noticia in noticias]
 
             for noticia in noticias_data:
-                col1, col2, col3 = st.columns([1, 7, 1])
+                col1, col2 = st.columns([ 7, 1])
 
+                st.markdown(f'[{noticia["ID"]}]', unsafe_allow_html=True)
                 with col1:
-                    st.markdown(render_box('ID', noticia["ID"]), unsafe_allow_html=True)
-                    st.markdown(render_status('Status', noticia['STATUS']), unsafe_allow_html=True)
-
-                    if noticia['STATUS'] == '99-DELETED':
-                        if st.button("Recuperar", key=f"recuperar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True):
-                            update_data = NoticiaRaspadaUpdateSchema(STATUS='15-URL-CHK')
-                            noticia_service.atualizar_noticia(noticia['ID'], update_data)
-                            st.toast(f"Notícia ID {noticia['ID']} recuperada com sucesso.")
-                            st.rerun()
-                    else:
-                        if st.button("Excluir", icon=":material/delete_forever:", key=f"delete_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True):
-                            update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
-                            noticia_service.atualizar_noticia(noticia['ID'], update_data)
-                            st.toast(f"Notícia ID {noticia['ID']} excluída com sucesso.")
-                            st.rerun()
-
-                    if st.button("Analisar", icon=":material/find_in_page:", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", use_container_width=True, disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE')):
-                        with st.spinner("Analisando..."):
-                            st.session_state['page_to_return'] = 'home.py'
-                            st.session_state['id_notice_to_analyze'] = noticia['ID']
-                            st.session_state[f'notice_to_analyze_{noticia["ID"]}'] = noticia
-                            st.session_state['url'] = noticia['URL']
-                            st.switch_page("pages/_extract_page.py")
-                with col2:
-                    st.markdown(render_box('Fonte', noticia['FONTE']), unsafe_allow_html=True)
                     st.markdown(render_box('Título', noticia['TITULO']), unsafe_allow_html=True)
+                    st.markdown(render_box('Fonte', noticia['FONTE']), unsafe_allow_html=True)
                     st.markdown(f'**Link Google:** [Acessar link]({noticia["LINK_ORIGINAL"]})')
 
                     key_edit_mode = f"edit_mode_{noticia['ID']}"
@@ -169,7 +148,32 @@ def main(current_user=None):
                             if st.button('', icon=":material/edit_note:", key=f"edit_link_{noticia['ID']}"):
                                 st.session_state[key_edit_mode] = True
                                 st.rerun()
-                with col3:
+
+                    xcol1, xcol2, _ = st.columns([1, 1, 3])
+                    with xcol1:
+                        if noticia['STATUS'] == '99-DELETED':
+                            if st.button("Recuperar", key=f"recuperar_{noticia['ID']}_{st.session_state['page_number']}"):
+                                update_data = NoticiaRaspadaUpdateSchema(STATUS='15-URL-CHK')
+                                noticia_service.atualizar_noticia(noticia['ID'], update_data)
+                                st.toast(f"Notícia ID {noticia['ID']} recuperada com sucesso.")
+                                st.rerun()
+                        else:
+                            if st.button("Excluir", icon=":material/delete_forever:", key=f"delete_{noticia['ID']}_{st.session_state['page_number']}"):
+                                update_data = NoticiaRaspadaUpdateSchema(STATUS='99-DELETED')
+                                noticia_service.atualizar_noticia(noticia['ID'], update_data)
+                                st.toast(f"Notícia ID {noticia['ID']} excluída com sucesso.")
+                                st.rerun()
+                    with xcol2:
+                        if st.button("Analisar", icon=":material/find_in_page:", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE')):
+                            with st.spinner("Analisando..."):
+                                st.session_state['page_to_return'] = 'home.py'
+                                st.session_state['id_notice_to_analyze'] = noticia['ID']
+                                st.session_state[f'notice_to_analyze_{noticia["ID"]}'] = noticia
+                                st.session_state['url'] = noticia['URL']
+                                st.switch_page("pages/_extract_page.py")
+
+                with col2:
+                    st.markdown(render_status('Status', noticia['STATUS']), unsafe_allow_html=True)
                     st.markdown(render_box('Categoria', noticia['CATEGORIA']), unsafe_allow_html=True)
                     st.markdown(render_box('Publicação', noticia['DATA_PUBLICACAO']), unsafe_allow_html=True)
                     st.markdown(render_box('Extração', noticia['DT_RASPAGEM']), unsafe_allow_html=True)
@@ -226,15 +230,14 @@ def render_box(txt_label, txt):
         <label style="
             font-size: 14px;
             color: #333;
-            margin-bottom: 2px;
-        ">
-            {txt_label}
+            margin-bottom: 2px;">
+            {txt_label} 
         </label>
         <div style="
             font-weight: bold;
             background-color: #fbfbfb;
             padding: 8px;
-            border-radius: 10px;
+            border-radius: 5px;
             border: 1px solid #ccc;
             font-size: 14px;
             color: #1f77b4;
@@ -294,7 +297,6 @@ def render_status(txt_label, txt):
     ">
         <label style="
             font-size: 14px;
-            font-weight: bold;
             color: #333;
             margin-bottom: 5px;
         ">
