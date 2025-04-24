@@ -60,7 +60,7 @@ def load_css():
             /* Textbox mais compacto */
             .stTextInput input {
                 padding: 0.2rem 0.4rem;
-                line-height: 1.2;
+                line-height: 1.1;
                 font-size: 0.9rem;
             }
             /* Outros ajustes */
@@ -68,7 +68,6 @@ def load_css():
         </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-    #st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">', unsafe_allow_html=True)
     st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">', unsafe_allow_html=True)
 
 @require_authentication
@@ -76,7 +75,7 @@ def main(current_user=None):
     init_page_layout()
     navsidebar(current_user)
 
-    st.markdown('####  <i class="bi bi-newspaper"></i> Notícias', unsafe_allow_html=True)
+    st.markdown('#### <i class="bi bi-newspaper"></i> Notícias', unsafe_allow_html=True)
     
     session = SessionLocal()
     noticia_service = NoticiaService(session)
@@ -89,7 +88,7 @@ def main(current_user=None):
     def listar_noticias():
         noticias, total_pages = filters(session)
 
-        cols = st.columns([4,14,1,1,1])
+        cols = st.columns([4,10,1,1,1])
         with cols[0]:
             if st.button('Incluir', icon=":material/newspaper:", type='primary'):
                 notice_register_dialog()

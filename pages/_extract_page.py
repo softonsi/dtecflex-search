@@ -50,33 +50,6 @@ def validate_cnpj(cnpj: str) -> bool:
         return False
     return True
 
-# def load_css():
-#     css = """
-#         <style>
-#             [data-testid="stExpander"] > div { width: 100% !important; }
-#             .block-container { padding-top: 2.5rem; }
-#             .element-container { margin-bottom: 0.5rem; }
-#             .stButton>button {
-#                 background-color: #E1F0FF;
-#                 color: #2C7BE5;
-#                 border: 1px solid #BFD9F9;
-#                 padding: 0.2rem 0.5rem;
-#                 border-radius: 4px;
-#                 transition: all 0.2s;
-#             }
-#             .stButton>button:hover {
-#                 background-color: #CAE4FF;
-#                 border-color: #2C7BE5;
-#             }
-#             .stTextInput input {
-#                 padding: 0.2rem 0.4rem;
-#                 line-height: 1.2;
-#                 font-size: 0.9rem;
-#             }
-#         </style>
-#     """
-#     st.markdown(css, unsafe_allow_html=True)
-
 def load_css():
     css = """
         <style>
@@ -95,7 +68,7 @@ def load_css():
                 margin-bottom: 0.5rem;
             }
             /* Estilo dos botões em azul pastel */
-            .stButton>button {
+            .stButton button {
                 background-color: #E1F0FF;
                 color: #2C7BE5;
                 border: 1px solid #BFD9F9;
@@ -103,7 +76,7 @@ def load_css():
                 border-radius: 4px;
                 transition: all 0.2s;
             }
-            .stButton>button:hover {
+            .stButton button:hover {
                 background-color: #CAE4FF;
                 border-color: #2C7BE5;
             }
