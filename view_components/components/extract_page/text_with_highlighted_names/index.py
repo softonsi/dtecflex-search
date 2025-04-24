@@ -1,3 +1,4 @@
+import re
 import itertools
 import streamlit as st
 
@@ -9,40 +10,40 @@ from database import SessionLocal
 def destaque_nomes(texto, lista_nomes):
     if not isinstance(texto, str):
         texto = '' if texto is None else str(texto)
-    
+
     lt_colors = [
         "LightSkyBlue", "LightCoral", "PaleGreen", "Khaki", 
         "Lavender", "PeachPuff", "MistyRose", "PowderBlue", 
         "Thistle", "PaleTurquoise", "LightSalmon", "Aquamarine"
     ]
-    
     dk_colors = [
         "MidnightBlue", "DarkRed", "ForestGreen", "SaddleBrown", 
         "Indigo", "FireBrick", "DarkSlateGray", "DarkOliveGreen", 
         "DarkMagenta", "DarkCyan", "Chocolate", "DarkGoldenrod"
     ]
-    
     color_sequence = itertools.cycle(lt_colors)
-    
     for nome in lista_nomes:
         if not isinstance(nome, str) or not nome.strip():
             st.warning(f"Nome inválido encontrado: {nome}")
             continue
         texto = texto.replace(
-            nome, 
-            f'<span style="background-color: {next(color_sequence)}; text-transform: uppercase; font-weight: bold;">{nome}</span>'
+            nome,
+            f'<span style="background-color: {next(color_sequence)}; '
+            f'text-transform: uppercase; font-weight: bold;">{nome}</span>'
         )
-    
     texto = texto.replace('\n', '<br>').replace('\r', '<br>')
-    
+
     return texto
 
 def text_with_highlighted_names(notice_id):
     session = SessionLocal()
     noticia_service = NoticiaService(session)
     notice = noticia_service.get_by_id_with_names(notice_id)
-    text = notice['TEXTO_NOTICIA']
-    saved_names_list = notice['nomes_raspados'] if notice['nomes_raspados'] else []
+    original_text = notice.get('TEXTO_NOTICIA') or ''
+
+    visual_text = re.sub(r'R\$', r'R\\$', original_text)
+
+    saved_names_list = notice.get('nomes_raspados') or []
     extracted_names_list = []
     names_to_highlight = []
 
@@ -51,38 +52,44 @@ def text_with_highlighted_names(notice_id):
     with st.expander('**Texto notícia e nomes destacados**', expanded=True):
         if names_results:
             extracted_names_list = names_results
-            saved_names_set = set([item['NOME'] for item in saved_names_list if 'NOME' in item])
-            extracted_names_list = [item for item in extracted_names_list if item.get('NOME') not in saved_names_set]
-
-            names_to_highlight = [
-                item['NOME'] 
-                for item in saved_names_list + extracted_names_list 
-                if 'NOME' in item and isinstance(item['NOME'], str) and item['NOME'].strip()
+            saved_names_set = {
+                item['NOME'] for item in saved_names_list
+                if 'NOME' in item and isinstance(item['NOME'], str)
+            }
+            extracted_names_list = [
+                item for item in extracted_names_list
+                if item.get('NOME') not in saved_names_set
             ]
 
-        if text and names_to_highlight:
-            highlighted_text = destaque_nomes(text, names_to_highlight)
+            names_to_highlight = [
+                item['NOME']
+                for item in saved_names_list + extracted_names_list
+                if isinstance(item.get('NOME'), str) and item['NOME'].strip()
+            ]
+
+        if visual_text and names_to_highlight:
+            highlighted = destaque_nomes(visual_text, names_to_highlight)
             st.markdown(
-                '<div style="font-size:14px; white-space: pre-wrap;">{}</div>'.format(highlighted_text),
+                f'<div style="font-size:14px; white-space: pre-wrap;">{highlighted}</div>',
                 unsafe_allow_html=True
             )
         else:
-            if text:
-                if len(text) < 1:
+            if visual_text:
+                if len(visual_text) == 0:
                     st.write('Não há texto para exibir.')
                 else:
-                    st.write(text)
+                    st.markdown(visual_text, unsafe_allow_html=True)
 
-        col_analisar, col_editar, spacer_col = st.columns([2, 2, 6])
+        col_analisar, col_editar, _ = st.columns([2, 2, 6])
         with col_analisar:
             if st.button("Analisar", icon=":material/find_in_page:", use_container_width=True):
                 try:
                     with st.spinner('Analisando o texto...'):
-                        analyzer = TextAnalyzer(notice_categoria=notice['CATEGORIA'])
-                        names_results = analyzer.analyze_text(text)
-                        if len(names_results) <= 0:
+                        analyser = TextAnalyzer(notice_categoria=notice['CATEGORIA'])
+                        results = analyser.analyze_text(original_text)
+                        if not results:
                             st.toast('Texto analisado e nenhum nome encontrado.')
-                        st.session_state[f'{notice["ID"]}_is_extracted'] = names_results
+                        st.session_state[f'{notice["ID"]}_is_extracted'] = results
                         st.toast("Análise concluída!")
                         st.rerun()
                 except Exception as e:
@@ -90,11 +97,10 @@ def text_with_highlighted_names(notice_id):
         with col_editar:
             if st.button("Editar", icon=":material/edit_note:", use_container_width=True):
                 edit_text_dialog(notice, noticia_service)
-            
     return (
-        names_to_highlight if names_to_highlight else [], 
-        saved_names_list if saved_names_list else [], 
-        extracted_names_list if extracted_names_list else []
+        names_to_highlight,
+        saved_names_list,
+        extracted_names_list
     )
 
 @st.dialog("Editar Texto", width="large")
@@ -110,7 +116,11 @@ def edit_text_dialog(notice, noticia_service):
         unsafe_allow_html=True,
     )
 
-    texto_noticia = st.text_area("Texto da Notícia", value=notice['TEXTO_NOTICIA'], height=500)
+    texto_noticia = st.text_area(
+        "Texto da Notícia",
+        value=notice.get('TEXTO_NOTICIA', ''),
+        height=500
+    )
     if st.button("Atualizar", use_container_width=True):
         update_data = NoticiaRaspadaUpdateSchema(TEXTO_NOTICIA=texto_noticia)
         try:
