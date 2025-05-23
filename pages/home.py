@@ -75,6 +75,37 @@ def main(current_user=None):
     init_page_layout()
     navsidebar(current_user)
 
+    contagens = noticia_name_service.obter_contagem_por_status()
+    st.markdown("## 📊 Contagem de nomes por notícia")
+    contagens = noticia_name_service.obter_contagem_por_status()
+
+    label_map = {
+        "205-TRANSFERED": "Transferidas",
+        "200-TO-APPROVE": "Aguardando aprovação",
+        "201-APPROVED": "Aprovadas Hoje",
+        "203-PUBLISHED": "Publicadas",
+    }
+
+    cols = st.columns(len(contagens))
+    for col, (status, count) in zip(cols, contagens.items()):
+        label = label_map.get(status, status)
+        # aqui não passamos href direto, mas usamos onclick + JS
+        html = f"""
+        <div style="text-align:center;">
+        <a style="text-decoration:none; color:inherit; cursor:pointer;"
+            onclick="
+            window.location.href = window.location.origin
+                + '/list_names_per_status?status_to_list={status}';
+            ">
+            <span style="font-size:2rem; font-weight:bold;">{count}</span>
+        </a>
+        <div style="font-size:0.9rem; color:#555;">{label}</div>
+        </div>
+        """
+        col.markdown(html, unsafe_allow_html=True)
+
+    st.markdown("---")
+
     st.markdown('#### <i class="bi bi-newspaper"></i> Notícias', unsafe_allow_html=True)
     
     session = SessionLocal()

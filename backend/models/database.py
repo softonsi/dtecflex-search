@@ -20,6 +20,7 @@ class NoticiaRaspadaModel(Base):
     ID_ORIGINAL = Column(String(2000), nullable=False)
     DT_RASPAGEM = Column(DateTime, nullable=False, server_default=func.now())
     DT_APROVACAO = Column(DateTime, nullable=False, server_default=func.now())
+    DT_TRANSFERENCIA = Column(DateTime, nullable=False, server_default=func.now())
     DT_DECODE = Column(DateTime, nullable=True)
     TITULO = Column(String(250), nullable=True)
     ID_USUARIO = Column(Integer, ForeignKey('TB_USER.ID'), nullable=True)
