@@ -26,4 +26,5 @@ dependencies = [
     "streamlit>=1.39.0",
     "tiktoken>=0.8.0",
     "trafilatura>=2.0.0",
+    "xmltodict>=0.14.2",
 ]
