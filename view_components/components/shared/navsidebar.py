@@ -2,6 +2,7 @@ import streamlit as st
 from backend.resources.auth.auth_service import AuthService
 
 def navsidebar(current_user):
+    st.sidebar.markdown("#### v1.1.1")
     st.sidebar.title("Navegação")
 
     if current_user:
