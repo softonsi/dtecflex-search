@@ -31,15 +31,18 @@ class NoticiaNomeRepository:
         resultados = q.all()
 
         def to_dict(obj: NoticiaRaspadaNomeModel) -> Dict[str, Any]:
+            # Mapeia todas as colunas de NoticiaRaspadaNomeModel
             d = {
                 col.name: getattr(obj, col.name)
                 for col in obj.__table__.columns
             }
+            # Campos adicionais vindos da notícia relacionada
             d["REG_NOTICIA"] = obj.noticia.REG_NOTICIA
+            d["CATEGORIA"]   = obj.noticia.CATEGORIA
             return d
 
         return [to_dict(n) for n in resultados]
-    
+
     def obter_contagem_por_status(self) -> List[NoticiaRaspadaNomeModel]:
         hoje = date.today()
         status_list = [

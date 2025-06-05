@@ -69,48 +69,68 @@ def main(current_user=None):
     users = user_service.find_all()
     user_options = ["-"] + [user.USERNAME for user in users]
 
+    # Inicializa session_state
     if 'selected_period' not in st.session_state:
         st.session_state['selected_period'] = "-"
     if 'selected_user' not in st.session_state:
         st.session_state['selected_user'] = "-"
+    if 'selected_categoria' not in st.session_state:
+        st.session_state['selected_categoria'] = "-"        # <-- nova linha
     if 'page' not in st.session_state:
         st.session_state['page'] = 1
     if 'approval_started' not in st.session_state:
         st.session_state['approval_started'] = False
 
     noticias_editaveis, count_editaveis = noticia_service.listar_noticias(
-        page=1, 
-        per_page=1, 
+        page=1,
+        per_page=1,
         filters={'STATUS': ['00-START-APPROVE']}
     )
-    if count_editaveis > 0:
-        st.session_state['approval_started'] = True
-    else:
-        st.session_state['approval_started'] = False
+    st.session_state['approval_started'] = (count_editaveis > 0)
 
+    # Sidebar: usuário e categoria
     with st.sidebar:
         selected_user = st.selectbox(
             "Usuário:",
             user_options,
-            index=user_options.index(st.session_state['selected_user'])
-                  if st.session_state['selected_user'] in user_options else 0,
+            index=(
+                user_options.index(st.session_state['selected_user'])
+                if st.session_state['selected_user'] in user_options else 0
+            ),
             key='selected_user'
         )
+        selected_categoria = st.selectbox(                    # <-- nova selectbox
+            "Categoria:",
+            options=['-', 'Lavagem de dinheiro', 'Ambiental', 'Crime', 'Empresarial', 'Fraude'],
+            index=0,
+            key='selected_categoria'
+        )
 
+    # Se mudou período ou usuário, reseta página
     if st.session_state['selected_period'] != "-" or st.session_state['selected_user'] != "-":
         st.session_state['page'] = 1
 
+    # Monta filtros iniciais
     if st.session_state['approval_started']:
         filters = {'STATUS': ['00-START-APPROVE']}
     else:
         filters = {'STATUS': ['200-TO-APPROVE']}
 
-    if st.session_state['selected_period'] and st.session_state['selected_period'] != "-":
+    # Filtro por período
+    if st.session_state['selected_period'] != "-":
         filters['PERIODO'] = st.session_state['selected_period'].lower()
-    if st.session_state['selected_user'] and st.session_state['selected_user'] != "-":
+
+    # Filtro por usuário
+    if st.session_state['selected_user'] != "-":
         selected_username = st.session_state['selected_user']
-        selected_user_obj = next((user for user in users if user.USERNAME == selected_username), None)
+        selected_user_obj = next(
+            (u for u in users if u.USERNAME == selected_username), None
+        )
         filters['USUARIO_ID'] = selected_user_obj.ID
+
+    # Filtro por categoria (inserido sem alterar mais nada)
+    if st.session_state['selected_categoria'] != "-":
+        filters['CATEGORIA'] = [st.session_state['selected_categoria']]
 
     per_page = 10
     page = st.session_state['page']

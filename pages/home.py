@@ -76,34 +76,30 @@ def main(current_user=None):
     navsidebar(current_user)
 
     contagens = noticia_name_service.obter_contagem_por_status()
-    st.markdown("## 📊 Contagem de nomes por notícia")
+    st.markdown("### 📊 Contagem de nomes por notícia")
     contagens = noticia_name_service.obter_contagem_por_status()
 
     label_map = {
         "205-TRANSFERED": "Transferidas",
         "200-TO-APPROVE": "Aguardando aprovação",
-        "201-APPROVED": "Aprovadas Hoje",
+        "201-APPROVED": "Aprovadas",
         "203-PUBLISHED": "Publicadas",
     }
 
     cols = st.columns(len(contagens))
     for col, (status, count) in zip(cols, contagens.items()):
         label = label_map.get(status, status)
-        # aqui não passamos href direto, mas usamos onclick + JS
+        url = f"/list_names_per_status?status_to_list={status}"
         html = f"""
         <div style="text-align:center;">
-        <a style="text-decoration:none; color:inherit; cursor:pointer;"
-            onclick="
-            window.location.href = window.location.origin
-                + '/list_names_per_status?status_to_list={status}';
-            ">
+        <a href="{url}" 
+            style="text-decoration:none; color:inherit;">
             <span style="font-size:2rem; font-weight:bold;">{count}</span>
         </a>
         <div style="font-size:0.9rem; color:#555;">{label}</div>
         </div>
         """
         col.markdown(html, unsafe_allow_html=True)
-
     st.markdown("---")
 
     st.markdown('#### <i class="bi bi-newspaper"></i> Notícias', unsafe_allow_html=True)
@@ -117,7 +113,7 @@ def main(current_user=None):
         st.session_state['edit_id'] = None
 
     def listar_noticias():
-        noticias, total_pages = filters(session)
+        noticias, total_pages = filters()
 
         cols = st.columns([4,10,1,1,1])
         with cols[0]:
@@ -196,11 +192,25 @@ def main(current_user=None):
                     with xcol2:
                         if st.button("Analisar", icon=":material/find_in_page:", key=f"analisar_{noticia['ID']}_{st.session_state['page_number']}", disabled=not (noticia['STATUS'] == '10-URL-OK' or noticia['STATUS'] == '07-EDIT-MODE')):
                             with st.spinner("Analisando..."):
-                                st.session_state['page_to_return'] = 'home.py'
-                                st.session_state['id_notice_to_analyze'] = noticia['ID']
-                                st.session_state[f'notice_to_analyze_{noticia["ID"]}'] = noticia
-                                st.session_state['url'] = noticia['URL']
-                                st.switch_page("pages/_extract_page.py")
+                                with SessionLocal() as sess:
+                                    noticia_to = NoticiaService(sess).obter_noticia(noticia['ID'])
+                                    if noticia_to.STATUS == "10-URL-OK":
+                                        st.session_state['page_to_return'] = 'home.py'
+                                        st.session_state['id_notice_to_analyze'] = noticia['ID']
+                                        st.session_state[f'notice_to_analyze_{noticia["ID"]}'] = noticia
+                                        st.session_state['url'] = noticia['URL']
+                                        st.switch_page("pages/_extract_page.py")
+
+                                    elif noticia_to.STATUS == "07-EDIT-MODE" and noticia_to.ID_USUARIO == current_user['user_id']:
+                                        st.session_state['page_to_return'] = 'home.py'
+                                        st.session_state['id_notice_to_analyze'] = noticia['ID']
+                                        st.session_state[f'notice_to_analyze_{noticia["ID"]}'] = noticia
+                                        st.session_state['url'] = noticia['URL']
+                                        st.switch_page("pages/_extract_page.py")
+
+                                    else:
+                                        indisponibilidade_noticia_dialog()
+
 
                 with col2:
                     st.markdown(render_status('Status', noticia['STATUS']), unsafe_allow_html=True)
@@ -344,6 +354,14 @@ def render_status(txt_label, txt):
         </div>
     </div>
     """
+
+
+@st.dialog("Notícia indisponível.")
+def indisponibilidade_noticia_dialog():
+    st.write("Notícia já está sendo analisada por outra pessoa")
+    if st.button("Fechar"):
+        # Fecha o diálogo e força o recarregamento da página
+        st.rerun()
 
 @st.dialog("Você possui alterações não salvas.")
 def notice_register_dialog():

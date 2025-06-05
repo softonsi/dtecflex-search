@@ -455,34 +455,34 @@ def main(current_user=None):
                     delete_sub = st.form_submit_button("Deletar")
                 if submitted:
                     cpf = input_vals.get('CPF','')
-                    nome_cpf = input_vals.get('NOME CPF','')
+                    nome_cpf = input_vals.get('NOME_CPF','')
                     pessoa_tipo = input_vals.get('PESSOA','NA')
-                    valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
-                    if not valid:
-                        st.error(err)
-                    else:
-                        data = NoticiaRaspadaNomeCreateSchema(
-                            CPF=cpf,
-                            NOME=input_vals.get('NOME'),
-                            APELIDO=input_vals.get('APELIDO'),
-                            NOME_CPF=nome_cpf,
-                            SEXO=None if input_vals.get('SEXO')=='N/A' else input_vals.get('SEXO'),
-                            PESSOA=pessoa_tipo,
-                            IDADE=input_vals.get('IDADE'),
-                            ANIVERSARIO=input_vals.get('ANIVERSARIO'),
-                            ATIVIDADE=input_vals.get('ATIVIDADE'),
-                            ENVOLVIMENTO=input_vals.get('ENVOLVIMENTO'),
-                            OPERACAO=input_vals.get('OPERACAO'),
-                            FLG_PESSOA_PUBLICA=input_vals.get('FLG_PESSOA_PUBLICA'),
-                            INDICADOR_PPE=input_vals.get('INDICADOR_PPE'),
-                            NOTICIA_ID=noticia['ID']
-                        )
-                        if 'ID' in item:
-                            noticia_name_service.update(item['ID'], data)
-                        else:
-                            noticia_name_service.create(data)
+                    # valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
+                    # if not valid:
+                    #     st.error(err)
+                    # else:
+                    data = NoticiaRaspadaNomeCreateSchema(
+                        CPF=cpf,
+                        NOME=input_vals.get('NOME'),
+                        APELIDO=input_vals.get('APELIDO'),
+                        NOME_CPF=nome_cpf,
+                        SEXO=None if input_vals.get('SEXO')=='N/A' else input_vals.get('SEXO'),
+                        PESSOA=pessoa_tipo,
+                        IDADE=input_vals.get('IDADE'),
+                        ANIVERSARIO=input_vals.get('ANIVERSARIO'),
+                        ATIVIDADE=input_vals.get('ATIVIDADE'),
+                        ENVOLVIMENTO=input_vals.get('ENVOLVIMENTO'),
+                        OPERACAO=input_vals.get('OPERACAO'),
+                        FLG_PESSOA_PUBLICA=input_vals.get('FLG_PESSOA_PUBLICA'),
+                        INDICADOR_PPE=input_vals.get('INDICADOR_PPE'),
+                        NOTICIA_ID=noticia['ID']
+                    )
+                    if 'ID' in item:
+                        noticia_name_service.update(item['ID'], data)
                         st.toast(f"Dados de {input_vals.get('NOME')} atualizados com sucesso!")
-                        st.rerun()
+                    else:
+                        noticia_name_service.create(data)
+                    # st.rerun()
                 if delete_sub and 'ID' in item:
                     ok = noticia_name_service.delete(item['ID'])
                     if ok:

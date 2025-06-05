@@ -95,10 +95,8 @@ def main(current_user):
     for row in dados:
         idade = row.get("IDADE")
         row["IDADE"] = int(idade) if isinstance(idade, Decimal) else idade or 0
-
         aniversario = row.get("ANIVERSARIO")
         row["ANIVERSARIO"] = aniversario.strftime("%Y-%m-%d") if aniversario else ""
-
         row["CPF"] = row.get("CPF") or ""
 
     df = pd.DataFrame(dados)
@@ -120,6 +118,7 @@ def main(current_user):
         "FLG_PESSOA_PUBLICA": "Pessoa Pública",
         "ANIVERSARIO": "Aniversário",
         "INDICADOR_PPE": "Indicador PPE",
+        "CATEGORIA": "Categoria",
     })
 
     label_map = {
@@ -130,6 +129,18 @@ def main(current_user):
     }
 
     st.markdown(f"### 📋 Nomes de notícias {label_map[status].lower()}")
-    st.dataframe(df, use_container_width=True)
+
+    if "Categoria" in df.columns:
+        df = df.drop(columns=["ID Nome", "ID Notícia"])
+        categorias = df["Categoria"].unique().tolist()
+        abas = st.tabs(categorias)
+        for aba, categoria in zip(abas, categorias):
+            with aba:
+                st.markdown(f"#### {categoria}")
+                subset = df[df["Categoria"] == categoria].drop(columns=["Categoria"])
+                st.dataframe(subset, use_container_width=True)
+    else:
+        st.dataframe(df, use_container_width=True)
+
 if __name__ == "__main__":
     main()
