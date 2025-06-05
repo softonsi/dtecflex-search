@@ -76,7 +76,7 @@ def main(current_user=None):
     navsidebar(current_user)
 
     contagens = noticia_name_service.obter_contagem_por_status()
-    st.markdown("### 📊 Contagem de nomes por notícia")
+    st.markdown("#### 📊 Contagem de nomes por notícia")
     contagens = noticia_name_service.obter_contagem_por_status()
 
     label_map = {
@@ -94,7 +94,7 @@ def main(current_user=None):
         <div style="text-align:center;">
         <a href="{url}" 
             style="text-decoration:none; color:inherit;">
-            <span style="font-size:2rem; font-weight:bold;">{count}</span>
+            <span style="font-size:1.2rem; font-weight:bold;">{count}</span>
         </a>
         <div style="font-size:0.9rem; color:#555;">{label}</div>
         </div>
