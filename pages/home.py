@@ -75,12 +75,12 @@ def main(current_user=None):
     init_page_layout()
     navsidebar(current_user)
 
-    contagens = noticia_name_service.obter_contagem_por_status()
+    # contagens = noticia_name_service.obter_contagem_por_status()
     st.markdown("#### 📊 Contagem de nomes por notícia")
     contagens = noticia_name_service.obter_contagem_por_status()
 
     label_map = {
-        "205-TRANSFERED": "Transferidas",
+        # "205-TRANSFERED": "Transferidas",
         "200-TO-APPROVE": "Aguardando aprovação",
         "201-APPROVED": "Aprovadas",
         "203-PUBLISHED": "Publicadas",

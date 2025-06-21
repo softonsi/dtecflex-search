@@ -363,11 +363,33 @@ def open_justificativa_dialog(noticia, current_user):
 @st.dialog("Editar Nome")
 def edit_nome_dialog(nome_obj, noticia_id):
     st.markdown(f"### Editar Nome - ID: {nome_obj.ID}")
-    
-    updated_nome = st.text_input("Nome", value=nome_obj.NOME, key=f"nome_dialog_{nome_obj.ID}_nome")
-    updated_cpf = st.text_input("CPF", value=nome_obj.CPF, key=f"nome_dialog_{nome_obj.ID}_cpf")
-    updated_apelido = st.text_input("Apelido", value=nome_obj.APELIDO, key=f"nome_dialog_{nome_obj.ID}_apelido")
-    
+
+    # Campos de texto existentes
+    updated_nome     = st.text_input(
+        "Nome",
+        value=nome_obj.NOME,
+        key=f"nome_dialog_{nome_obj.ID}_nome"
+    )
+    updated_cpf      = st.text_input(
+        "CPF",
+        value=nome_obj.CPF,
+        key=f"nome_dialog_{nome_obj.ID}_cpf"
+    )
+    updated_apelido  = st.text_input(
+        "Apelido",
+        value=nome_obj.APELIDO,
+        key=f"nome_dialog_{nome_obj.ID}_apelido"
+    )
+
+    # <<< Novo campo para NOME_CPF >>>
+    updated_nome_cpf = st.text_input(
+        "Nome CPF",
+        value=nome_obj.NOME_CPF if hasattr(nome_obj, "NOME_CPF") and nome_obj.NOME_CPF else "",
+        key=f"nome_dialog_{nome_obj.ID}_nome_cpf"
+    )
+    # <<< /fim do novo campo >>>
+
+    # Select de Sexo
     sexo_options = ["M", "F", "NA"]
     updated_sexo = st.selectbox(
         "Sexo",
@@ -375,7 +397,8 @@ def edit_nome_dialog(nome_obj, noticia_id):
         index=sexo_options.index(nome_obj.SEXO) if nome_obj.SEXO in sexo_options else sexo_options.index("NA"),
         key=f"nome_dialog_{nome_obj.ID}_sexo"
     )
-    
+
+    # Select de Pessoa
     pessoa_options = ["PF", "PJ", "NA"]
     updated_pessoa = st.selectbox(
         "Pessoa",
@@ -383,19 +406,39 @@ def edit_nome_dialog(nome_obj, noticia_id):
         index=pessoa_options.index(nome_obj.PESSOA) if nome_obj.PESSOA in pessoa_options else pessoa_options.index("NA"),
         key=f"nome_dialog_{nome_obj.ID}_pessoa"
     )
-    
+
+    # Número e data
     updated_idade = st.number_input(
-        "Idade", 
+        "Idade",
         value=nome_obj.IDADE if nome_obj.IDADE is not None else 0,
-        key=f"nome_dialog_{nome_obj.ID}_idade", 
-        min_value=0
+        min_value=0,
+        key=f"nome_dialog_{nome_obj.ID}_idade"
     )
-    updated_atividade = st.text_input("Atividade", value=nome_obj.ATIVIDADE, key=f"nome_dialog_{nome_obj.ID}_atividade")
-    updated_envolvimento = st.text_area("Envolvimento", value=nome_obj.ENVOLVIMENTO,
-                                        key=f"nome_dialog_{nome_obj.ID}_envolvimento")
-    updated_tipo_suspeita = st.text_input("Tipo de Suspeita", value=nome_obj.TIPO_SUSPEITA,
-                                          key=f"nome_dialog_{nome_obj.ID}_tipo_suspeita")
-    
+    default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO else None
+    updated_aniversario = st.date_input(
+        "Aniversário",
+        value=default_date,
+        key=f"nome_dialog_{nome_obj.ID}_aniversario"
+    )
+
+    # Outros campos de texto
+    updated_atividade      = st.text_input(
+        "Atividade",
+        value=nome_obj.ATIVIDADE,
+        key=f"nome_dialog_{nome_obj.ID}_atividade"
+    )
+    updated_envolvimento   = st.text_area(
+        "Envolvimento",
+        value=nome_obj.ENVOLVIMENTO,
+        key=f"nome_dialog_{nome_obj.ID}_envolvimento"
+    )
+    updated_tipo_suspeita  = st.text_input(
+        "Tipo de Suspeita",
+        value=nome_obj.TIPO_SUSPEITA,
+        key=f"nome_dialog_{nome_obj.ID}_tipo_suspeita"
+    )
+
+    # Toggles (booleanos)
     updated_flg_pessoa_publica = st.toggle(
         "Pessoa Pública",
         value=True if nome_obj.FLG_PESSOA_PUBLICA in [True, "True", "true", "S", 1] else False,
@@ -406,29 +449,21 @@ def edit_nome_dialog(nome_obj, noticia_id):
         value=True if nome_obj.INDICADOR_PPE in [True, "True", "true", "S", 1] else False,
         key=f"nome_dialog_{nome_obj.ID}_indicador_ppe"
     )
-    
-    default_date = nome_obj.ANIVERSARIO if nome_obj.ANIVERSARIO else None
-    updated_aniversario = st.date_input(
-        "Aniversário", 
-        value=default_date,
-        key=f"nome_dialog_{nome_obj.ID}_aniversario"
-    )
-    
+
+    # Botão de salvar
     if st.button("Salvar Alterações"):
         data = NoticiaRaspadaNomeCreateSchema(
             CPF=updated_cpf,
             NOME=updated_nome,
+            NOME_CPF=updated_nome_cpf,                      # uso do novo campo
             APELIDO=updated_apelido,
-            NOME_CPF=st.session_state.get(
-                f"nome_dialog_{nome_obj.ID}_nome_cpf", 
-                nome_obj.NOME_CPF if hasattr(nome_obj, "NOME_CPF") else None
-            ),
             SEXO=None if updated_sexo == 'NA' else updated_sexo,
             PESSOA=None if updated_pessoa == 'NA' else updated_pessoa,
             IDADE=updated_idade,
             ANIVERSARIO=updated_aniversario,
             ATIVIDADE=updated_atividade,
             ENVOLVIMENTO=updated_envolvimento,
+            TIPO_SUSPEITA=updated_tipo_suspeita,
             OPERACAO=nome_obj.OPERACAO,
             FLG_PESSOA_PUBLICA=updated_flg_pessoa_publica,
             ENVOLVIMENTO_GOV=None,

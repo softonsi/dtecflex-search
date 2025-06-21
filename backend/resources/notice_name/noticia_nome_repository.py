@@ -46,10 +46,10 @@ class NoticiaNomeRepository:
     def obter_contagem_por_status(self) -> List[NoticiaRaspadaNomeModel]:
         hoje = date.today()
         status_list = [
-            "203-PUBLISHED",
             "200-TO-APPROVE",
             "201-APPROVED",
-            "205-TRANSFERED",
+            "203-PUBLISHED",
+            # "205-TRANSFERED",
         ]
         resultados: Dict[str, int] = {}
 
