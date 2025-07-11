@@ -433,110 +433,40 @@ def main(current_user=None):
                     st.rerun()
 
 
-    
-    st.markdown("#### Nomes Salvos")
-    for idx, item in enumerate(saved_names_list):
-        label = item.get('NOME','')
-        with st.expander(label, expanded=False):
-            key_prefix = f"saved_{item.get('ID', idx)}"
-            with st.form(key=f'{key_prefix}_form'):
-                input_vals = {}
-                for i in range(0, len(colunas), 3):
-                    row = colunas[i:i+3]
-                    cols_f = st.columns(3)
-                    for j, coluna in enumerate(row):
-                        with cols_f[j]:
-                            valor = item.get(coluna, '')
-                            input_vals[coluna] = generate_input_widget(coluna, valor, key_prefix)
-                btns = st.columns(3)
-                with btns[0]:
-                    submitted = st.form_submit_button("Atualizar")
-                with btns[1]:
-                    delete_sub = st.form_submit_button("Deletar")
-                if submitted:
-                    cpf = input_vals.get('CPF','')
-                    nome_cpf = input_vals.get('NOME_CPF','')
-                    pessoa_tipo = input_vals.get('PESSOA','NA')
-                    # valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
-                    # if not valid:
-                    #     st.error(err)
-                    # else:
-                    data = NoticiaRaspadaNomeCreateSchema(
-                        CPF=cpf,
-                        NOME=input_vals.get('NOME'),
-                        APELIDO=input_vals.get('APELIDO'),
-                        NOME_CPF=nome_cpf,
-                        SEXO=None if input_vals.get('SEXO')=='N/A' else input_vals.get('SEXO'),
-                        PESSOA=pessoa_tipo,
-                        IDADE=input_vals.get('IDADE'),
-                        ANIVERSARIO=input_vals.get('ANIVERSARIO'),
-                        ATIVIDADE=input_vals.get('ATIVIDADE'),
-                        ENVOLVIMENTO=input_vals.get('ENVOLVIMENTO'),
-                        OPERACAO=input_vals.get('OPERACAO'),
-                        FLG_PESSOA_PUBLICA=input_vals.get('FLG_PESSOA_PUBLICA'),
-                        INDICADOR_PPE=input_vals.get('INDICADOR_PPE'),
-                        NOTICIA_ID=noticia['ID']
-                    )
-                    if 'ID' in item:
-                        noticia_name_service.update(item['ID'], data)
-                        st.toast(f"Dados de {input_vals.get('NOME')} atualizados com sucesso!")
-                    else:
-                        noticia_name_service.create(data)
-                    # st.rerun()
-                if delete_sub and 'ID' in item:
-                    ok = noticia_name_service.delete(item['ID'])
-                    if ok:
-                        st.toast(f"Dados de {item.get('NOME')} deletados com sucesso!")
-                        st.rerun()
-                    else:
-                        st.error(f"Erro ao deletar {item.get('NOME')}")
-
-    for idx, item in enumerate(extracted_names_list):
-        st.markdown("#### Nomes Extraídos")
-
-        is_deleted = item.get('deleted', False)
-        label = item.get('NOME','')
-        if is_deleted:
-            label = f"~{label}~ (Excluído)"
-        with st.expander(label, expanded=False):
-            key_prefix = (f"deleted" if is_deleted else "extracted") + f"_{item.get('NOME', idx)}"
-            col_search, _ = st.columns([1,9])
-            with col_search:
-                if st.button("🔍 Buscar Nome", key=f"{key_prefix}_buscar_top", use_container_width=True):
-                    search_name_dialog(key_prefix=key_prefix, nome=item.get("NOME",""))
-            with st.form(key=f"{key_prefix}_form"):
-                input_vals = {}
-                for i in range(0, len(colunas), 3):
-                    row = colunas[i:i+3]
-                    cols_f = st.columns(3)
-                    for j, coluna in enumerate(row):
-                        with cols_f[j]:
-                            valor = item.get(coluna, '')
-                            input_vals[coluna] = generate_input_widget(coluna, valor, key_prefix)
-                btns2 = st.columns([1,1])
-                with btns2[0]:
-                    if not is_deleted:
-                        submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
-                    else:
-                        restore_sub = st.form_submit_button("🔄 Restaurar", use_container_width=True)
-                with btns2[1]:
-                    if not is_deleted:
-                        delete_sub = st.form_submit_button("🗑 Excluir", use_container_width=True)
-                if not is_deleted and submitted:
-                    cpf = input_vals.get('CPF','')
-                    nome_cpf = input_vals.get('NOME_CPF','')
-                    pessoa_tipo = input_vals.get('PESSOA','NA')
-
-                    valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
-                    if not valid:
-                        st.error(err)
-                    else:
+    if len(saved_names_list) > 0:
+        st.markdown("#### Nomes Salvos")
+        for idx, item in enumerate(saved_names_list):
+            label = item.get('NOME','')
+            with st.expander(label, expanded=False):
+                key_prefix = f"saved_{item.get('ID', idx)}"
+                with st.form(key=f'{key_prefix}_form'):
+                    input_vals = {}
+                    for i in range(0, len(colunas), 3):
+                        row = colunas[i:i+3]
+                        cols_f = st.columns(3)
+                        for j, coluna in enumerate(row):
+                            with cols_f[j]:
+                                valor = item.get(coluna, '')
+                                input_vals[coluna] = generate_input_widget(coluna, valor, key_prefix)
+                    btns = st.columns(3)
+                    with btns[0]:
+                        submitted = st.form_submit_button("Atualizar")
+                    with btns[1]:
+                        delete_sub = st.form_submit_button("Deletar")
+                    if submitted:
+                        cpf = input_vals.get('CPF','')
+                        nome_cpf = input_vals.get('NOME_CPF','')
+                        pessoa_tipo = input_vals.get('PESSOA','NA')
+                        # valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
+                        # if not valid:
+                        #     st.error(err)
+                        # else:
                         data = NoticiaRaspadaNomeCreateSchema(
-                            CPF=limpar_cpf(cpf),
+                            CPF=cpf,
                             NOME=input_vals.get('NOME'),
                             APELIDO=input_vals.get('APELIDO'),
                             NOME_CPF=nome_cpf,
-                            SEXO=None if input_vals.get('SEXO') == 'N/A' else input_vals.get('SEXO'),
+                            SEXO=None if input_vals.get('SEXO')=='N/A' else input_vals.get('SEXO'),
                             PESSOA=pessoa_tipo,
                             IDADE=input_vals.get('IDADE'),
                             ANIVERSARIO=input_vals.get('ANIVERSARIO'),
@@ -549,29 +479,112 @@ def main(current_user=None):
                         )
                         if 'ID' in item:
                             noticia_name_service.update(item['ID'], data)
+                            st.toast(f"Dados de {input_vals.get('NOME')} atualizados com sucesso!")
                         else:
                             noticia_name_service.create(data)
+                        # st.rerun()
+                    if delete_sub and 'ID' in item:
+                        ok = noticia_name_service.delete(item['ID'])
+                        if ok:
+                            st.toast(f"Dados de {item.get('NOME')} deletados com sucesso!")
+                            st.rerun()
+                        else:
+                            st.error(f"Erro ao deletar {item.get('NOME')}")
 
-                        st.toast(f"Dados de {input_vals.get('NOME')} salvos com sucesso!")
-                        if is_deleted:
-                            item['deleted'] = False
+    if len(extracted_names_list) > 0:
+        st.markdown("#### Nomes Extraídos")
+        for idx, item in enumerate(extracted_names_list):
+            is_deleted = item.get('deleted', False)
+            label = item.get('NOME', '')
+            
+            # Exibir nome riscado e marcado como Excluído
+            if is_deleted:
+                label = f"~{label}~ (Excluído)"
+                
+            with st.expander(label, expanded=False):
+                key_prefix = (f"deleted" if is_deleted else "extracted") + f"_{item.get('NOME', idx)}"
+                
+                col_search, _ = st.columns([1, 9])
+                with col_search:
+                    if st.button("🔍 Buscar Nome", key=f"{key_prefix}_buscar_top", use_container_width=True):
+                        search_name_dialog(key_prefix=key_prefix, nome=item.get("NOME", ""))
+                
+                # Formulário de edição
+                with st.form(key=f"{key_prefix}_form"):
+                    input_vals = {}
+                    
+                    # Definir disabled como True se o item for excluído
+                    disabled = is_deleted  # Se excluído, desabilita todos os campos
+                    
+                    for i in range(0, len(colunas), 3):
+                        row = colunas[i:i+3]
+                        cols_f = st.columns(3)
+                        for j, coluna in enumerate(row):
+                            with cols_f[j]:
+                                valor = item.get(coluna, '')
+                                input_vals[coluna] = generate_input_widget(coluna, valor, key_prefix, disabled=disabled)
+                    
+                    # Botões de ação
+                    btns2 = st.columns([1, 1])
+                    with btns2[0]:
+                        if not is_deleted:
+                            submitted = st.form_submit_button("💾 Salvar", use_container_width=True)
+                        else:
+                            restore_sub = st.form_submit_button("🔄 Restaurar", use_container_width=True)
+                    
+                    with btns2[1]:
+                        if not is_deleted:
+                            delete_sub = st.form_submit_button("🗑 Excluir", use_container_width=True)
+                    
+                    # Processar o botão "Salvar"
+                    if not is_deleted and submitted:
+                        cpf = input_vals.get('CPF', '')
+                        nome_cpf = input_vals.get('NOME_CPF', '')
+                        pessoa_tipo = input_vals.get('PESSOA', 'NA')
+
+                        valid, err = validate_name_fields(cpf, nome_cpf, pessoa_tipo)
+                        if not valid:
+                            st.error(err)
+                        else:
+                            data = NoticiaRaspadaNomeCreateSchema(
+                                CPF=limpar_cpf(cpf),
+                                NOME=input_vals.get('NOME'),
+                                APELIDO=input_vals.get('APELIDO'),
+                                NOME_CPF=nome_cpf,
+                                SEXO=None if input_vals.get('SEXO') == 'N/A' else input_vals.get('SEXO'),
+                                PESSOA=pessoa_tipo,
+                                IDADE=input_vals.get('IDADE'),
+                                ANIVERSARIO=input_vals.get('ANIVERSARIO'),
+                                ATIVIDADE=input_vals.get('ATIVIDADE'),
+                                ENVOLVIMENTO=input_vals.get('ENVOLVIMENTO'),
+                                OPERACAO=input_vals.get('OPERACAO'),
+                                FLG_PESSOA_PUBLICA=input_vals.get('FLG_PESSOA_PUBLICA'),
+                                INDICADOR_PPE=input_vals.get('INDICADOR_PPE'),
+                                NOTICIA_ID=noticia['ID']
+                            )
+                            if 'ID' in item:
+                                noticia_name_service.update(item['ID'], data)
+                            else:
+                                noticia_name_service.create(data)
+
+                            st.toast(f"Dados de {input_vals.get('NOME')} salvos com sucesso!")
+                            if is_deleted:
+                                item['deleted'] = False
+                            st.session_state[f"{noticia['ID']}_is_extracted"] = extracted_names_list
+                            st.rerun()
+
+                    # Processar o botão "Excluir"
+                    if not is_deleted and delete_sub:
+                        # Como você não quer excluir do banco, simplesmente marque como excluído na interface
+                        item['deleted'] = True
                         st.session_state[f"{noticia['ID']}_is_extracted"] = extracted_names_list
                         st.rerun()
 
-                if not is_deleted and delete_sub:
-                    ok = noticia_name_service.delete(item['ID'])
-                    if ok:
-                        st.toast(f"Dados de {item.get('NOME')} excluídos com sucesso!")
-                        extracted_names_list.pop(idx)
-                        st.session_state[f"{noticia['ID']}_is_extracted"] = extracted_names_list
+                    # Processar o botão "Restaurar"
+                    if is_deleted and restore_sub:
+                        item['deleted'] = False
+                        st.session_state[f"{noticia['ID']}_is_extracted"][idx] = item
                         st.rerun()
-                    else:
-                        st.error(f"Erro ao excluir {item.get('NOME')}")
-
-                if is_deleted and restore_sub:
-                    item['deleted'] = False
-                    st.session_state[f"{noticia['ID']}_is_extracted"][idx] = item
-                    st.rerun()
 
 if __name__ == "__main__":
     main()
